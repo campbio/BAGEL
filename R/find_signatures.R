@@ -1,0 +1,178 @@
+#' Discovers signatures and weights from a table of counts using NMF
+#'
+#' @param input A bagel object or counts table
+#' @param num_signatures Number of signatures to discover, k
+#' @return Returns a result object with results and input object (if bagel)
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' find_signatures(bay, num_signatures = 4)
+#' @export
+find_signatures <- function(input, num_signatures){
+  if (methods::is(input, "bagel")){
+    mut_summary_mat <- input@counts_table
+  }else{
+    mut_summary_mat <- input
+    bagel <- methods::new("bagel")
+    bagel@counts_table <- input
+    input <- bagel
+  }
+  decomp <- NNLM::nnmf(mut_summary_mat, num_signatures, rel.tol = 1e-5,
+                       max.iter = 10000L);
+  colnames(decomp$W) <- paste("Signature.", seq_len(ncol(decomp$W)), sep = "")
+  nmf_result <- methods::new("Result", signatures = decomp$W,
+                             samples = decomp$H, type = "NMF", bagel = input)
+  return(nmf_result)
+}
+
+#' Compare two result files or input one to compare to COSMIC
+#'
+#' @param result Result to compare
+#' @param other_result Second result, leave blank to use cosmic results
+#' @param threshold threshold for similarity
+#' @param what Type of comparison (default is only best pairs)
+#' @return Returns the comparisons
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' compare_result(bay)
+#' @export
+compare_results <- function(result, other_result = cosmic_result,
+                            threshold = 0.9, what="bestpairs"){
+  signatures <- result@signatures
+  comparison <- lineup::corbetw2mat(signatures, other_result@signatures,
+                                   what = what, corthresh = threshold)
+  if (any(is.na(comparison))){
+    stop("No comparable signatures found, try  lowering threshold.")
+  }
+  result_subset <- methods::new("Result",
+                      signatures = result@signatures[, comparison$xindex,
+                                                     drop = FALSE], samples =
+                        matrix(), type = "NMF")
+  other_subset <- methods::new("Result",
+                      signatures = other_result@signatures[, comparison$yindex,
+                                                            drop = FALSE],
+                      samples = matrix(), type = "NMF")
+  result_plot <- MotifSig::plot_signatures(result_subset)
+  cosmic_plot <- MotifSig::plot_signatures(other_subset)
+  gridExtra::grid.arrange(result_plot, cosmic_plot, ncol = 2)
+  return(comparison)
+}
+
+#' Input a cancer subtype to return a list of related COSMIC signatures
+#'
+#' @param tumor_type Cancer subtype to view related signatures
+#' @return Returns signatures related to a partial string match
+#' @examples what_cosmic30_sigs("lung")
+#' @export
+what_cosmic30_sigs <- function(tumor_type) {
+  subtypes <- c("adrenocortical carcinoma", "all", "aml", "bladder", "breast",
+               "cervix", "chondrosarcoma", "cll", "colorectum", "glioblastoma",
+               "glioma low grade", "head and neck", "kidney chromophobe",
+               "kidney clear cell", "kidney papillary", "liver", "lung adeno",
+               "lung  small cell", "lung  squamous", "lymphoma b-cell",
+               "lymphoma hodgkin", "medulloblastoma", "melanoma", "myeloma",
+               "nasopharyngeal carcinoma", "neuroblastoma", "oesophagus",
+               "oral gingivo-buccal squamous", "osteosarcoma", "ovary",
+               "pancreas", "paraganglioma", "pilocytic astrocytoma", "prostate",
+               "stomach", "thyroid", "urothelial carcinoma", "uterine carcinoma"
+               , "uterine carcinosarcoma", "uveal melanoma")
+  present_sig <- list(
+    c(1, 2, 4, 5, 6, 13, 18), c(1, 2, 5, 13), c(1, 5), c(1, 2, 5, 10, 13),
+    c(1, 2, 3, 5, 6, 8, 10, 13, 17, 18, 20, 26, 30), c(1, 2, 5, 6, 10, 13, 26),
+    c(1, 5), c(1, 2, 5, 9, 13), c(1, 5, 6, 10), c(1, 5, 11), c(1, 5, 6, 14),
+    c(1, 2, 4, 5, 7, 13), c(1, 5, 6), c(1, 5, 6, 27), c(1, 2, 5, 13),
+    c(1, 4, 5, 6, 12, 16, 17, 22, 23, 24), c(1, 2, 4, 5, 6, 13, 17),
+    c(1, 4, 5, 15), c(1, 2, 4, 5, 13), c(1, 2, 5, 9, 13, 17), c(1, 5, 25),
+    c(1, 5, 8), c(1, 5, 7, 11, 17), c(1, 2, 5, 13), c(1, 2, 5, 6, 13),
+    c(1, 5, 18), c(1, 2, 4, 5, 6, 13, 17), c(1, 2, 5, 7, 13, 29),
+    c(1, 2, 5, 6, 13, 30), c(1, 5), c(1, 2, 3, 5, 6, 13), c(1, 5), c(1, 5, 19),
+    c(1, 5, 6), c(1, 2, 5, 13, 15, 17, 18, 20, 21, 26, 28), c(1, 2, 5, 13),
+    c(1, 2, 5, 13, 22), c(1, 2, 5, 6, 10, 13, 14, 26), c(1, 2, 5, 6, 10, 13),
+    c(1, 5, 6)
+  )
+  partial <- grep(tumor_type, subtypes)
+  for (i in seq_len(length(partial))){
+    print(subtypes[partial[i]])
+    print(present_sig[[partial[i]]])
+  }
+}
+
+#' LDA prediction of samples based on existing signatures (default COSMIC)
+#'
+#' @param bagel Input samples to predit signature weights
+#' @param signatures Signatures to use for prediction (default COSMIC)
+#' @param signatures_to_use Which signatures in set to use (default all)
+#' @return Results a result object containing signatures and sample weights
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' lda_posterior(bay)
+#' @export
+lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
+                          signatures_to_use = seq_len(ncol(signatures))) {
+
+  # Load sample counts matrix
+  counts_matrix <- bagel@counts_table
+
+  # convert data structures
+  sig_name <- colnames(signatures)
+  sig_props <- as.matrix( signatures[, colnames(signatures) %in% sig_name ])
+  samples_counts <- as.matrix( counts_matrix)
+
+  est_sig_prop <- function(samples_counts, sig_props, max.iter = 100,
+                           theta = 0.1) {
+    k <- ncol(sig_props) # number of signatures/topics
+    num_samples <- ncol(samples_counts) # number of samples
+
+    if (length(theta) == 1) {
+      theta <- rep(theta, k) # symmetric singular value converted to vector
+    }
+    sample_count_sums <- colSums(samples_counts)
+
+    # Initialize signature proportion matrix
+    samp_sig_prob_mat <- matrix(NA, nrow = num_samples, ncol = k)
+    sig_mut_counts <- matrix( NA, nrow = num_samples, ncol = k)
+    rownames(samp_sig_prob_mat) <-
+      rownames(sig_mut_counts) <- colnames(samples_counts)
+    colnames(samp_sig_prob_mat) <-
+      colnames(sig_mut_counts) <- colnames(sig_props)
+
+    for (s in seq_len(num_samples)) {
+      sig_mut_counts[s, ] <- base::tabulate(sample(x = seq_len(k), size =
+                                              sample_count_sums[s], replace =
+                                              TRUE), k)
+    }
+
+    # Update signature proportion matrix
+    print("Current Signature Proportions")
+    for (i in seq_len(max.iter)) {
+      for (s in seq_len(num_samples)) {
+        #updating each mutation probability to reassign to a signature
+        log_prob_mut_reassignment <-
+          digamma(sig_mut_counts[s, ] + theta) -
+          digamma(sample_count_sums[s] + sum(theta))
+        #updating present sample topic probability
+        sig_sample_weights <- t(sig_props + 1e-20) *
+          exp( log_prob_mut_reassignment) # avoid 0 in norm
+        sig_sample_weights <- sweep( sig_sample_weights, MARGIN = 2, STATS =
+                                       colSums(sig_sample_weights), FUN = "/")
+        #assigned counts for a topic for a sample
+        updated_topic_motifs <- samples_counts[, s] * t(sig_sample_weights)
+
+        # Update nN.SbyT[s, ] sample counts assigned to signature
+        sig_mut_counts[s, ] <- colSums(updated_topic_motifs)
+
+        # Update p.SbyT[s, ]
+        samp_sig_prob_mat[s, ] <- (sig_mut_counts[s, ]) / (sample_count_sums[s])
+      }
+      # Update theta
+      theta <- MCMCprecision::fit_dirichlet(x = samp_sig_prob_mat)$alpha
+    }
+    return(list(samp_sig_prob_mat = samp_sig_prob_mat, theta.poster = theta))
+  }
+  res2 <- est_sig_prop(samples_counts = samples_counts, sig_props = sig_props,
+                       max.iter = 100)
+  nmf_result <- methods::new("Result", signatures =
+                               signatures[, signatures_to_use], samples =
+                               t(res2$samp_sig_prob_mat), type =
+                               "posterior_LDA", bagel = bagel)
+  return(nmf_result)
+}

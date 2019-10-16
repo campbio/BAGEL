@@ -1,0 +1,44 @@
+Package: MotifSig
+Title: Novel Mutational Signature Analysis
+Version: 0.99.0
+Authors@R: person("Aaron", "Chevalier", email = "atgc@bu.edu", role = "cre", comment = c(ORCHID = "0000-0002-3968-9250"))
+Description: What the package does (one paragraph).
+Depends: R (>= 3.6)
+License: GPL-3
+Encoding: UTF-8
+LazyData: FALSE
+biocViews:
+    Software,
+    BiologicalQuestion,
+    SomaticMutation
+Imports:
+    VariantAnnotation,
+    SummarizedExperiment,
+    ggplot2,
+    cowplot,
+    Biostrings,
+    base,
+    methods,
+    magrittr,
+    NNLM,
+    tibble,
+    tidyr,
+    reshape2,
+    gtools,
+    lineup,
+    gridExtra,
+    maftools,
+    MCMCprecision,
+    data.table,
+    dplyr,
+    rlang
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown,
+    survival,
+    BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Hsapiens.UCSC.hg38,
+    qpdf
+RoxygenNote: 6.1.1
+VignetteBuilder: knitr

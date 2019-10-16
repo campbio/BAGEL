@@ -1,0 +1,126 @@
+---
+title: "BAGEL_vignette"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BAGEL_vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(MotifSig)
+```
+
+```{r}
+#vcf_to_dt("/Users/atgc/Documents/Tools/vcf2maf/output_maf2vcf/TCGA_test.vcf")
+#vcfs_to_dt("/Users/atgc/Documents/Tools/vcf2maf/output_maf2vcf/gdc_download_20191011_223725.150011/4b7a5729-b83e-4837-9b61-a6002dce1c0a/subset_1k_TCGA.SKCM.vcf")
+#a = maf_to_dt("/Users/atgc/Documents/Tools/vcf2maf/output_maf2vcf/gdc_download_20191015_034733.988608/95258183-63ea-4c97-ae29-1bae9ed06334/TCGA.LUSC.mutect.95258183-63ea-4c97-ae29-1bae9ed06334.DR-10.0.somatic.maf")
+
+#kidney_maf <- "/Users/atgc/Desktop/gdc_download_20191015_171607.020010/ddb523ba-29ac-4056-82ca-4147d2e98ddf/TCGA.K#ICH.mutect.ddb523ba-29ac-4056-82ca-4147d2e98ddf.DR-10.0.somatic.maf"
+#kidney <- MotifSig::maf_to_dt(maf_file = kidney_maf)
+#dat <- kidney
+
+#Load MAF File
+lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "MotifSig") 
+lusc <- MotifSig::maf_to_dt(maf_file = lusc_maf)
+
+#Load individual VCF Files
+luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", package = "MotifSig")
+luad1 <- MotifSig::vcf_to_dt(vcf = luad1_vcf)
+luad2_vcf <- system.file("testdata", "public_LUAD_TCGA-MP-A4TJ.vcf", package = "MotifSig")
+luad2 <- MotifSig::vcf_to_dt(vcf = luad2_vcf)
+
+#Load Multiple VCF Files At Once
+melanoma_vcf <- list.files(system.file("testdata", package = "MotifSig"), pattern = glob2rx("*SKCM*vcf"), 
+           full.names = TRUE)
+melanoma <- MotifSig::vcfs_to_dt(vcfs = melanoma_vcf)
+
+#Combine all data.frames
+dat <- rbind(lusc, melanoma, luad1, luad2)
+
+#saveRDS(dat, "/Users/atgc/Documents/Aaron_Tools/MotifSig/MotifSig/inst/testdata/dt.rds")
+#readRDS(system.file("testdata", "dt.rds", package = "MotifSig"))
+
+#Load MAF File
+#maf_file <- system.file("testdata", "TCGA_test.maf", package = "MotifSig") 
+#maf <- MotifSig::maf_to_dt(maf_file = maf_file)
+
+#Load VCF Files
+#vcfs <- list.files(system.file("testdata", package = "MotifSig"), "*.vcf", full.names = TRUE)
+#vcf <- MotifSig::vcfs_to_dt(vcfs = vcfs)
+
+#vcf_mat <- rbind(maf, vcf)
+#dat <- vcf_mat
+
+#Choose genome build
+#Automatically detect genome build
+#g=MotifSig::select_genome("38")
+
+#Create Object and add samples
+bagel = new("bagel")
+MotifSig::set_samples(bagel, dat)
+
+#Or alternatively create an object with sample names included
+bagel = new("bagel", samples = dat)
+
+#Display what samples were added
+MotifSig::sample_names(bagel)
+
+#Create 96 Motif samples
+#g=MotifSig::select_genome("19")
+#MotifSig::create_tables(bagel, g)
+g=MotifSig::select_genome("38")
+MotifSig::create_tables(bagel, g)
+
+#saveRDS(bagel, "/Users/atgc/Documents/Aaron_Tools/MotifSig/MotifSig/inst/testdata/bagel.rds")
+#readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+
+#Generate signatures/weights
+#We can use the bagel object we generated tables for
+result=MotifSig::find_signatures(bagel, num_signatures = 4)
+#saveRDS(result, "/Users/atgc/Documents/Aaron_Tools/MotifSig/MotifSig/inst/testdata/res.rds")
+#readRDS(system.file("testdata", "res.rds", package = "MotifSig"))
+
+#We can name signatures based on prior knowledge
+name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
+
+#Plot results
+MotifSig::plot_signatures(result)
+MotifSig::plot_samples(result, proportional = TRUE)
+MotifSig::plot_samples(result, proportional = FALSE)
+
+#Compare to COSMIC signatures by leaving the second result as default
+MotifSig::compare_results(result, threshold = 0.75)
+
+#List which signatures correspond to subtypes including "lung"
+MotifSig::what_cosmic30_sigs("lung")
+
+#Calculate posterior based on COSMIC signatures 4, 11, 12, 15
+cosmic_post = lda_posterior(bagel = bagel, signatures_to_use = c(12, 4, 11, 15))
+#cosmic_post = lda_posterior(bagel = bagel)
+#to_use = as.numeric(substr(names(which(rowSums(cosmic_post@samples) > 2)), 11, 12))
+#cosmic_post = lda_posterior(bagel = bagel, signatures_to_use = to_use)
+
+#Calculate posterior based on all calculated signatures
+our_sigs_post = lda_posterior(bagel = bagel, signatures = result@signatures)
+
+#Plot results from posterior calculation
+MotifSig::plot_signatures(cosmic_post)
+MotifSig::plot_samples(cosmic_post, proportional = TRUE)
+
+MotifSig::plot_signatures(our_sigs_post)
+MotifSig::plot_samples(our_sigs_post, proportional = TRUE)
+
+#Compare posterior results to each other
+MotifSig::compare_results(cosmic_post, our_sigs_post, threshold = 0.60)
+
+plot_sample(bagel, sample_names(bagel)[1])
+#make kerning better (no spaces)
+```
