@@ -33,7 +33,7 @@ find_signatures <- function(input, num_signatures){
 #' @return Returns the comparisons
 #' @examples
 #' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' compare_results(res)
+#' compare_results(res, threshold = 0.8)
 #' @export
 compare_results <- function(result, other_result = cosmic_result,
                             threshold = 0.9, what="bestpairs"){

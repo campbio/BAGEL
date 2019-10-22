@@ -86,7 +86,7 @@ BAGEL::create_tables(bagel, g)
 #We can use the bagel object we generated tables for
 result=BAGEL::find_signatures(bagel, num_signatures = 4)
 #saveRDS(result, "/Users/atgc/Documents/Aaron_Tools/BAGEL/inst/testdata/res.rds")
-#readRDS(system.file("testdata", "res.rds", package = BAGEL))
+#readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 
 #We can name signatures based on prior knowledge
 name_signatures(result, c("smoking", "uv", "apobec", "unknown"))

@@ -24,5 +24,5 @@ Compare two result files or input one to compare to COSMIC
 }
 \examples{
 res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-compare_results(res)
+compare_results(res, threshold = 0.8)
 }
