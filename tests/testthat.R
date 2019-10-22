@@ -1,4 +1,4 @@
 library("testthat")
-library("MotifSig")
+library("BAGEL")
 
-test_check("MotifSig")
+test_check("BAGEL")

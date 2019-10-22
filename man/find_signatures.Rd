@@ -18,6 +18,6 @@ Returns a result object with results and input object (if bagel)
 Discovers signatures and weights from a table of counts using NMF
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 find_signatures(bay, num_signatures = 4)
 }

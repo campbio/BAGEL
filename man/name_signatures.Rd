@@ -18,6 +18,6 @@ Result object with user-defined signatures names
 Return sample from bagel object
 }
 \examples{
-result <- readRDS(system.file("testdata", "res.rds", package = "MotifSig"))
+result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
 }

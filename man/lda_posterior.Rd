@@ -21,6 +21,6 @@ Results a result object containing signatures and sample weights
 LDA prediction of samples based on existing signatures (default COSMIC)
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 lda_posterior(bay)
 }

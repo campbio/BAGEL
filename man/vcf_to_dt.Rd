@@ -17,6 +17,6 @@ Loads a vcf and converts to data.table
 }
 \examples{
 luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
-  package = "MotifSig")
-luad1 <- MotifSig::vcf_to_dt(vcf = luad1_vcf)
+  package = "BAGEL")
+luad1 <- BAGEL::vcf_to_dt(vcf = luad1_vcf)
 }

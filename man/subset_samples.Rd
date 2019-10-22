@@ -18,6 +18,6 @@ Returns sample dataframe subset to a single sample
 Return sample from bagel object
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 subset_samples(bay, "public_LUAD_TCGA-97-7938.vcf")
 }

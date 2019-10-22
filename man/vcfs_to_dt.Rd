@@ -16,7 +16,7 @@ Returns a data.table of variants from vcfs
 Loads a list of vcfs and converts to a combined data.table
 }
 \examples{
-melanoma_vcf <- list.files(system.file("testdata", package = "MotifSig"),
+melanoma_vcf <- list.files(system.file("testdata", package = "BAGEL"),
   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
-melanoma <- MotifSig::vcfs_to_dt(vcfs = melanoma_vcf)
+melanoma <- BAGEL::vcfs_to_dt(vcfs = melanoma_vcf)
 }

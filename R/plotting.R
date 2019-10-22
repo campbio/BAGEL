@@ -8,6 +8,10 @@ NULL
 #' @param bay Bagel object containing samples
 #' @param sample_name Sample name to plot counts
 #' @return Generates sample plot {no return}
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' plot_sample(bay, sample_names(bay)[1])
+#' @export
 plot_sample <- function(bay, sample_name){
   if (length(sample_name) != 1){
     stop("`please specify exactly one sample")
@@ -61,7 +65,7 @@ plot_full <- function(sample){
 #' @param result S4 Result Object
 #' @return Generates plot {no return}
 #' @examples
-#' result <- readRDS(system.file("testdata", "res.rds", package = "MotifSig"))
+#' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_signatures(result)
 #' @export
 plot_signatures <- function(result){
@@ -95,7 +99,7 @@ plot_signatures <- function(result){
 #' @param proportional Whether weights are normalized to sum to 1 or not
 #' @return Generates plot {no return}
 #' @examples
-#' result <- readRDS(system.file("testdata", "res.rds", package = "MotifSig"))
+#' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_samples(result)
 #' @export
 plot_samples <- function(result, proportional = TRUE){

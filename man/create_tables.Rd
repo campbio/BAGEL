@@ -18,7 +18,7 @@ Returns 96 motif summary tables
 Uses a genome object to find context and generate tables for input samples
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 g <- select_genome("38")
 create_tables(bay, g)
 }

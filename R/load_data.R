@@ -27,14 +27,14 @@ select_genome <- function(hg){
 #' @param vcfs A list of vcf file locations
 #' @return Returns a data.table of variants from vcfs
 #' @examples
-#' melanoma_vcf <- list.files(system.file("testdata", package = "MotifSig"),
+#' melanoma_vcf <- list.files(system.file("testdata", package = "BAGEL"),
 #'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
-#' melanoma <- MotifSig::vcfs_to_dt(vcfs = melanoma_vcf)
+#' melanoma <- BAGEL::vcfs_to_dt(vcfs = melanoma_vcf)
 #' @export
 vcfs_to_dt <- function(vcfs){
   vcf_list <- vector("list", length(vcfs))
   for (i in seq_len(length(vcfs))){
-    vcf_list[[i]] <- MotifSig::vcf_to_dt(vcfs[i])
+    vcf_list[[i]] <- BAGEL::vcf_to_dt(vcfs[i])
   }
   combined <- do.call("rbind", vcf_list)
   return(combined)
@@ -46,8 +46,8 @@ vcfs_to_dt <- function(vcfs){
 #' @return Returns a data.table of variants from a vcf
 #' @examples
 #' luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
-#'   package = "MotifSig")
-#' luad1 <- MotifSig::vcf_to_dt(vcf = luad1_vcf)
+#'   package = "BAGEL")
+#' luad1 <- BAGEL::vcf_to_dt(vcf = luad1_vcf)
 #' @export
 vcf_to_dt <- function(vcf_file){
   required_columns <- c("Chromosome", "Start_Position", "End_Position",
@@ -63,7 +63,7 @@ vcf_to_dt <- function(vcf_file){
   if (length(multi_allelic > 0)){
     vcf <- vcf[-multi_allelic, ]
   }
-  rows <- VariantAnnotation::rowRanges(vcf)
+  rows <- SummarizedExperiment::rowRanges(vcf)
 
   #Remove filtered rows
   pass <- rows$FILTER
@@ -100,8 +100,8 @@ vcf_to_dt <- function(vcf_file){
 #' @param maf_file Location of maf file
 #' @return Returns a data.table of variants from a maf
 #' @examples
-#' maf_file=system.file("testdata", "TCGA_test.maf", package = "MotifSig")
-#' maf = MotifSig::maf_to_dt(maf_file = maf_file)
+#' maf_file=system.file("testdata", "TCGA_test.maf", package = "BAGEL")
+#' maf = BAGEL::maf_to_dt(maf_file = maf_file)
 #' @export
 maf_to_dt <- function(maf_file){
   required_columns <- c("Chromosome", "Start_Position", "End_Position",

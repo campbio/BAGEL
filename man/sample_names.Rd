@@ -16,6 +16,6 @@ Returns names of samples in bagel object
 Return samples names for bagel object
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 sample_names(bay)
 }

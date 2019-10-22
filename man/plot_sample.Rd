@@ -17,3 +17,7 @@ Generates sample plot {no return}
 \description{
 Return sample from bagel object
 }
+\examples{
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+plot_sample(bay, sample_names(bay)[1])
+}

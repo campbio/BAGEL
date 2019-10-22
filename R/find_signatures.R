@@ -4,7 +4,7 @@
 #' @param num_signatures Number of signatures to discover, k
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' find_signatures(bay, num_signatures = 4)
 #' @export
 find_signatures <- function(input, num_signatures){
@@ -32,8 +32,8 @@ find_signatures <- function(input, num_signatures){
 #' @param what Type of comparison (default is only best pairs)
 #' @return Returns the comparisons
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
-#' compare_result(bay)
+#' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
+#' compare_results(res)
 #' @export
 compare_results <- function(result, other_result = cosmic_result,
                             threshold = 0.9, what="bestpairs"){
@@ -51,8 +51,8 @@ compare_results <- function(result, other_result = cosmic_result,
                       signatures = other_result@signatures[, comparison$yindex,
                                                             drop = FALSE],
                       samples = matrix(), type = "NMF")
-  result_plot <- MotifSig::plot_signatures(result_subset)
-  cosmic_plot <- MotifSig::plot_signatures(other_subset)
+  result_plot <- BAGEL::plot_signatures(result_subset)
+  cosmic_plot <- BAGEL::plot_signatures(other_subset)
   gridExtra::grid.arrange(result_plot, cosmic_plot, ncol = 2)
   return(comparison)
 }
@@ -103,7 +103,7 @@ what_cosmic30_sigs <- function(tumor_type) {
 #' @param signatures_to_use Which signatures in set to use (default all)
 #' @return Results a result object containing signatures and sample weights
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' lda_posterior(bay)
 #' @export
 lda_posterior <- function(bagel, signatures=cosmic_result@signatures,

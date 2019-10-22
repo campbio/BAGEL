@@ -42,7 +42,7 @@ setMethod("show", "bagel",
 #' @param samp Sample DataFrame
 #' @return Sets sample slot {no return}
 #' @examples
-#' samp <- readRDS(system.file("testdata", "dt.rds", package = "MotifSig"))
+#' samp <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 #' bay <- new("bagel")
 #' set_samples(bay, dat)
 #' @export
@@ -55,7 +55,7 @@ set_samples <- function(bay, samp) {
 #' @param bay Bagel object containing samples
 #' @return Returns names of samples in bagel object
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' sample_names(bay)
 #' @export
 sample_names <- function(bay){
@@ -68,7 +68,7 @@ sample_names <- function(bay){
 #' @param sample_name Sample name to subset by
 #' @return Returns sample dataframe subset to a single sample
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' subset_samples(bay, "public_LUAD_TCGA-97-7938.vcf")
 #' @export
 subset_samples <- function(bay, sample_name){
@@ -86,7 +86,7 @@ setClass("Result", representation(signatures = "matrix", samples = "matrix",
 #' @param name_vector Vector of user-defined signature names
 #' @return Result object with user-defined signatures names
 #' @examples
-#' result <- readRDS(system.file("testdata", "res.rds", package = "MotifSig"))
+#' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
 #' @export
 name_signatures <- function(result, name_vector){

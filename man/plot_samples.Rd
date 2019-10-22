@@ -18,6 +18,6 @@ Generates plot {no return}
 Plots signature weights for each sample
 }
 \examples{
-result <- readRDS(system.file("testdata", "res.rds", package = "MotifSig"))
+result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 plot_samples(result)
 }

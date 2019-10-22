@@ -23,6 +23,6 @@ Returns the comparisons
 Compare two result files or input one to compare to COSMIC
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
-compare_result(bay)
+res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
+compare_results(res)
 }

@@ -1,9 +1,8 @@
 context("Test Plotting Functions")
-library("MotifSig")
+library("BAGEL")
 
 test_that(desc = "Testing VCF Input", {
-  sample_df <- readRDS(system.file("testdata", "sample_df.rds", package =
-                           "MotifSig"))
-  p <- MotifSig::plot_full(sample_df)
+  result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
+  p <- plot_samples(result)
   expect_true(ggplot2::is.ggplot(p))
 })

@@ -34,7 +34,7 @@ table_96 <- function(sample_df){
 #' @param g Genome object used for finding variant context
 #' @return Returns 96 motif summary tables
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "MotifSig"))
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("38")
 #' create_tables(bay, g)
 #' @export

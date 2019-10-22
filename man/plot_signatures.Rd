@@ -16,6 +16,6 @@ Generates plot {no return}
 Plotting Signature Motif counts/spectra
 }
 \examples{
-result <- readRDS(system.file("testdata", "res.rds", package = "MotifSig"))
+result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 plot_signatures(result)
 }

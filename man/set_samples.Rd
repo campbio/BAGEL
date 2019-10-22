@@ -18,7 +18,7 @@ Sets sample slot {no return}
 Set samples for bagel object
 }
 \examples{
-samp <- readRDS(system.file("testdata", "dt.rds", package = "MotifSig"))
+samp <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 bay <- new("bagel")
 set_samples(bay, dat)
 }
