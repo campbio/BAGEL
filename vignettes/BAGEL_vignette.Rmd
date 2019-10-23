@@ -123,6 +123,7 @@ BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.60)
 
 BAGEL::plot_sample(bagel, sample_names(bagel)[1])
 #make kerning better (no spaces)
+#saveRDS(result, system.file("testdata", "res.rds", package = "BAGEL"))
 #result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", package = "BAGEL")
 ```
