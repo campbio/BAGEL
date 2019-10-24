@@ -1,13 +1,13 @@
 #Necessary for S4 to recognize "data.table" as a class
-#But it causes other weird behavior, disabling for now
 setOldClass(c("data.frame"))
 setOldClass(c("data.table", "data.frame"))
 
-#' The primary object for BayeSig that contains all samples and results
+#' The primary object for BAGEL that contains all samples and results
 #'
 #' @slot samples A list of sample objects containing sample-level information
 #' @slot prop_table Summary tables with motif counts normalized by sample sums
 #' @slot counts_table Summary tables with unnormalized motif counts
+#' @export
 setClass("bagel", representation(samples = "data.table", prop_table = "matrix",
                                  counts_table = "matrix"),
          prototype(samples = NULL, prop_table = matrix(nrow = 0, ncol = 0),
@@ -44,7 +44,7 @@ setMethod("show", "bagel",
 #' @examples
 #' samp <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 #' bay <- new("bagel")
-#' set_samples(bay, dat)
+#' set_samples(bay, samp)
 #' @export
 set_samples <- function(bay, samp) {
   eval.parent(substitute(bay@samples <- samp))
@@ -77,6 +77,14 @@ subset_samples <- function(bay, sample_name){
 
 # Result object/methods -------------------------------
 
+#' Object containing deconvolved/predicted signatures, sample weights, and
+#' the bagel object the result was generated from
+#'
+#' @slot signatures A matrix of signatures by mutational motifs
+#' @slot samples A matrix of samples by signature weights
+#' @slot type Describes how the signatures/weights were generated
+#' @slot bagel The bagel object the results were generated from
+#' @export
 setClass("Result", representation(signatures = "matrix", samples = "matrix",
                                   type = "character", bagel = "bagel"))
 

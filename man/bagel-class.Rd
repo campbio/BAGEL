@@ -3,9 +3,9 @@
 \docType{class}
 \name{bagel-class}
 \alias{bagel-class}
-\title{The primary object for BayeSig that contains all samples and results}
+\title{The primary object for BAGEL that contains all samples and results}
 \description{
-The primary object for BayeSig that contains all samples and results
+The primary object for BAGEL that contains all samples and results
 }
 \section{Slots}{
 

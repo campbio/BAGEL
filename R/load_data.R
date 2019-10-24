@@ -100,7 +100,7 @@ vcf_to_dt <- function(vcf_file){
 #' @param maf_file Location of maf file
 #' @return Returns a data.table of variants from a maf
 #' @examples
-#' maf_file=system.file("testdata", "TCGA_test.maf", package = "BAGEL")
+#' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = BAGEL::maf_to_dt(maf_file = maf_file)
 #' @export
 maf_to_dt <- function(maf_file){

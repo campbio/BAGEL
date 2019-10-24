@@ -20,5 +20,5 @@ Set samples for bagel object
 \examples{
 samp <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 bay <- new("bagel")
-set_samples(bay, dat)
+set_samples(bay, samp)
 }

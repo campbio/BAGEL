@@ -16,6 +16,6 @@ Returns a data.table of variants from a maf
 Loads a maf file and extracts the data.table of variants
 }
 \examples{
-maf_file=system.file("testdata", "TCGA_test.maf", package = "BAGEL")
+maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 maf = BAGEL::maf_to_dt(maf_file = maf_file)
 }
