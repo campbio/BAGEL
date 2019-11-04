@@ -113,7 +113,7 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
   counts_matrix <- bagel@counts_table
 
   # convert data structures
-  sig_name <- colnames(signatures)
+  sig_name <- colnames(signatures[, signatures_to_use])
   sig_props <- as.matrix( signatures[, colnames(signatures) %in% sig_name ])
   samples_counts <- as.matrix( counts_matrix)
 

@@ -37,7 +37,7 @@ luad1 <- BAGEL::vcf_to_dt(vcf = luad1_vcf)
 luad2_vcf <- system.file("testdata", "public_LUAD_TCGA-MP-A4TJ.vcf", package = "BAGEL")
 luad2 <- BAGEL::vcf_to_dt(vcf = luad2_vcf)
 
-#Load Multiple VCF Files At Once
+#Load Multiple VCF Files At Once using list files with regular expressions
 melanoma_vcf <- list.files(system.file("testdata", package = "BAGEL"), pattern = glob2rx("*SKCM*vcf"), 
            full.names = TRUE)
 melanoma <- BAGEL::vcfs_to_dt(vcfs = melanoma_vcf)
@@ -105,7 +105,8 @@ BAGEL::what_cosmic30_sigs("lung")
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
 cosmic_post = lda_posterior(bagel = bagel, signatures_to_use = c(12, 4, 11, 15))
 #cosmic_post = lda_posterior(bagel = bagel)
-#to_use = as.numeric(substr(names(which(rowSums(cosmic_post@samples) > 2)), 11, 12))
+#to_use = as.numeric(substr(names(which(rowSums(cosmic_post@samples) > 10^-10)), 11, 12))
+#to_use = as.numeric(substr(names(which(apply(cosmic_post@samples, 1, max) > 10^-10)), 11, 12))
 #cosmic_post = lda_posterior(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
