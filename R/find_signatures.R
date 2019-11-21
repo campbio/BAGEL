@@ -7,7 +7,7 @@
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' find_signatures(bay, num_signatures = 4)
 #' @export
-find_signatures <- function(input, num_signatures) {
+find_signatures <- function(input, num_signatures, method="lda") {
   if (methods::is(input, "bagel")) {
     mut_summary_mat <- input@counts_table
   }else{
@@ -16,14 +16,33 @@ find_signatures <- function(input, num_signatures) {
     bagel@counts_table <- input
     input <- bagel
   }
-  decomp <- NNLM::nnmf(mut_summary_mat, num_signatures, rel.tol = 1e-5,
-                       max.iter = 10000L);
-  colnames(decomp$W) <- paste("Signature.", seq_len(ncol(decomp$W)), sep = "")
-  nmf_result <- methods::new("Result", signatures = decomp$W,
-                             samples = decomp$H, type = "NMF", bagel = input)
-  nmf_result@signatures <- sweep(nmf_result@signatures, 2,
-                                 colSums(nmf_result@signatures), FUN = "/")
-  return(nmf_result)
+  if (method == "lda") {
+    counts_table = t(bagel@counts_table)
+    lda_out <- topicmodels::LDA(counts_table, num_signatures)
+    lda_sigs = exp(t(lda_out@beta))
+    rownames(lda_sigs) = colnames(counts_table)
+    colnames(lda_sigs) = paste("Signature", 1:num_signatures, sep="")
+
+    weights <- t(lda_out@gamma)
+    rownames(weights) = paste("Signature", 1:num_signatures, sep="")
+    colnames(weights) = rownames(counts_table)
+
+    lda_result=new("Result")
+    lda_result@signatures = lda_sigs
+    lda_result@samples = weights
+    return(lda_result)
+  } else if (method == "nmf") {
+    decomp <- NNLM::nnmf(mut_summary_mat, num_signatures, rel.tol = 1e-5,
+                         max.iter = 10000L);
+    colnames(decomp$W) <- paste("Signature.", seq_len(ncol(decomp$W)), sep = "")
+    nmf_result <- methods::new("Result", signatures = decomp$W,
+                               samples = decomp$H, type = "NMF", bagel = input)
+    nmf_result@signatures <- sweep(nmf_result@signatures, 2,
+                                   colSums(nmf_result@signatures), FUN = "/")
+    return(nmf_result)
+  } else{
+    stop("That method is not supported. Use lda or nmf to generate signatures.")
+  }
 }
 
 kld <- function(a, b) {

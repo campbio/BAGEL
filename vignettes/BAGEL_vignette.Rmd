@@ -72,7 +72,7 @@ BAGEL::plot_samples(result, proportional = TRUE)
 BAGEL::plot_samples(result, proportional = FALSE)
 
 #Compare to COSMIC signatures by leaving the second result as default
-BAGEL::compare_results(result, threshold = 0.3)
+BAGEL::compare_results(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
 BAGEL::what_cosmic30_sigs("lung")
