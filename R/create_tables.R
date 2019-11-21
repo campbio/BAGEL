@@ -2,7 +2,7 @@
 #'
 #' @param sample_df Input counts table
 #' @return Returns a 96 motif summary table
-table_96 <- function(sample_df){
+table_96 <- function(sample_df) {
   motif <- names(sample_df)
   expanded <- rep(motif, sample_df)
   context <- substr(expanded, 5, 7)
@@ -113,7 +113,7 @@ create_tables <- function(bay, g) {
   sample_names <- unique(dat$Tumor_Sample_Barcode)
   num_samples <- length(sample_names)
   maf_mut_summaries <- vector("list", length = num_samples)
-  for (i in seq_len(num_samples)){
+  for (i in seq_len(num_samples)) {
     sample_index <- which(dat$Tumor_Sample_Barcode == sample_names[i])
     mut_id <- apply(cbind(mut_type, mut_trinuc), 1, paste, collapse = "_")
     mutation <- factor(maf_mut_id[sample_index], levels = mut_id)
@@ -122,7 +122,7 @@ create_tables <- function(bay, g) {
                               stringsAsFactors = FALSE)
     maf_mut_summaries[[i]] <- mut_summary
   }
-  sigit <- function(mut_summary){
+  sigit <- function(mut_summary) {
     tab <- table(mut_summary[, "mutation"])
     tab <- tab / sum(tab)
     return(tab)

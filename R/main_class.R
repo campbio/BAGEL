@@ -15,7 +15,7 @@ setClass("bagel", representation(samples = "data.table", prop_table = "matrix",
 
 setMethod("show", "bagel",
           function(object)cat("BayeSig Object containing \nSamples: ",
-                              if (!is.null(object@samples)){
+                              if (!is.null(object@samples)) {
                                 noquote(paste(length(unique(
                                   object@samples$Tumor_Sample_Barcode)),
                                   collapse = ", "))
@@ -23,13 +23,13 @@ setMethod("show", "bagel",
                                   "Empty"
                                     },
                               "\nProportional Table Rows: ",
-                              if (!is.null(object@prop_table)){
+                              if (!is.null(object@prop_table)) {
                                 round(base::rowSums(object@prop_table), 3)
                                 }else{
                                   "Empty"
                                   },
                               "\nCounts Table Rows: ",
-                              if (!is.null(object@counts_table)){
+                              if (!is.null(object@counts_table)) {
                                 rowSums(object@counts_table)
                                 }else{
                                   "Empty"
@@ -58,7 +58,7 @@ set_samples <- function(bay, samp) {
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' sample_names(bay)
 #' @export
-sample_names <- function(bay){
+sample_names <- function(bay) {
   return(unique(bay@samples$Tumor_Sample_Barcode))
 }
 
@@ -71,7 +71,7 @@ sample_names <- function(bay){
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' subset_samples(bay, "public_LUAD_TCGA-97-7938.vcf")
 #' @export
-subset_samples <- function(bay, sample_name){
+subset_samples <- function(bay, sample_name) {
   return(bay@samples[which(bay@samples$Tumor_Sample_Barcode == sample_name), ])
 }
 
@@ -97,9 +97,9 @@ setClass("Result", representation(signatures = "matrix", samples = "matrix",
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
 #' @export
-name_signatures <- function(result, name_vector){
+name_signatures <- function(result, name_vector) {
   num_sigs <- length(colnames(result@signatures))
-  if (length(name_vector) != num_sigs){
+  if (length(name_vector) != num_sigs) {
     stop(paste("Please provide a full list of signatures names (length = ",
                num_sigs, ")", sep = ""))
   }

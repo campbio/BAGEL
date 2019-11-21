@@ -4,8 +4,13 @@
 \alias{compare_results}
 \title{Compare two result files or input one to compare to COSMIC}
 \usage{
-compare_results(result, other_result = cosmic_result, threshold = 0.9,
-  what = "bestpairs")
+compare_results(
+  result,
+  other_result = cosmic_result,
+  threshold = 0.9,
+  result_name = "User Signatures 1",
+  other_result_name = "User Signatures 2"
+)
 }
 \arguments{
 \item{result}{Result to compare}
@@ -14,7 +19,9 @@ compare_results(result, other_result = cosmic_result, threshold = 0.9,
 
 \item{threshold}{threshold for similarity}
 
-\item{what}{Type of comparison (default is only best pairs)}
+\item{result_name}{title for plot of first result signatures}
+
+\item{other_result_name}{title for plot of second result signatures}
 }
 \value{
 Returns the comparisons

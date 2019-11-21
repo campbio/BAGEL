@@ -19,14 +19,6 @@ library("BAGEL")
 ```
 
 ```{r}
-#vcf_to_dt("/Users/atgc/Documents/Tools/vcf2maf/output_maf2vcf/TCGA_test.vcf")
-#vcfs_to_dt("/Users/atgc/Documents/Tools/vcf2maf/output_maf2vcf/gdc_download_20191011_223725.150011/4b7a5729-b83e-4837-9b61-a6002dce1c0a/subset_1k_TCGA.SKCM.vcf")
-#a = maf_to_dt("/Users/atgc/Documents/Tools/vcf2maf/output_maf2vcf/gdc_download_20191015_034733.988608/95258183-63ea-4c97-ae29-1bae9ed06334/TCGA.LUSC.mutect.95258183-63ea-4c97-ae29-1bae9ed06334.DR-10.0.somatic.maf")
-
-#kidney_maf <- "/Users/atgc/Desktop/gdc_download_20191015_171607.020010/ddb523ba-29ac-4056-82ca-4147d2e98ddf/TCGA.K#ICH.mutect.ddb523ba-29ac-4056-82ca-4147d2e98ddf.DR-10.0.somatic.maf"
-#kidney <- BAGEL::maf_to_dt(maf_file = kidney_maf)
-#dat <- kidney
-
 #Load MAF File
 lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL") 
 lusc <- BAGEL::maf_to_dt(maf_file = lusc_maf)
@@ -44,20 +36,6 @@ melanoma <- BAGEL::vcfs_to_dt(vcfs = melanoma_vcf)
 
 #Combine all data.frames
 dat <- rbind(lusc, melanoma, luad1, luad2)
-
-#saveRDS(dat, "/Users/atgc/Documents/Aaron_Tools/BAGEL/inst/testdata/dt.rds")
-#readRDS(system.file("testdata", "dt.rds", package = BAGEL))
-
-#Load MAF File
-#maf_file <- system.file("testdata", "TCGA_test.maf", package = BAGEL) 
-#maf <- BAGEL::maf_to_dt(maf_file = maf_file)
-
-#Load VCF Files
-#vcfs <- list.files(system.file("testdata", package = BAGEL), "*.vcf", full.names = TRUE)
-#vcf <- BAGEL::vcfs_to_dt(vcfs = vcfs)
-
-#vcf_mat <- rbind(maf, vcf)
-#dat <- vcf_mat
 
 #Choose genome build
 #Automatically detect genome build
@@ -79,9 +57,6 @@ BAGEL::sample_names(bagel)
 g=BAGEL::select_genome("38")
 BAGEL::create_tables(bagel, g)
 
-#saveRDS(bagel, "/Users/atgc/Documents/Aaron_Tools/BAGEL/inst/testdata/bagel.rds")
-#readRDS(system.file("testdata", "bagel.rds", package = BAGEL))
-
 #Generate signatures/weights
 #We can use the bagel object we generated tables for
 result=BAGEL::find_signatures(bagel, num_signatures = 4)
@@ -97,7 +72,7 @@ BAGEL::plot_samples(result, proportional = TRUE)
 BAGEL::plot_samples(result, proportional = FALSE)
 
 #Compare to COSMIC signatures by leaving the second result as default
-BAGEL::compare_results(result, threshold = 0.75)
+BAGEL::compare_results(result, threshold = 0.3)
 
 #List which signatures correspond to subtypes including "lung"
 BAGEL::what_cosmic30_sigs("lung")
@@ -123,8 +98,4 @@ BAGEL::plot_samples(our_sigs_post, proportional = TRUE)
 BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.60)
 
 BAGEL::plot_sample(bagel, sample_names(bagel)[1])
-#make kerning better (no spaces)
-#saveRDS(result, system.file("testdata", "res.rds", package = "BAGEL"))
-#result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", package = "BAGEL")
 ```

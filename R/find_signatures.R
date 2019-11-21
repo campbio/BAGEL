@@ -7,8 +7,8 @@
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' find_signatures(bay, num_signatures = 4)
 #' @export
-find_signatures <- function(input, num_signatures){
-  if (methods::is(input, "bagel")){
+find_signatures <- function(input, num_signatures) {
+  if (methods::is(input, "bagel")) {
     mut_summary_mat <- input@counts_table
   }else{
     mut_summary_mat <- input
@@ -21,7 +21,65 @@ find_signatures <- function(input, num_signatures){
   colnames(decomp$W) <- paste("Signature.", seq_len(ncol(decomp$W)), sep = "")
   nmf_result <- methods::new("Result", signatures = decomp$W,
                              samples = decomp$H, type = "NMF", bagel = input)
+  nmf_result@signatures <- sweep(nmf_result@signatures, 2,
+                                 colSums(nmf_result@signatures), FUN = "/")
   return(nmf_result)
+}
+
+kld <- function(a, b) {
+  return(sum(a * log2(a / b)))
+}
+
+#' Compare two vectors similarity based on Jensen-Shannon Divergence
+#'
+#' @param p First vector
+#' @param q Second vector
+#' @return Returns Jensen-Shannon Divergence of the two vectors
+#' @examples
+#' p <- c(0.2, 0.3, 0.4, 0.5, 0.6)
+#' q <- c(0.6, 0.5, 0.4, 0.3, 0.2)
+#' jsd(p, q)
+#' @export
+jsd <- function(p, q) {
+  epsilon <- 0.0000001
+  p <- p + epsilon
+  q <- q + epsilon
+  m <- (p + q) / 2
+  jsd <- 0.5 * kld(p, m) + 0.5 * kld(q, m)
+  return(jsd)
+}
+
+sig_compare <- function(sig1, sig2, threshold=0.9) {
+  sig1_names <- colnames(sig1)
+  sig2_names <- colnames(sig2)
+  if (nrow(sig1) != nrow(sig2)) {
+    stop("Signatures must have the same motifs")
+  }
+  matches <- matrix(nrow = ncol(sig1), ncol = ncol(sig2))
+  for (i in seq_len(ncol(sig1))) {
+    for (j in seq_len(ncol(sig2))) {
+      matches[i, j] <- 1 - jsd(sig1[, i], sig2[, j])
+    }
+  }
+  comparison <- NULL
+  for (row in seq_len(nrow(matches))) {
+    line <- which(matches[row, ] > threshold)
+    if (length(line) > 0) {
+      for (match in line) {
+        comparison <- rbind(comparison, c(matches[row, match], row, match,
+                                          sig1_names[row], sig2_names[match]))
+      }
+    }
+  }
+  if (is.null(comparison)) {
+    stop("No matches found, try lowering threshold.")
+  }
+  comparison <- data.frame(comparison, stringsAsFactors = FALSE)
+  colnames(comparison) <- c("cor", "xindex", "yindex", "xcol", "ycol")
+  comparison$cor <- as.numeric(comparison$cor)
+  comparison$xindex <- as.numeric(comparison$xindex)
+  comparison$yindex <- as.numeric(comparison$yindex)
+  return(comparison)
 }
 
 #' Compare two result files or input one to compare to COSMIC
@@ -29,20 +87,20 @@ find_signatures <- function(input, num_signatures){
 #' @param result Result to compare
 #' @param other_result Second result, leave blank to use cosmic results
 #' @param threshold threshold for similarity
-#' @param what Type of comparison (default is only best pairs)
+#' @param result_name title for plot of first result signatures
+#' @param other_result_name title for plot of second result signatures
 #' @return Returns the comparisons
 #' @examples
 #' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' compare_results(res, threshold = 0.8)
 #' @export
 compare_results <- function(result, other_result = cosmic_result,
-                            threshold = 0.9, what="bestpairs"){
+                            threshold = 0.9, result_name = "User Signatures 1",
+                            other_result_name = "User Signatures 2") {
   signatures <- result@signatures
-  comparison <- lineup::corbetw2mat(signatures, other_result@signatures,
-                                   what = what, corthresh = threshold)
-  if (any(is.na(comparison))){
-    stop("No comparable signatures found, try  lowering threshold.")
-  }
+  #comparison <- lineup::corbetw2mat(signatures, other_result@signatures,
+  #                                 what = what, corthresh = threshold)
+  comparison <- sig_compare(signatures, other_result@signatures, threshold)
   result_subset <- methods::new("Result",
                       signatures = result@signatures[, comparison$xindex,
                                                      drop = FALSE], samples =
@@ -51,8 +109,14 @@ compare_results <- function(result, other_result = cosmic_result,
                       signatures = other_result@signatures[, comparison$yindex,
                                                             drop = FALSE],
                       samples = matrix(), type = "NMF")
+  if (identical(other_result, cosmic_result)) {
+    result_name <- "User Signatures"
+    other_result_name <- "COSMIC Signatures"
+  }
   result_plot <- BAGEL::plot_signatures(result_subset)
+  result_plot <- result_plot + ggplot2::ggtitle(result_name)
   cosmic_plot <- BAGEL::plot_signatures(other_subset)
+  cosmic_plot <- cosmic_plot + ggplot2::ggtitle(other_result_name)
   gridExtra::grid.arrange(result_plot, cosmic_plot, ncol = 2)
   return(comparison)
 }
@@ -90,7 +154,7 @@ what_cosmic30_sigs <- function(tumor_type) {
     c(1, 5, 6)
   )
   partial <- grep(tumor_type, subtypes)
-  for (i in seq_len(length(partial))){
+  for (i in seq_len(length(partial))) {
     print(subtypes[partial[i]])
     print(present_sig[[partial[i]]])
   }
@@ -114,8 +178,8 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
 
   # convert data structures
   sig_name <- colnames(signatures[, signatures_to_use])
-  sig_props <- as.matrix( signatures[, colnames(signatures) %in% sig_name ])
-  samples_counts <- as.matrix( counts_matrix)
+  sig_props <- as.matrix(signatures[, colnames(signatures) %in% sig_name])
+  samples_counts <- as.matrix(counts_matrix)
 
   est_sig_prop <- function(samples_counts, sig_props, max.iter = 100,
                            theta = 0.1) {
@@ -129,7 +193,7 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
 
     # Initialize signature proportion matrix
     samp_sig_prob_mat <- matrix(NA, nrow = num_samples, ncol = k)
-    sig_mut_counts <- matrix( NA, nrow = num_samples, ncol = k)
+    sig_mut_counts <- matrix(NA, nrow = num_samples, ncol = k)
     rownames(samp_sig_prob_mat) <-
       rownames(sig_mut_counts) <- colnames(samples_counts)
     colnames(samp_sig_prob_mat) <-
@@ -142,7 +206,7 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
     }
 
     # Update signature proportion matrix
-    print("Current Signature Proportions")
+    print("Calculating Signature Proportions")
     for (i in seq_len(max.iter)) {
       for (s in seq_len(num_samples)) {
         #updating each mutation probability to reassign to a signature
@@ -151,8 +215,8 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
           digamma(sample_count_sums[s] + sum(theta))
         #updating present sample topic probability
         sig_sample_weights <- t(sig_props + 1e-20) *
-          exp( log_prob_mut_reassignment) # avoid 0 in norm
-        sig_sample_weights <- sweep( sig_sample_weights, MARGIN = 2, STATS =
+          exp(log_prob_mut_reassignment) # avoid 0 in norm
+        sig_sample_weights <- sweep(sig_sample_weights, MARGIN = 2, STATS =
                                        colSums(sig_sample_weights), FUN = "/")
         #assigned counts for a topic for a sample
         updated_topic_motifs <- samples_counts[, s] * t(sig_sample_weights)

@@ -12,8 +12,8 @@ NULL
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' plot_sample(bay, sample_names(bay)[1])
 #' @export
-plot_sample <- function(bay, sample_name){
-  if (length(sample_name) != 1){
+plot_sample <- function(bay, sample_name) {
+  if (length(sample_name) != 1) {
     stop("`please specify exactly one sample")
   }
   sample_number <- which(sample_names(bay = bay) == sample_name)
@@ -25,7 +25,7 @@ plot_sample <- function(bay, sample_name){
 #'
 #' @param sample Single sample DataFrame
 #' @return Generates sample plot {no return}
-plot_full <- function(sample){
+plot_full <- function(sample) {
   mut_summary <- table_96(sample)
   major <- table(mut_summary[, "Type"])
   df <- data.frame(major)
@@ -68,7 +68,7 @@ plot_full <- function(sample){
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_signatures(result)
 #' @export
-plot_signatures <- function(result){
+plot_signatures <- function(result) {
   signatures <- result@signatures
   groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
                                                                     "context"))
@@ -102,12 +102,12 @@ plot_signatures <- function(result){
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_samples(result)
 #' @export
-plot_samples <- function(result, proportional = TRUE){
+plot_samples <- function(result, proportional = TRUE) {
   samples <- result@samples
   y_label <- "absolute"
-  if (proportional){
+  if (proportional) {
     y_label <- "%"
-    samples <- apply(samples, 2, function(x){
+    samples <- apply(samples, 2, function(x) {
       x * 100 / sum(x, na.rm = TRUE)
     })
   }

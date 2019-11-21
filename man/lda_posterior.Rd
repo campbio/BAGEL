@@ -4,8 +4,11 @@
 \alias{lda_posterior}
 \title{LDA prediction of samples based on existing signatures (default COSMIC)}
 \usage{
-lda_posterior(bagel, signatures = cosmic_result@signatures,
-  signatures_to_use = seq_len(ncol(signatures)))
+lda_posterior(
+  bagel,
+  signatures = cosmic_result@signatures,
+  signatures_to_use = seq_len(ncol(signatures))
+)
 }
 \arguments{
 \item{bagel}{Input samples to predit signature weights}

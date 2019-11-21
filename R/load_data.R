@@ -9,12 +9,12 @@ NULL
 #' g <- select_genome(hg = 38)
 #'
 #' @export
-select_genome <- function(hg){
+select_genome <- function(hg) {
   #Choose genome build version
   #Keep for now as a helper function
-  if (hg == 19){
+  if (hg == 19) {
     g <- BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19
-  }else if (hg == 38){
+  }else if (hg == 38) {
     g <- BSgenome.Hsapiens.UCSC.hg38::BSgenome.Hsapiens.UCSC.hg38
   }else{
     stop("That genome build is not currently supported")
@@ -31,9 +31,9 @@ select_genome <- function(hg){
 #'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 #' melanoma <- BAGEL::vcfs_to_dt(vcfs = melanoma_vcf)
 #' @export
-vcfs_to_dt <- function(vcfs){
+vcfs_to_dt <- function(vcfs) {
   vcf_list <- vector("list", length(vcfs))
-  for (i in seq_len(length(vcfs))){
+  for (i in seq_len(length(vcfs))) {
     vcf_list[[i]] <- BAGEL::vcf_to_dt(vcfs[i])
   }
   combined <- do.call("rbind", vcf_list)
@@ -49,7 +49,7 @@ vcfs_to_dt <- function(vcfs){
 #'   package = "BAGEL")
 #' luad1 <- BAGEL::vcf_to_dt(vcf = luad1_vcf)
 #' @export
-vcf_to_dt <- function(vcf_file){
+vcf_to_dt <- function(vcf_file) {
   required_columns <- c("Chromosome", "Start_Position", "End_Position",
                        "Tumor_Seq_Allele1", "Tumor_Seq_Allele2",
                        "Tumor_Sample_Barcode")
@@ -60,14 +60,14 @@ vcf_to_dt <- function(vcf_file){
   #Remove MultiAllelic Sites for now
   num_alleles <- lengths(VariantAnnotation::fixed(vcf)[, "ALT"])
   multi_allelic <- which(num_alleles != 1)
-  if (length(multi_allelic > 0)){
+  if (length(multi_allelic > 0)) {
     vcf <- vcf[-multi_allelic, ]
   }
   rows <- SummarizedExperiment::rowRanges(vcf)
 
   #Remove filtered rows
   pass <- rows$FILTER
-  if (length(which(pass == "PASS")) < 1){
+  if (length(which(pass == "PASS")) < 1) {
     warning(paste("No variants passed filtering, please review VCF file: ",
                   vcf_name, sep = ""))
   }
@@ -84,11 +84,11 @@ vcf_to_dt <- function(vcf_file){
                     "Chromosome" = "seqnames", "Start_Position" = "start",
                     "End_Position" = "end")
   variant_type <- rep(NA, nrow(dt))
-  variant_type[which( (nchar(dt$Tumor_Seq_Allele1) == 1) &
+  variant_type[which((nchar(dt$Tumor_Seq_Allele1) == 1) &
                         (nchar(dt$Tumor_Seq_Allele2) == 1))] <- "SNP"
   dt <- dt[which(variant_type == "SNP"), ]
 
-  if (!all(required_columns %in% names(dt))){
+  if (!all(required_columns %in% names(dt))) {
     warning("Some required columns missing")
   }
   dt <- dt[, required_columns]
@@ -103,17 +103,17 @@ vcf_to_dt <- function(vcf_file){
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = BAGEL::maf_to_dt(maf_file = maf_file)
 #' @export
-maf_to_dt <- function(maf_file){
+maf_to_dt <- function(maf_file) {
   required_columns <- c("Chromosome", "Start_Position", "End_Position",
                        "Tumor_Seq_Allele1", "Tumor_Seq_Allele2",
                        "Tumor_Sample_Barcode")
   maf <- maftools::read.maf(maf_file)
   dat <- maf@data
-  if (!all(required_columns %in% names(dat))){
+  if (!all(required_columns %in% names(dat))) {
     warning("Some required columns missing")
   }
   dat <- dat[which(dat$Variant_Type == "SNP"), ]
-  if (nrow(dat) == 0){
+  if (nrow(dat) == 0) {
     warning(paste("No variants found in maf file:", basename(maf_file)))
   }
   dat <- dat[, required_columns]
