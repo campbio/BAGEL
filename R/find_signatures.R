@@ -2,6 +2,7 @@
 #'
 #' @param input A bagel object or counts table
 #' @param num_signatures Number of signatures to discover, k
+#' @param method Discovery of new signatures using either LDA or NMF
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
@@ -17,7 +18,7 @@ find_signatures <- function(input, num_signatures, method="lda") {
     input <- bagel
   }
   if (method == "lda") {
-    counts_table = t(bagel@counts_table)
+    counts_table = t(input@counts_table)
     lda_out <- topicmodels::LDA(counts_table, num_signatures)
     lda_sigs = exp(t(lda_out@beta))
     rownames(lda_sigs) = colnames(counts_table)
@@ -27,7 +28,7 @@ find_signatures <- function(input, num_signatures, method="lda") {
     rownames(weights) = paste("Signature", 1:num_signatures, sep="")
     colnames(weights) = rownames(counts_table)
 
-    lda_result=new("Result")
+    lda_result=methods::new("Result")
     lda_result@signatures = lda_sigs
     lda_result@samples = weights
     return(lda_result)

@@ -32,7 +32,8 @@ Imports:
     MCMCprecision,
     data.table,
     dplyr,
-    rlang
+    rlang,
+    topicmodels
 Suggests:
     testthat,
     knitr,

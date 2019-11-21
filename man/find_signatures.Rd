@@ -10,6 +10,8 @@ find_signatures(input, num_signatures, method = "lda")
 \item{input}{A bagel object or counts table}
 
 \item{num_signatures}{Number of signatures to discover, k}
+
+\item{method}{Discovery of new signatures using either LDA or NMF}
 }
 \value{
 Returns a result object with results and input object (if bagel)
