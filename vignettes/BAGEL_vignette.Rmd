@@ -24,14 +24,16 @@ lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 lusc <- BAGEL::maf_to_dt(maf_file = lusc_maf)
 
 #Load individual VCF Files
-luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", package = "BAGEL")
+luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", 
+                         package = "BAGEL")
 luad1 <- BAGEL::vcf_to_dt(vcf = luad1_vcf)
-luad2_vcf <- system.file("testdata", "public_LUAD_TCGA-MP-A4TJ.vcf", package = "BAGEL")
+luad2_vcf <- system.file("testdata", "public_LUAD_TCGA-MP-A4TJ.vcf", 
+                         package = "BAGEL")
 luad2 <- BAGEL::vcf_to_dt(vcf = luad2_vcf)
 
 #Load Multiple VCF Files At Once using list files with regular expressions
-melanoma_vcf <- list.files(system.file("testdata", package = "BAGEL"), pattern = glob2rx("*SKCM*vcf"), 
-           full.names = TRUE)
+melanoma_vcf <- list.files(system.file("testdata", package = "BAGEL"), 
+                           pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 melanoma <- BAGEL::vcfs_to_dt(vcfs = melanoma_vcf)
 
 #Combine all data.frames
@@ -60,8 +62,6 @@ BAGEL::create_tables(bagel, g)
 #Generate signatures/weights
 #We can use the bagel object we generated tables for
 result=BAGEL::find_signatures(bagel, num_signatures = 4)
-#saveRDS(result, "/Users/atgc/Documents/Aaron_Tools/BAGEL/inst/testdata/res.rds")
-#readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 
 #We can name signatures based on prior knowledge
 name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
@@ -95,7 +95,7 @@ BAGEL::plot_signatures(our_sigs_post)
 BAGEL::plot_samples(our_sigs_post, proportional = TRUE)
 
 #Compare posterior results to each other
-BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.60)
+BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
 
 BAGEL::plot_sample(bagel, sample_names(bagel)[1])
 ```

@@ -22,10 +22,10 @@ find_signatures <- function(input, num_signatures, method="lda") {
     lda_out <- topicmodels::LDA(counts_table, num_signatures)
     lda_sigs = exp(t(lda_out@beta))
     rownames(lda_sigs) = colnames(counts_table)
-    colnames(lda_sigs) = paste("Signature", 1:num_signatures, sep="")
+    colnames(lda_sigs) = paste("Signature", seq_len(num_signatures), sep="")
 
     weights <- t(lda_out@gamma)
-    rownames(weights) = paste("Signature", 1:num_signatures, sep="")
+    rownames(weights) = paste("Signature", seq_len(num_signatures), sep="")
     colnames(weights) = rownames(counts_table)
 
     lda_result=methods::new("Result")
