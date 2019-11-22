@@ -118,8 +118,6 @@ compare_results <- function(result, other_result = cosmic_result,
                             threshold = 0.9, result_name = "User Signatures 1",
                             other_result_name = "User Signatures 2") {
   signatures <- result@signatures
-  #comparison <- lineup::corbetw2mat(signatures, other_result@signatures,
-  #                                 what = what, corthresh = threshold)
   comparison <- sig_compare(signatures, other_result@signatures, threshold)
   result_subset <- methods::new("Result",
                       signatures = result@signatures[, comparison$xindex,

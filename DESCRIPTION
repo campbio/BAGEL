@@ -26,7 +26,6 @@ Imports:
     tidyr,
     reshape2,
     gtools,
-    lineup,
     gridExtra,
     maftools,
     MCMCprecision,
