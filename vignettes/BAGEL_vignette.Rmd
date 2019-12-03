@@ -78,14 +78,14 @@ BAGEL::compare_results(result, threshold = 0.8)
 BAGEL::what_cosmic30_sigs("lung")
 
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
-cosmic_post = lda_posterior(bagel = bagel, signatures_to_use = c(12, 4, 11, 15))
-#cosmic_post = lda_posterior(bagel = bagel)
+cosmic_post = infer_signatures(bagel = bagel, signatures_to_use = c(12, 4, 11, 15))
+#cosmic_post = infer_signatures(bagel = bagel)
 #to_use = as.numeric(substr(names(which(rowSums(cosmic_post@samples) > 10^-10)), 11, 12))
 #to_use = as.numeric(substr(names(which(apply(cosmic_post@samples, 1, max) > 10^-10)), 11, 12))
-#cosmic_post = lda_posterior(bagel = bagel, signatures_to_use = to_use)
+#cosmic_post = infer_signatures(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
-our_sigs_post = lda_posterior(bagel = bagel, signatures = result@signatures)
+our_sigs_post = infer_signatures(bagel = bagel, signatures = result@signatures)
 
 #Plot results from posterior calculation
 BAGEL::plot_signatures(cosmic_post)
