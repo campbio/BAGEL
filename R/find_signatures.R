@@ -10,32 +10,35 @@
 #' @export
 find_signatures <- function(input, num_signatures, method="lda") {
   if (methods::is(input, "bagel")) {
-    mut_summary_mat <- input@counts_table
+    has_tables(input)
   }else{
-    mut_summary_mat <- input
+    if(!methods::is(input, "matrix")){
+      stop("Input to find_signatures must be a bagel object or a matrix")
+    }
     bagel <- methods::new("bagel")
     bagel@counts_table <- input
     input <- bagel
   }
   if (method == "lda") {
-    counts_table = t(input@counts_table)
+    counts_table <- t(input@counts_table)
     lda_out <- topicmodels::LDA(counts_table, num_signatures)
-    lda_sigs = exp(t(lda_out@beta))
-    rownames(lda_sigs) = colnames(counts_table)
-    colnames(lda_sigs) = paste("Signature", seq_len(num_signatures), sep="")
+    lda_sigs <- exp(t(lda_out@beta))
+    rownames(lda_sigs) <- colnames(counts_table)
+    colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep="")
 
     weights <- t(lda_out@gamma)
-    rownames(weights) = paste("Signature", seq_len(num_signatures), sep="")
-    colnames(weights) = rownames(counts_table)
+    rownames(weights) <- paste("Signature", seq_len(num_signatures), sep="")
+    colnames(weights) <- rownames(counts_table)
 
-    lda_result=methods::new("Result")
-    lda_result@signatures = lda_sigs
-    lda_result@samples = weights
+    lda_result <- methods::new("Result", signatures = lda_sigs,
+                               samples = weights, type = "LDA", bagel = input)
     return(lda_result)
   } else if (method == "nmf") {
-    decomp <- NNLM::nnmf(mut_summary_mat, num_signatures, rel.tol = 1e-5,
+    decomp <- NNLM::nnmf(input@counts_table, num_signatures, rel.tol = 1e-5,
                          max.iter = 10000L);
-    colnames(decomp$W) <- paste("Signature.", seq_len(ncol(decomp$W)), sep = "")
+    rownames(decomp$H) <- paste("Signature", seq_len(num_signatures),
+                                 sep = "")
+    colnames(decomp$W) <- paste("Signature", seq_len(num_signatures), sep = "")
     nmf_result <- methods::new("Result", signatures = decomp$W,
                                samples = decomp$H, type = "NMF", bagel = input)
     nmf_result@signatures <- sweep(nmf_result@signatures, 2,
@@ -186,10 +189,12 @@ what_cosmic30_sigs <- function(tumor_type) {
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' lda_posterior(bay)
+#' infer_signatures(bay)
 #' @export
-lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
-                          signatures_to_use = seq_len(ncol(signatures))) {
+infer_signatures <- function(bagel, signatures=cosmic_result@signatures,
+                          signatures_to_use = seq_len(ncol(signatures)),
+                          verbose = FALSE) {
+  has_tables(bagel)
 
   # Load sample counts matrix
   counts_matrix <- bagel@counts_table
@@ -224,7 +229,9 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
     }
 
     # Update signature proportion matrix
-    print("Calculating Signature Proportions")
+    if (verbose) {
+      print("Calculating Signature Proportions")
+    }
     for (i in seq_len(max.iter)) {
       for (s in seq_len(num_samples)) {
         #updating each mutation probability to reassign to a signature
@@ -247,6 +254,9 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
       }
       # Update theta
       theta <- MCMCprecision::fit_dirichlet(x = samp_sig_prob_mat)$alpha
+      if (verbose) {
+        print(theta)
+      }
     }
     return(list(samp_sig_prob_mat = samp_sig_prob_mat, theta.poster = theta))
   }
@@ -257,4 +267,16 @@ lda_posterior <- function(bagel, signatures=cosmic_result@signatures,
                                t(res2$samp_sig_prob_mat), type =
                                "posterior_LDA", bagel = bagel)
   return(nmf_result)
+}
+
+has_tables <- function(bagel){
+  if(!is(bagel, "bagel")){
+    stop(strwrap(prefix = " ", initial = "", "The input object is not a
+    bagel object, please use new('bagel') to create one."))
+  }
+  if(length(bagel@counts_table)==0){
+    stop(strwrap(prefix = " ", initial = "", "The counts table is
+    either missing or malformed, please run create_tables prior to this
+                         function."))
+  }
 }
