@@ -12,7 +12,7 @@ find_signatures <- function(input, num_signatures, method="lda") {
   if (methods::is(input, "bagel")) {
     has_tables(input)
   }else{
-    if(!methods::is(input, "matrix")){
+    if (!methods::is(input, "matrix")) {
       stop("Input to find_signatures must be a bagel object or a matrix")
     }
     bagel <- methods::new("bagel")
@@ -24,10 +24,10 @@ find_signatures <- function(input, num_signatures, method="lda") {
     lda_out <- topicmodels::LDA(counts_table, num_signatures)
     lda_sigs <- exp(t(lda_out@beta))
     rownames(lda_sigs) <- colnames(counts_table)
-    colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep="")
+    colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")
 
     weights <- t(lda_out@gamma)
-    rownames(weights) <- paste("Signature", seq_len(num_signatures), sep="")
+    rownames(weights) <- paste("Signature", seq_len(num_signatures), sep = "")
     colnames(weights) <- rownames(counts_table)
 
     lda_result <- methods::new("Result", signatures = lda_sigs,
@@ -186,6 +186,7 @@ what_cosmic30_sigs <- function(tumor_type) {
 #' @param bagel Input samples to predit signature weights
 #' @param signatures Signatures to use for prediction (default COSMIC)
 #' @param signatures_to_use Which signatures in set to use (default all)
+#' @param verbose Whether to show intermediate results
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
@@ -269,12 +270,12 @@ infer_signatures <- function(bagel, signatures=cosmic_result@signatures,
   return(nmf_result)
 }
 
-has_tables <- function(bagel){
-  if(!is(bagel, "bagel")){
+has_tables <- function(bagel) {
+  if (!methods::is(bagel, "bagel")) {
     stop(strwrap(prefix = " ", initial = "", "The input object is not a
     bagel object, please use new('bagel') to create one."))
   }
-  if(length(bagel@counts_table)==0){
+  if (length(bagel@counts_table) == 0) {
     stop(strwrap(prefix = " ", initial = "", "The counts table is
     either missing or malformed, please run create_tables prior to this
                          function."))
