@@ -10,9 +10,9 @@ NULL
 #' @return Generates sample plot {no return}
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' plot_sample(bay, sample_names(bay)[1])
+#' plot_sample_counts(bay, sample_names(bay)[1])
 #' @export
-plot_sample <- function(bay, sample_name) {
+plot_sample_counts <- function(bay, sample_name) {
   if (length(sample_name) != 1) {
     stop("`please specify exactly one sample")
   }
@@ -86,7 +86,7 @@ plot_signatures <- function(result) {
                                                            unique(plot_dat$var
                                                                   )))) +
     theme_bw() +
-    xlab("Motifs") + ylab("Counts") + theme(axis.text.x = element_blank(),
+    xlab("Motifs") + ylab("Proportion") + theme(axis.text.x = element_blank(),
                                             axis.ticks.x = element_blank(),
                                             strip.text.y =
                                               element_text(size = 7)) +
@@ -97,25 +97,64 @@ plot_signatures <- function(result) {
 #'
 #' @param result S4 Result Object
 #' @param proportional Whether weights are normalized to sum to 1 or not
+#' @param label_samples Whether to display sample names or not
+#' @param samples_plotted A subset of samples to plot
+#' @param sort_samples Defaults to numerical, may be total 'counts', or a
+#' specific signatures name (e.g. 'Signature1)
+#' @param num_samples Number of sorted samples to plot
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' plot_samples(result)
+#' plot_exposures(result)
 #' @export
-plot_samples <- function(result, proportional = TRUE) {
+plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
+                           samples_plotted = colnames(result@samples),
+                           sort_samples = "numerical",
+                           num_samples = length(colnames(result@samples))) {
   samples <- result@samples
-  y_label <- "absolute"
+  if (!all(samples_plotted %in% colnames(samples))) {
+    stop(strwrap(prefix = " ", initial = "", "Some samples specified are
+    not in this dataset, available samples are as follows: "), "\n",
+         paste0(colnames(samples), collapse = "\n"))
+  }
+  samples <- samples[, samples_plotted]
+  y_label <- "counts"
   if (proportional) {
     y_label <- "%"
-    samples <- apply(samples, 2, function(x) {
-      x * 100 / sum(x, na.rm = TRUE)
-    })
+    samples <- sweep(samples, 2, colSums(samples), FUN = "/")
   }
-  a <- samples %>% as.data.frame %>%
+  plot_dat <- samples %>% as.data.frame %>%
     tibble::rownames_to_column(var = "make") %>% tidyr::gather("var", "val",
                                                                -"make")
-  a$var <- factor(a$var, levels = unique(gtools::mixedsort(a$var)))
-  a %>% dplyr::arrange(.data$make) %>% ggplot() +
+  if (length(sort_samples == 1) && sort_samples == "numerical") {
+    plot_dat$var <- factor(plot_dat$var, levels =
+                             unique(gtools::mixedsort(plot_dat$var)))
+  }else if (length(sort_samples == 1) && sort_samples == "counts") {
+    counts <- colSums(samples)
+    plot_dat$var <- factor(plot_dat$var, levels =
+                             unique(plot_dat$var)
+                           [order(counts, decreasing = TRUE)])
+  }else {
+    if (!all(sort_samples %in% rownames(samples))) {
+      stop("Signature is not present in this result, please choose from: \n",
+           paste0(rownames(samples), collapse = "\n"))
+    }
+    if (length(sort_samples) == 1) {
+      plot_dat$var <- factor(plot_dat$var, levels =
+                               unique(plot_dat$var)[order(samples[
+                                 sort_samples, ], decreasing = TRUE)])
+    }
+    else{
+      plot_dat$var <- factor(plot_dat$var, levels =
+                               unique(plot_dat$var)[do.call(order,
+                                                            c(decreasing = TRUE,
+                                               as.data.frame(
+                                                 t(samples[sort_samples, ]))))])
+    }
+  }
+  samples_to_use <- levels(plot_dat$var)[seq_len(num_samples)]
+  plot_dat <- plot_dat[which(plot_dat$var %in% samples_to_use), ]
+  p <- plot_dat %>% dplyr::arrange(.data$make) %>% ggplot() +
     geom_bar(aes_string(y = "val", x = "var", fill = "make"), stat =
                "identity") + theme_bw() + theme(legend.title =
                                                   element_blank(), axis.text.x =
@@ -123,4 +162,9 @@ plot_samples <- function(result, proportional = TRUE) {
                        panel.grid.major.x = element_blank()) +
     xlab("Samples") + ylab(paste("Signatures (", y_label, ")", sep = "")) +
     ggplot2::scale_y_continuous(expand = c(0, 0))
+  if (!label_samples) {
+    p <- p + theme(axis.text.x = element_blank(), axis.ticks.x =
+                     element_blank())
+  }
+  return(p)
 }

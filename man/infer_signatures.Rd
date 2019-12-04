@@ -17,6 +17,8 @@ infer_signatures(
 \item{signatures}{Signatures to use for prediction (default COSMIC)}
 
 \item{signatures_to_use}{Which signatures in set to use (default all)}
+
+\item{verbose}{Whether to show intermediate results}
 }
 \value{
 Results a result object containing signatures and sample weights
