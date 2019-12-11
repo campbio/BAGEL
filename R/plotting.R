@@ -154,8 +154,18 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
   }
   samples_to_use <- levels(plot_dat$var)[seq_len(num_samples)]
   plot_dat <- plot_dat[which(plot_dat$var %in% samples_to_use), ]
-  p <- plot_dat %>% dplyr::arrange(.data$make) %>% ggplot() +
-    geom_bar(aes_string(y = "val", x = "var", fill = "make"), stat =
+
+
+  #Testing
+  plot_dat_table <- plot_dat %>% dplyr::arrange(.data$make)
+  if (all(!sort_samples %in% c("numerical", "counts"))) {
+    plot_levels <- c(setdiff(unique(plot_dat_table$make), sort_samples),
+                     rev(sort_samples))
+    plot_dat_table$make <- factor(plot_dat_table$make, levels = plot_levels)
+  }
+
+  p <- plot_dat_table %>% ggplot() + geom_bar(aes_string(y = "val", x = "var",
+                                                         fill = "make"), stat =
                "identity") + theme_bw() + theme(legend.title =
                                                   element_blank(), axis.text.x =
                          element_text(angle = 90, hjust = 1, vjust = 0.5),

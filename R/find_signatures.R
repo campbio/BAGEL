@@ -19,6 +19,18 @@ find_signatures <- function(input, num_signatures, method="lda") {
     bagel@counts_table <- input
     input <- bagel
   }
+
+  #Determine if samples are present and can be used to scale weights
+  used_samples <- which(input@samples$Tumor_Sample_Barcode %in%
+                          colnames(input@counts_table))
+  if (length(used_samples) == 0) {
+    warning(strwrap(prefix = " ", initial = "", "No samples overlap with
+                      counts table, exposures will not be scaled by sample
+                      counts."))
+  } else {
+    sample_counts <- table(input@samples$Tumor_Sample_Barcode[used_samples])
+    matched <- match(colnames(input@counts_table), names(sample_counts))
+  }
   if (method == "lda") {
     counts_table <- t(input@counts_table)
     lda_out <- topicmodels::LDA(counts_table, num_signatures)
@@ -30,6 +42,10 @@ find_signatures <- function(input, num_signatures, method="lda") {
     rownames(weights) <- paste("Signature", seq_len(num_signatures), sep = "")
     colnames(weights) <- rownames(counts_table)
 
+    # Multiply Weights by sample counts
+    if (length(used_samples) != 0) {
+      weights <- sweep(weights, 2, sample_counts[matched], FUN = "*")
+    }
     lda_result <- methods::new("Result", signatures = lda_sigs,
                                samples = weights, type = "LDA", bagel = input)
     return(lda_result)
@@ -43,6 +59,14 @@ find_signatures <- function(input, num_signatures, method="lda") {
                                samples = decomp$H, type = "NMF", bagel = input)
     nmf_result@signatures <- sweep(nmf_result@signatures, 2,
                                    colSums(nmf_result@signatures), FUN = "/")
+    nmf_result@samples <- sweep(nmf_result@samples, 2,
+                                   colSums(nmf_result@samples), FUN = "/")
+
+    # Multiply Weights by sample counts
+    if (length(used_samples) != 0) {
+      nmf_result@samples <- sweep(nmf_result@samples, 2,
+                                  sample_counts[matched], FUN = "*")
+    }
     return(nmf_result)
   } else{
     stop("That method is not supported. Use lda or nmf to generate signatures.")
@@ -263,11 +287,25 @@ infer_signatures <- function(bagel, signatures=cosmic_result@signatures,
   }
   res2 <- est_sig_prop(samples_counts = samples_counts, sig_props = sig_props,
                        max.iter = 100)
-  nmf_result <- methods::new("Result", signatures =
+  lda_posterior_result <- methods::new("Result", signatures =
                                signatures[, signatures_to_use], samples =
                                t(res2$samp_sig_prob_mat), type =
                                "posterior_LDA", bagel = bagel)
-  return(nmf_result)
+
+  # Multiply Weights by sample counts
+  used_samples <- which(bagel@samples$Tumor_Sample_Barcode %in%
+                          colnames(bagel@counts_table))
+  if (length(used_samples) == 0) {
+    warning(strwrap(prefix = " ", initial = "", "No samples overlap with
+                      counts table, exposures will not be scaled by sample
+                      counts."))
+  } else {
+    sample_counts <- table(bagel@samples$Tumor_Sample_Barcode[used_samples])
+    matched <- match(colnames(bagel@counts_table), names(sample_counts))
+    lda_posterior_result@samples <- sweep(lda_posterior_result@samples, 2,
+                                          sample_counts[matched], FUN = "*")
+  }
+  return(lda_posterior_result)
 }
 
 has_tables <- function(bagel) {
