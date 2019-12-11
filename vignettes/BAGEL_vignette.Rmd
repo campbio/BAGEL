@@ -21,20 +21,20 @@ library("BAGEL")
 ```{r}
 #Load MAF File
 lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL") 
-lusc <- BAGEL::maf_to_dt(maf_file = lusc_maf)
+lusc <- BAGEL::maf_file_to_dt(maf_file = lusc_maf)
 
 #Load individual VCF Files
 luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", 
                          package = "BAGEL")
-luad1 <- BAGEL::vcf_to_dt(vcf = luad1_vcf)
+luad1 <- BAGEL::vcf_file_to_dt(vcf_file = luad1_vcf)
 luad2_vcf <- system.file("testdata", "public_LUAD_TCGA-MP-A4TJ.vcf", 
                          package = "BAGEL")
-luad2 <- BAGEL::vcf_to_dt(vcf = luad2_vcf)
+luad2 <- BAGEL::vcf_file_to_dt(vcf_file = luad2_vcf)
 
 #Load Multiple VCF Files At Once using list files with regular expressions
 melanoma_vcf <- list.files(system.file("testdata", package = "BAGEL"), 
                            pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
-melanoma <- BAGEL::vcfs_to_dt(vcfs = melanoma_vcf)
+melanoma <- BAGEL::vcf_files_to_dt(vcf_files = melanoma_vcf)
 
 #Combine all data.frames
 dat <- rbind(lusc, melanoma, luad1, luad2)
