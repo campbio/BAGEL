@@ -131,6 +131,15 @@ vcf_to_dt <- function(vcf, vcf_name, filter = TRUE, only_snp = TRUE,
     }
     dt <- dt[, used_fields, with = FALSE]
   }
+
+  #For some reason non-variants are included (e.g. T>T), remove them
+  non_variant <- which(dt$Tumor_Seq_Allele1 == dt$Tumor_Seq_Allele2)
+  if (length(non_variant) > 0) {
+    dt <- dt[-non_variant, ]
+  }
+
+  #Drop factor levels which cause problems down the line
+  dt$Chromosome <- as.character(dt$Chromosome)
   return(dt)
 }
 
@@ -200,7 +209,16 @@ maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp = TRUE,
     }
     dt <- dt[, used_fields, with = FALSE]
   }
+
+  #For some reason non-variants are included (e.g. T>T), remove them
+  non_variant <- which(dt$Tumor_Seq_Allele1 == dt$Tumor_Seq_Allele2)
+  if (length(non_variant) > 0) {
+    dt <- dt[-non_variant, ]
+  }
   return(dt)
+
+  #Drop factor levels which cause problems down the line
+  dt$Chromosome <- as.character(dt$Chromosome)
 }
 
 #' Loads a maf file and extracts the data.table of variants

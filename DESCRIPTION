@@ -32,7 +32,8 @@ Imports:
     data.table,
     dplyr,
     rlang,
-    topicmodels
+    topicmodels,
+    GenomeInfoDb
 Suggests:
     testthat,
     knitr,

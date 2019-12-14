@@ -28,11 +28,104 @@ table_96 <- function(sample_df) {
   return(mut_summary)
 }
 
+#' Uses a genome object to find context and add it to the variant table
+#'
+#' @param bay Input samples
+#' @param g Genome object used for finding variant context
+#' @param flank_start Start of flank area to add, can be positive or negative
+#' @param flank_end End of flank area to add, can be positive or negative
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("38")
+#' add_flank_to_variants(bay, g, 1, 5)
+#' add_flank_to_variants(bay, g, -5, -1)
+#' @export
+add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
+  stopifnot(sign(flank_start) == sign(flank_end), flank_start < flank_end)
+
+  direction <- ifelse(sign(flank_start) == 1, "r", "l")
+
+  #Determine output and calculations based on selected context area
+  output_column <- paste(direction, "flank_", abs(flank_start), "_to_",
+                         abs(flank_end), sep = "")
+
+  dat <- bay@samples
+  mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
+  chr <- dat$Chromosome
+  tryCatch(
+    GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
+    error = function(e) {
+      warning("found no sequence renaming map compatible with seqname",
+              " style 'UCSC' for the input reference ", g@pkgname)
+    }
+  )
+
+  if (sign(flank_start) == 1) {
+    center <- dat$End_Position
+  } else {
+    center <- dat$Start_Position
+  }
+  ref <- dat$Tumor_Seq_Allele1
+  alt <- dat$Tumor_Seq_Allele2
+  type <- mut_type
+
+  #Mutation Context
+  flank <- VariantAnnotation::getSeq(g, chr, center + flank_start,
+                                     center + flank_end, as.character = TRUE)
+  final_mut_context <- rep(NA, length(ref))
+
+  # Get mutation context info for those on "+" strand
+  forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
+  ind <- type %in% forward_change
+
+  final_mut_context[ind] <- flank[ind]
+
+  # Get mutation context info for those on "-" strand
+  rev_change <- c("A>G", "A>T", "A>C", "G>T", "G>C", "G>A")
+  ind <- type %in% rev_change
+
+  # Reverse complement the context so only 6 mutation categories instead of 12
+  rev_flank <- flank[ind] %>% Biostrings::DNAStringSet() %>%
+    Biostrings::reverseComplement()
+
+  final_mut_context[ind] <- as.character(rev_flank)
+  dat$output_column <- final_mut_context
+  eval.parent(substitute(bay@samples <- dat))
+}
+
+#' Adds an annotation to the variant table with length of each variant
+#'
+#' @param bay Input samples
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_variant_length(bay)
+#' @export
+annotate_variant_length <- function(bay) {
+  dat <- bay@samples
+  var_length <- nchar(dat$Tumor_Seq_Allele2)
+  dat$Variant_Length <- var_length
+  eval.parent(substitute(bay@samples <- dat))
+}
+
+#' Drops a column from the variant table that the user no longer needs
+#'
+#' @param bay Input samples
+#' @param column_name Name of column to drop
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' drop_annotation(bay, "Chromosome")
+#' @export
+drop_annotation <- function(bay, column_name) {
+  dat <- bay@samples
+  stopifnot(column_name %in% colnames(dat))
+  data.table::set(dat, j = column_name, value = NULL)
+  eval.parent(substitute(bay@samples <- dat))
+}
+
 #' Uses a genome object to find context and generate tables for input samples
 #'
 #' @param bay Input samples
 #' @param g Genome object used for finding variant context
-#' @return Returns 96 motif summary tables
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("38")
@@ -47,13 +140,13 @@ create_tables <- function(bay, g) {
   #### TODO
 
   chr <- dat$Chromosome
-  #tryCatch(
-  #  GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
-  #  error = function(e) {
-  #    warning("found no sequence renaming map compatible with seqname",
-  #            " style 'UCSC' for the input reference ", basename(g))
-  #  }
-  #)
+  tryCatch(
+    GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
+    error = function(e) {
+      warning("found no sequence renaming map compatible with seqname",
+              " style 'UCSC' for the input reference ", basename(g))
+    }
+  )
 
   range_start <- dat$Start_Position
   range_end <- dat$End_Position

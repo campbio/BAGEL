@@ -6,5 +6,5 @@ test_that(desc = "Testing VCF Input", {
                           package = "BAGEL")
   vcf <- BAGEL::vcf_file_to_dt(vcf_file)
   expect_s3_class(vcf, "data.table")
-  expect_equal(nrow(vcf), 121)
+  expect_equal(nrow(vcf), 117)
 })

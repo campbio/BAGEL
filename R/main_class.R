@@ -22,12 +22,6 @@ setMethod("show", "bagel",
                                 }else{
                                   "Empty"
                                     },
-                              "\nProportional Table Rows: ",
-                              if (!is.null(object@prop_table)) {
-                                round(base::rowSums(object@prop_table), 3)
-                                }else{
-                                  "Empty"
-                                  },
                               "\nCounts Table Rows: ",
                               if (!is.null(object@counts_table)) {
                                 rowSums(object@counts_table)
