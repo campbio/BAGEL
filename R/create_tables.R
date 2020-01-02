@@ -49,7 +49,7 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
   output_column <- paste(direction, "flank_", abs(flank_start), "_to_",
                          abs(flank_end), sep = "")
 
-  dat <- bay@samples
+  dat <- bay@variants
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
   chr <- dat$Chromosome
   tryCatch(
@@ -90,7 +90,7 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
 
   final_mut_context[ind] <- as.character(rev_flank)
   dat$output_column <- final_mut_context
-  eval.parent(substitute(bay@samples <- dat))
+  eval.parent(substitute(bay@variants <- dat))
 }
 
 #' Adds an annotation to the variant table with length of each variant
@@ -101,10 +101,10 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
 #' annotate_variant_length(bay)
 #' @export
 annotate_variant_length <- function(bay) {
-  dat <- bay@samples
+  dat <- bay@variants
   var_length <- nchar(dat$Tumor_Seq_Allele2)
   dat$Variant_Length <- var_length
-  eval.parent(substitute(bay@samples <- dat))
+  eval.parent(substitute(bay@variants <- dat))
 }
 
 #' Drops a column from the variant table that the user no longer needs
@@ -116,10 +116,10 @@ annotate_variant_length <- function(bay) {
 #' drop_annotation(bay, "Chromosome")
 #' @export
 drop_annotation <- function(bay, column_name) {
-  dat <- bay@samples
+  dat <- bay@variants
   stopifnot(column_name %in% colnames(dat))
   data.table::set(dat, j = column_name, value = NULL)
-  eval.parent(substitute(bay@samples <- dat))
+  eval.parent(substitute(bay@variants <- dat))
 }
 
 #' Uses a genome object to find context and generate tables for input samples
@@ -132,7 +132,7 @@ drop_annotation <- function(bay, column_name) {
 #' create_tables(bay, g)
 #' @export
 create_tables <- function(bay, g) {
-  dat <- bay@samples
+  dat <- bay@variants
 
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
 
@@ -144,7 +144,7 @@ create_tables <- function(bay, g) {
     GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
     error = function(e) {
       warning("found no sequence renaming map compatible with seqname",
-              " style 'UCSC' for the input reference ", basename(g))
+              " style 'UCSC' for the input reference ", (g@pkgname))
     }
   )
 
@@ -220,11 +220,8 @@ create_tables <- function(bay, g) {
     tab <- tab / sum(tab)
     return(tab)
   }
-  mut_summary_mat <- do.call(cbind, lapply(maf_mut_summaries, sigit))
-  mut_summary_mat_unnorm <- do.call(cbind, lapply(maf_mut_summaries, function(x)
+  mut_summary_mat <- do.call(cbind, lapply(maf_mut_summaries, function(x)
     table(x[, "mutation"])))
   colnames(mut_summary_mat) <- sample_names
-  colnames(mut_summary_mat_unnorm) <- sample_names
-  eval.parent(substitute(bay@prop_table <- mut_summary_mat))
-  eval.parent(substitute(bay@counts_table <- mut_summary_mat_unnorm))
+  eval.parent(substitute(bay@counts_table <- mut_summary_mat))
 }

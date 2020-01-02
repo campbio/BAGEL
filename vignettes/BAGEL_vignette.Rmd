@@ -48,7 +48,7 @@ bagel = new("bagel")
 BAGEL::set_samples(bagel, dat)
 
 #Or alternatively create an object with sample names included
-bagel = new("bagel", samples = dat)
+bagel = new("bagel", variants = dat)
 
 #Display what samples were added
 BAGEL::sample_names(bagel)

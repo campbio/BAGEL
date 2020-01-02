@@ -21,14 +21,14 @@ find_signatures <- function(input, num_signatures, method="lda") {
   }
 
   #Determine if samples are present and can be used to scale weights
-  used_samples <- which(input@samples$Tumor_Sample_Barcode %in%
+  used_samples <- which(input@variants$Tumor_Sample_Barcode %in%
                           colnames(input@counts_table))
   if (length(used_samples) == 0) {
     warning(strwrap(prefix = " ", initial = "", "No samples overlap with
                       counts table, exposures will not be scaled by sample
                       counts."))
   } else {
-    sample_counts <- table(input@samples$Tumor_Sample_Barcode[used_samples])
+    sample_counts <- table(input@variants$Tumor_Sample_Barcode[used_samples])
     matched <- match(colnames(input@counts_table), names(sample_counts))
   }
   if (method == "lda") {
@@ -293,14 +293,14 @@ infer_signatures <- function(bagel, signatures=cosmic_result@signatures,
                                "posterior_LDA", bagel = bagel)
 
   # Multiply Weights by sample counts
-  used_samples <- which(bagel@samples$Tumor_Sample_Barcode %in%
+  used_samples <- which(bagel@variants$Tumor_Sample_Barcode %in%
                           colnames(bagel@counts_table))
   if (length(used_samples) == 0) {
     warning(strwrap(prefix = " ", initial = "", "No samples overlap with
                       counts table, exposures will not be scaled by sample
                       counts."))
   } else {
-    sample_counts <- table(bagel@samples$Tumor_Sample_Barcode[used_samples])
+    sample_counts <- table(bagel@variants$Tumor_Sample_Barcode[used_samples])
     matched <- match(colnames(bagel@counts_table), names(sample_counts))
     lda_posterior_result@samples <- sweep(lda_posterior_result@samples, 2,
                                           sample_counts[matched], FUN = "*")
