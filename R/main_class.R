@@ -4,7 +4,7 @@ setOldClass(c("data.table", "data.frame"))
 
 #' The primary object for BAGEL that contains all samples and tables
 #'
-#' @slot variants A list of variants objects containing variant-level information
+#' @slot variants Data.table of variants objects containing variant-level information
 #' @slot counts_table Summary tables with unnormalized motif counts
 #' @export
 setClass("bagel", representation(variants = "data.table", counts_table =
@@ -24,8 +24,8 @@ setMethod("show", "bagel",
                                 cat("Dim: \n")
                                 cat(show(dim(object@counts_table)),
                                     "\nSubset Results:\n")
-                                cat(show(object@counts_table[
-                                  seq_len(min(5, nrow(object@counts_table))), 1,
+                                cat(show(object@counts_table[seq_len(5),
+                                  seq_len(min(3, nrow(object@counts_table))),
                                                                    drop=FALSE]))
                                 }else{
                                   cat("Empty")
@@ -178,7 +178,8 @@ get_sample_names <- function(bay) {
 #' @slot bagel The bagel object the results were generated from
 #' @export
 setClass("Result", representation(signatures = "matrix", samples = "matrix",
-                                  type = "character", bagel = "bagel"))
+                                  type = "character", bagel = "bagel",
+                                  log_lik = "numeric"))
 
 #' Return sample from bagel object
 #'
@@ -196,4 +197,20 @@ name_signatures <- function(result, name_vector) {
                num_sigs, ")", sep = ""))
   }
   eval.parent(substitute(colnames(result@signatures) <- name_vector))
+  eval.parent(substitute(rownames(result@samples) <- name_vector))
 }
+
+# Result Grid object/methods -------------------------------
+
+#' Object containing the result objects generated from the combination of
+#' annotations and a range of k values
+#'
+#' @slot grid_params The parameters the result grid was created using
+#' @slot result_list A list of result objects with different parameters
+#' @slot grid_table A summary table of the result objects in result_list
+#' @export
+setClass("Result_Grid", representation(grid_params = "data.table",
+                                       result_list = "list",
+                                       grid_table = "data.table"))
+
+

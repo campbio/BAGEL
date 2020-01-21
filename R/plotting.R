@@ -10,13 +10,13 @@ NULL
 #' @return Generates sample plot {no return}
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' plot_sample_counts(bay, sample_names(bay)[1])
+#' plot_sample_counts(bay, get_sample_names(bay)[1])
 #' @export
 plot_sample_counts <- function(bay, sample_name) {
   if (length(sample_name) != 1) {
     stop("`please specify exactly one sample")
   }
-  sample_number <- which(sample_names(bay = bay) == sample_name)
+  sample_number <- which(get_sample_names(bay = bay) == sample_name)
   sample <- bay@counts_table[, sample_number]
   plot_full(sample)
 }
@@ -91,6 +91,50 @@ plot_signatures <- function(result) {
                                             strip.text.y =
                                               element_text(size = 7)) +
     ggplot2::scale_y_continuous(expand = c(0, 0))
+}
+
+#' Plotting Signature Motif counts/spectra
+#'
+#' @param result S4 Result Object
+#' @return Generates plot {no return}
+#' @examples
+#' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
+#' plot_signatures(result)
+#' @export
+plot_sample_reconstruction_error <- function(result, sample_number) {
+  signatures <- result@bagel@counts_table[, sample_number, drop=FALSE]
+  reconstructed <- reconstruct_sample(result, sample_number)
+  error = signatures-reconstructed
+  colnames(error) = "Error"
+
+  groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
+                                                                    "context"))
+
+  signatures %>% as.data.frame %>% tibble::rownames_to_column(var = "Motif") %>%
+    tidyr::gather("var", "val", -"Motif") %>% cbind(groups[, "mutation"]) ->
+    plot_dat
+
+  reconstructed %>% as.data.frame %>% tibble::rownames_to_column(var =
+                                                                   "Motif") %>%
+    tidyr::gather("var", "val", -"Motif") %>% cbind(groups[, "mutation"]) ->
+    reconstructed_dat
+
+  error %>% as.data.frame %>% tibble::rownames_to_column(var = "Motif") %>%
+    tidyr::gather("var", "val", -"Motif") %>% cbind(groups[, "mutation"]) ->
+    error_dat
+
+  plot_dat = rbind(plot_dat, reconstructed_dat, error_dat)
+  colnames(plot_dat) = c("Motif", "var", "val", "mutation")
+
+  plot_dat %>% ggplot(aes_string(y = "val", x = "Motif", fill = "mutation")) +
+    geom_bar(stat = "identity")+
+    theme_bw() +
+    xlab("Motifs") + ylab("Proportion") + theme(axis.text.x = element_blank(),
+                                                axis.ticks.x = element_blank(),
+                                                strip.text.y =
+                                                  element_text(size = 7)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed")
 }
 
 #' Plots signature weights for each sample
@@ -195,7 +239,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
 plot_exposures_by_annotation <- function(result, proportional = TRUE,
                                          label_samples = FALSE,
                                          sort_samples = "numerical",
-                                         annotation) {
+                                         annotation, by_group = TRUE) {
   samples <- result@samples
 
   y_label <- "counts"
@@ -231,7 +275,7 @@ plot_exposures_by_annotation <- function(result, proportional = TRUE,
                                unique(plot_dat$var)[order(samples[
                                  sort_samples, ], decreasing = TRUE)])
     }
-    else{
+    else {
       plot_dat$var <- factor(plot_dat$var, levels = unique(plot_dat$var)[
         do.call(order, c(decreasing = TRUE, as.data.frame(t(samples[
           sort_samples, ]))))])
@@ -245,19 +289,29 @@ plot_exposures_by_annotation <- function(result, proportional = TRUE,
                      rev(sort_samples))
     plot_dat_table$make <- factor(plot_dat_table$make, levels = plot_levels)
   }
-
-  p <- plot_dat_table %>% ggplot() + geom_bar(aes_string(y = "val", x = "var",
-                                                         fill = "make"), stat =
-                                                "identity") + theme_bw() +
-    theme(legend.title = element_blank(), axis.text.x =
-            element_text(angle = 90, hjust = 1, vjust = 0.5),
-          panel.grid.major.x = element_blank()) + xlab("Samples") +
-    ylab(paste("Signatures (", y_label, ")", sep = "")) +
-    ggplot2::scale_y_continuous(expand = c(0, 0))
+  if (by_group) {
+    p <- plot_dat_table %>% ggplot() + geom_bar(aes_string(y = "val", x = "var",
+                                                           fill = "make"),
+                                                stat = "identity") +
+      theme_bw() + theme(legend.title = element_blank(), axis.text.x =
+              element_text(angle = 90, hjust = 1, vjust = 0.5),
+            panel.grid.major.x = element_blank()) + xlab("Samples") +
+      ylab(paste("Signatures (", y_label, ")", sep = "")) +
+      ggplot2::scale_y_continuous(expand = c(0, 0))
+    p <- p + ggplot2::facet_wrap(~ annotation, drop = TRUE, scales = "free")
+  } else {
+    p <- plot_dat_table %>% ggplot(aes_string(x = "annotation", y = "val",
+                                              fill = "annotation")) +
+      ggplot2::geom_boxplot() + theme_bw() +
+      theme(legend.title = element_blank(), axis.text.x =
+              element_text(angle = 90, hjust = 1, vjust = 0.5),
+            panel.grid.major.x = element_blank()) + xlab("Annotation") +
+      ylab(paste("Signatures (", y_label, ")", sep = ""))
+    p <- p + ggplot2::facet_wrap(~ make, drop = TRUE, scales = "free")
+  }
   if (!label_samples) {
     p <- p + theme(axis.text.x = element_blank(), axis.ticks.x =
                      element_blank())
   }
-  p <- p + ggplot2::facet_wrap(~ annotation, drop = TRUE, scales = "free")
   return(p)
 }

@@ -8,7 +8,8 @@
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' find_signatures(bay, num_signatures = 4)
 #' @export
-find_signatures <- function(input, num_signatures, method="lda") {
+find_signatures <- function(input, num_signatures, method="lda", seed = NA,
+                            nstart = 1) {
   if (methods::is(input, "bagel")) {
     has_tables(input)
   }else{
@@ -33,7 +34,12 @@ find_signatures <- function(input, num_signatures, method="lda") {
   }
   if (method == "lda") {
     counts_table <- t(input@counts_table)
-    lda_out <- topicmodels::LDA(counts_table, num_signatures)
+    if (is.na(seed)) {
+      control = list(nstart = nstart)
+    } else {
+      control = list(seed = (seq_len(nstart) -1) + seed, nstart = nstart)
+    }
+    lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
     lda_sigs <- exp(t(lda_out@beta))
     rownames(lda_sigs) <- colnames(counts_table)
     colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")
@@ -47,11 +53,12 @@ find_signatures <- function(input, num_signatures, method="lda") {
       weights <- sweep(weights, 2, sample_counts[matched], FUN = "*")
     }
     lda_result <- methods::new("Result", signatures = lda_sigs,
-                               samples = weights, type = "LDA", bagel = input)
+                               samples = weights, type = "LDA", bagel = input,
+                               log_lik = median(lda_out@loglikelihood))
     return(lda_result)
   } else if (method == "nmf") {
     decomp <- NNLM::nnmf(input@counts_table, num_signatures, rel.tol = 1e-5,
-                         max.iter = 10000L);
+                         max.iter = 10000L)
     rownames(decomp$H) <- paste("Signature", seq_len(num_signatures),
                                  sep = "")
     colnames(decomp$W) <- paste("Signature", seq_len(num_signatures), sep = "")
@@ -318,4 +325,96 @@ has_tables <- function(bagel) {
     either missing or malformed, please run create_tables prior to this
                          function."))
   }
+}
+
+#' Generate result_grid from bagel based on annotation and range of k
+#'
+#' @param bagel Input bagel to generate grid from
+#' @param discovery_type Algorithm for signature discovery
+#' @param annotation Sample annotation to split results into
+#' @param k_start Lower range of number of signatures for discovery
+#' @param k_end Upper range of number of signatures for discovery
+#' @param num_iter Number of times to discover signatures and compare based on
+#' loglikihood
+#' @param seed Give a seed to generate reproducible signatures
+#' @param verbose Whether to output loop iterations
+#' @return Results a result object containing signatures and sample weights
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' generate_result_grid(bay, k_start = 2, k_end = 5)
+#' @export
+generate_result_grid <- function(bagel, discovery_type = "lda", annotation,
+                                 k_start, k_end, n_start = 1, seed = NA,
+                                 verbose = FALSE) {
+  result_grid <- methods::new("Result_Grid")
+
+  #Set Parameters
+  params <- data.table::data.table("discovery_type" = discovery_type,
+                                   "annotation_used" = annotation, "k_start" =
+                                     k_start, "k_end" = k_end,
+                                   "total_num_samples" =
+                                     nrow(bagel@sample_annotations),
+                                   "nstart" = n_start, seed = seed)
+  result_grid@grid_params <- params
+
+  #Initialize grid_table and result_list
+  grid_table <- data.table::data.table(annotation = character(), k =
+                                         numeric(), num_samples = numeric(),
+                                       reconstruction_error = numeric())
+  result_list <- list()
+  list_elem <- 1
+
+  #Generate and set result_list
+  annot_samples <- bagel@sample_annotations$Samples
+  annot <- bagel@sample_annotations$Tumor_Type
+  annot_names <- unique(annot)
+  num_annotation <- length(annot_names)
+
+  #Define new bagels
+  for (i in 1:num_annotation) {
+    if (verbose) {
+      cat(paste("Current Annotation: ", annot_names[i], "\n", sep = ""))
+    }
+    cur_ind <- which(annot == annot_names[i])
+    cur_annot_samples <- annot_samples[cur_ind]
+    cur_annot_variants <- bagel@variants[which(
+      bagel@variants$Tumor_Sample_Barcode %in% cur_annot_samples), ]
+
+    cur_bagel <- new("bagel", variants = cur_annot_variants,
+                     sample_annotations =
+                       bagel@sample_annotations[cur_ind, ],
+                     counts_table = bagel@counts_table[, cur_ind])
+
+    #Used for reconstruction error
+    cur_counts <- cur_bagel@counts_table
+
+    #Define new results
+    for (cur_k in k_start:k_end) {
+      cur_result <- find_signatures(input = cur_bagel, num_signatures = cur_k,
+                                    method = discovery_type, nstart = n_start,
+                                    seed = seed)
+      result_list[[list_elem]] <- cur_result
+      list_elem <- list_elem + 1
+
+      recon_error <- mean(sapply(1:ncol(cur_counts), function(x)
+        mean((cur_counts[, x, drop = FALSE] - reconstruct_sample(
+          cur_result, x))^2)/sum(cur_counts[, x, drop = FALSE]))^2)
+
+      grid_table <- rbind(grid_table, data.table::data.table(
+        annotation = annot_names[i], k = cur_k, num_samples =
+          length(cur_annot_samples), reconstruction_error = recon_error))
+    }
+  }
+  result_grid@result_list <- result_list
+  result_grid@grid_table <- grid_table
+  return(result_grid)
+}
+
+reconstruct_sample <- function(result, sample_number) {
+  reconstruction <- matrix(apply(sweep(result@signatures, 2,
+                                       result@samples[, sample_number,
+                                                      drop=FALSE], FUN = "*"),
+                                 1, sum), dimnames =
+                             list(rownames(result@signatures), "Reconstructed"))
+  return(reconstruction)
 }
