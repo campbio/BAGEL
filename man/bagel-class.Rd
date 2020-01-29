@@ -10,7 +10,7 @@ The primary object for BAGEL that contains all samples and tables
 \section{Slots}{
 
 \describe{
-\item{\code{variants}}{A list of variants objects containing variant-level information}
+\item{\code{variants}}{Data.table of variants and variant-level information}
 
 \item{\code{counts_table}}{Summary tables with unnormalized motif counts}
 }}

@@ -4,7 +4,7 @@ setOldClass(c("data.table", "data.frame"))
 
 #' The primary object for BAGEL that contains all samples and tables
 #'
-#' @slot variants Data.table of variants objects containing variant-level information
+#' @slot variants Data.table of variants and variant-level information
 #' @slot counts_table Summary tables with unnormalized motif counts
 #' @export
 setClass("bagel", representation(variants = "data.table", counts_table =
@@ -26,7 +26,8 @@ setMethod("show", "bagel",
                                     "\nSubset Results:\n")
                                 cat(show(object@counts_table[seq_len(5),
                                   seq_len(min(3, nrow(object@counts_table))),
-                                                                   drop=FALSE]))
+                                                                   drop =
+                                    FALSE]))
                                 }else{
                                   cat("Empty")
                                   },
@@ -43,15 +44,15 @@ setMethod("show", "bagel",
 #' Set variants table for bagel object
 #'
 #' @param bay Bagel object we input sample into
-#' @param variants Variant DataFrame
+#' @param variant_dt Variant DataFrame
 #' @return Sets variant slot {no return}
 #' @examples
 #' variants <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 #' bay <- new("bagel")
 #' set_variants(bay, variants)
 #' @export
-set_variants <- function(bay, variants) {
-  eval.parent(substitute(bay@variants <- variants))
+set_variants <- function(bay, variant_dt) {
+  eval.parent(substitute(bay@variants <- variant_dt))
 }
 
 #' Return sample from bagel object
@@ -112,21 +113,21 @@ init_sample_annotations <- function(bay) {
 #' @export
 add_sample_annotations <- function(bay, annotations, sample_column = Sample_ID,
                                    columns_to_add) {
-  bay_annotations = get_sample_annotations(bay)
-  if(all(is.na(bay_annotations))) {
+  bay_annotations <- get_sample_annotations(bay)
+  if (all(is.na(bay_annotations))) {
     stop(strwrap(prefix = " ", initial = "", "Please run init_sample_annotations
                  on this bagel before adding sample annotations."))
   }
-  if(!sample_column %in% colnames(annotations)) {
+  if (!sample_column %in% colnames(annotations)) {
     stop(strwrap(prefix = " ", initial = "", "User-defined sample_column is
                  not in input annotations, please check and rerun."))
   }
-  if(!all(bay_annotations$Samples %in%
-          annotations[ ,sample_column])) {
+  if (!all(bay_annotations$Samples %in%
+          annotations[, sample_column])) {
     stop(strwrap(prefix = " ", initial = "", "Some samples are missing
                  annotations, please check input annotations and rerun."))
   }
-  if(!all(columns_to_add %in% colnames(annotations))) {
+  if (!all(columns_to_add %in% colnames(annotations))) {
     stop(strwrap(prefix = " ", initial = "", paste("Some user-defined
                                                    columns_to_add are not in
                                                    the input annotations, (",
@@ -134,9 +135,9 @@ add_sample_annotations <- function(bay, annotations, sample_column = Sample_ID,
                                         colnames(annotations))]),
                  ") please check and rerun.", sep = "")))
   }
-  matches = match(bay_annotations$Samples,
-                  annotations[ ,sample_column])
-  bay_annotations = cbind(bay_annotations, annotations[matches, columns_to_add,
+  matches <- match(bay_annotations$Samples,
+                  annotations[, sample_column])
+  bay_annotations <- cbind(bay_annotations, annotations[matches, columns_to_add,
                                                        drop = FALSE])
   eval.parent(substitute(bay@sample_annotations <- bay_annotations))
 }
@@ -212,5 +213,3 @@ name_signatures <- function(result, name_vector) {
 setClass("Result_Grid", representation(grid_params = "data.table",
                                        result_list = "list",
                                        grid_table = "data.table"))
-
-

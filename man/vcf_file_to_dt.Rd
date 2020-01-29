@@ -9,7 +9,8 @@ vcf_file_to_dt(
   filter = TRUE,
   only_snp = TRUE,
   used_fields = c("Chromosome", "Start_Position", "End_Position", "Tumor_Seq_Allele1",
-    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode")
+    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode"),
+  auto_fix_errors = TRUE
 )
 }
 \arguments{

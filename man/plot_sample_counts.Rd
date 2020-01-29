@@ -19,5 +19,5 @@ Return sample from bagel object
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-plot_sample_counts(bay, sample_names(bay)[1])
+plot_sample_counts(bay, get_sample_names(bay)[1])
 }

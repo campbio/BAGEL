@@ -45,13 +45,14 @@ dat <- rbind(lusc, melanoma, luad1, luad2)
 
 #Create Object and add samples
 bagel = new("bagel")
-BAGEL::set_samples(bagel, dat)
+variants = dat
+BAGEL::set_variants(bagel, variants)
 
 #Or alternatively create an object with sample names included
 bagel = new("bagel", variants = dat)
 
 #Display what samples were added
-BAGEL::sample_names(bagel)
+BAGEL::get_sample_names(bagel)
 
 #Create 96 Motif samples
 #g=BAGEL::select_genome("19")
@@ -97,5 +98,5 @@ BAGEL::plot_exposures(our_sigs_post, proportional = TRUE)
 #Compare posterior results to each other
 BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
 
-BAGEL::plot_sample_counts(bagel, sample_names(bagel)[1])
+BAGEL::plot_sample_counts(bagel, get_sample_names(bagel)[1])
 ```

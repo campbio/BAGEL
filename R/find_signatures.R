@@ -35,9 +35,9 @@ find_signatures <- function(input, num_signatures, method="lda", seed = NA,
   if (method == "lda") {
     counts_table <- t(input@counts_table)
     if (is.na(seed)) {
-      control = list(nstart = nstart)
+      control <- list(nstart = nstart)
     } else {
-      control = list(seed = (seq_len(nstart) -1) + seed, nstart = nstart)
+      control <- list(seed = (seq_len(nstart) - 1) + seed, nstart = nstart)
     }
     lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
     lda_sigs <- exp(t(lda_out@beta))
@@ -396,9 +396,12 @@ generate_result_grid <- function(bagel, discovery_type = "lda", annotation,
       result_list[[list_elem]] <- cur_result
       list_elem <- list_elem + 1
 
-      recon_error <- mean(sapply(1:ncol(cur_counts), function(x)
+      recon_error <- mean(sapply(seq_len(cur_counts), function(x)
         mean((cur_counts[, x, drop = FALSE] - reconstruct_sample(
-          cur_result, x))^2)/sum(cur_counts[, x, drop = FALSE]))^2)
+          cur_result, x))^2))^2)
+      #recon_error <- mean(sapply(1:ncol(cur_counts), function(x)
+      #  mean((cur_counts[, x, drop = FALSE] - reconstruct_sample(
+      #    cur_result, x))^2)/sum(cur_counts[, x, drop = FALSE]))^2)
 
       grid_table <- rbind(grid_table, data.table::data.table(
         annotation = annot_names[i], k = cur_k, num_samples =
@@ -413,7 +416,7 @@ generate_result_grid <- function(bagel, discovery_type = "lda", annotation,
 reconstruct_sample <- function(result, sample_number) {
   reconstruction <- matrix(apply(sweep(result@signatures, 2,
                                        result@samples[, sample_number,
-                                                      drop=FALSE], FUN = "*"),
+                                                      drop = FALSE], FUN = "*"),
                                  1, sum), dimnames =
                              list(rownames(result@signatures), "Reconstructed"))
   return(reconstruction)

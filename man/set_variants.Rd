@@ -4,12 +4,12 @@
 \alias{set_variants}
 \title{Set variants table for bagel object}
 \usage{
-set_variants(bay, variants)
+set_variants(bay, variant_dt)
 }
 \arguments{
 \item{bay}{Bagel object we input sample into}
 
-\item{variants}{Variant DataFrame}
+\item{variant_dt}{Variant DataFrame}
 }
 \value{
 Sets variant slot {no return}

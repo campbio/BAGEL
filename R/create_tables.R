@@ -66,7 +66,6 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
     center <- dat$Start_Position
   }
   ref <- dat$Tumor_Seq_Allele1
-  alt <- dat$Tumor_Seq_Allele2
   type <- mut_type
 
   #Mutation Context
@@ -85,7 +84,8 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
   ind <- type %in% rev_change
 
   # Reverse complement the context so only 6 mutation categories instead of 12
-  rev_flank <- flank[ind] %>% Biostrings::DNAStringSet() %>%
+  rev_flank <- flank[ind] %>%
+    Biostrings::DNAStringSet() %>%
     Biostrings::reverseComplement()
 
   final_mut_context[ind] <- as.character(rev_flank)
@@ -103,7 +103,7 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
 annotate_variant_length <- function(bay) {
   dat <- bay@variants
   var_length <- nchar(dat$Tumor_Seq_Allele2)
-  dat$Variant_Length <- var_length
+  dat[, "Variant_Length"] <- var_length
   eval.parent(substitute(bay@variants <- dat))
 }
 
@@ -176,13 +176,17 @@ create_tables <- function(bay, g) {
   ind <- type %in% rev_change
 
   # Reverse complement the context so only 6 mutation categories instead of 12
-  rev_refbase <- ref[ind] %>% Biostrings::DNAStringSet() %>%
+  rev_refbase <- ref[ind] %>%
+    Biostrings::DNAStringSet() %>%
     Biostrings::reverseComplement()
-  rev_altbase <- alt[ind] %>% Biostrings::DNAStringSet() %>%
+  rev_altbase <- alt[ind] %>%
+    Biostrings::DNAStringSet() %>%
     Biostrings::reverseComplement()
-  rev_lflank <- lflank[ind] %>% Biostrings::DNAStringSet() %>%
+  rev_lflank <- lflank[ind] %>%
+    Biostrings::DNAStringSet() %>%
     Biostrings::reverseComplement()
-  rev_rflank <- rflank[ind] %>% Biostrings::DNAStringSet() %>%
+  rev_rflank <- rflank[ind] %>%
+    Biostrings::DNAStringSet() %>%
     Biostrings::reverseComplement()
 
   final_mut_lflank <- as.character(rev_lflank)

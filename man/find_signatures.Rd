@@ -4,7 +4,7 @@
 \alias{find_signatures}
 \title{Discovers signatures and weights from a table of counts using NMF}
 \usage{
-find_signatures(input, num_signatures, method = "lda")
+find_signatures(input, num_signatures, method = "lda", seed = NA, nstart = 1)
 }
 \arguments{
 \item{input}{A bagel object or counts table}
