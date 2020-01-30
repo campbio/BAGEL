@@ -21,6 +21,8 @@ vcf_file_to_dt(
 \item{only_snp}{Filter only non-snp variants}
 
 \item{used_fields}{Which fields to extract}
+
+\item{auto_fix_errors}{Attempt to automatically fix file formatting errors}
 }
 \value{
 Returns a data.table of variants from a vcf

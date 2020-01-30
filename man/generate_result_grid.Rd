@@ -7,7 +7,7 @@
 generate_result_grid(
   bagel,
   discovery_type = "lda",
-  annotation,
+  annotation = NA,
   k_start,
   k_end,
   n_start = 1,
@@ -26,12 +26,12 @@ generate_result_grid(
 
 \item{k_end}{Upper range of number of signatures for discovery}
 
+\item{n_start}{Number of times to discover signatures and compare based on
+posterior loglikihood}
+
 \item{seed}{Give a seed to generate reproducible signatures}
 
 \item{verbose}{Whether to output loop iterations}
-
-\item{num_iter}{Number of times to discover signatures and compare based on
-loglikihood}
 }
 \value{
 Results a result object containing signatures and sample weights
@@ -41,5 +41,5 @@ Generate result_grid from bagel based on annotation and range of k
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-generate_result_grid(bay, k_start = 2, k_end = 5)
+grid <- generate_result_grid(bay, k_start = 2, k_end = 5)
 }

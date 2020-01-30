@@ -12,6 +12,8 @@ The primary object for BAGEL that contains all samples and tables
 \describe{
 \item{\code{variants}}{Data.table of variants and variant-level information}
 
-\item{\code{counts_table}}{Summary tables with unnormalized motif counts}
+\item{\code{counts_table}}{Summary table with per-sample unnormalized motif counts}
+
+\item{\code{sample_annotations}}{Sample-level annotations (e.g. age, sex, primary)}
 }}
 

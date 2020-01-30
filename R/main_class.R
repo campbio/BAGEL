@@ -5,7 +5,8 @@ setOldClass(c("data.table", "data.frame"))
 #' The primary object for BAGEL that contains all samples and tables
 #'
 #' @slot variants Data.table of variants and variant-level information
-#' @slot counts_table Summary tables with unnormalized motif counts
+#' @slot counts_table Summary table with per-sample unnormalized motif counts
+#' @slot sample_annotations Sample-level annotations (e.g. age, sex, primary)
 #' @export
 setClass("bagel", representation(variants = "data.table", counts_table =
                                    "matrix", sample_annotations = "data.table"),
@@ -15,25 +16,25 @@ setClass("bagel", representation(variants = "data.table", counts_table =
 setMethod("show", "bagel",
           function(object)cat(cat("BAGEL Object containing \n**Variants: \n"),
                               if (!all(is.na(object@variants))) {
-                                cat(show(object@variants))
+                                cat(methods::show(object@variants))
                                 }else{
                                   cat("Empty")
                                     },
                               cat("\n**Counts Table Dim and Subset: \n"),
                               if (!all(is.na(object@counts_table))) {
                                 cat("Dim: \n")
-                                cat(show(dim(object@counts_table)),
+                                cat(methods::show(dim(object@counts_table)),
                                     "\nSubset Results:\n")
-                                cat(show(object@counts_table[seq_len(5),
-                                  seq_len(min(3, nrow(object@counts_table))),
-                                                                   drop =
+                                cat(methods::show(
+                                  object@counts_table[seq_len(5), seq_len(min(
+                                    3, nrow(object@counts_table))), drop =
                                     FALSE]))
                                 }else{
                                   cat("Empty")
                                   },
                               cat("\n**Sample Level Annotations: \n"),
                               if (!all(is.na(object@sample_annotations))) {
-                                cat(show(object@sample_annotations))
+                                cat(methods::show(object@sample_annotations))
                               }else{
                                 cat("Empty")
                               })
@@ -105,14 +106,18 @@ init_sample_annotations <- function(bay) {
 #' Adds sample annotation to bagel object with available samples
 #'
 #' @param bay Bagel object we input sample into
+#' @param annotations table of sample-level annotations to add
+#' @param sample_column name of sample name column
+#' @param columns_to_add which annotation columns to add, defaults to all
 #' @return Sets sample_annotations slot {no return}
 #' @examples
 #' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 #' bay <- new("bagel")
 #' init_sample_annotations(bay)
 #' @export
-add_sample_annotations <- function(bay, annotations, sample_column = Sample_ID,
-                                   columns_to_add) {
+add_sample_annotations <- function(bay, annotations, sample_column =
+                                     "Sample_ID", columns_to_add =
+                                     colnames(annotations)) {
   bay_annotations <- get_sample_annotations(bay)
   if (all(is.na(bay_annotations))) {
     stop(strwrap(prefix = " ", initial = "", "Please run init_sample_annotations
@@ -150,7 +155,7 @@ add_sample_annotations <- function(bay, annotations, sample_column = Sample_ID,
 #' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 #' bay <- new("bagel")
 #' init_sample_annotations(bay)
-#' show_sample_annotations(bay)
+#' get_sample_annotations(bay)
 #' @export
 get_sample_annotations <- function(bay) {
   return(bay@sample_annotations)
@@ -162,7 +167,7 @@ get_sample_annotations <- function(bay) {
 #' @return Returns names of samples in bagel object
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' sample_names(bay)
+#' get_sample_names(bay)
 #' @export
 get_sample_names <- function(bay) {
   return(unique(bay@variants$Tumor_Sample_Barcode))
@@ -177,6 +182,7 @@ get_sample_names <- function(bay) {
 #' @slot samples A matrix of samples by signature weights
 #' @slot type Describes how the signatures/weights were generated
 #' @slot bagel The bagel object the results were generated from
+#' @slot log_lik Posterior likelihood of the result (LDA only)
 #' @export
 setClass("Result", representation(signatures = "matrix", samples = "matrix",
                                   type = "character", bagel = "bagel",

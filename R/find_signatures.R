@@ -3,6 +3,8 @@
 #' @param input A bagel object or counts table
 #' @param num_signatures Number of signatures to discover, k
 #' @param method Discovery of new signatures using either LDA or NMF
+#' @param seed Seed for reproducible signature discovery
+#' @param nstart Number of independent runs with optimal chosen (lda only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
@@ -54,7 +56,7 @@ find_signatures <- function(input, num_signatures, method="lda", seed = NA,
     }
     lda_result <- methods::new("Result", signatures = lda_sigs,
                                samples = weights, type = "LDA", bagel = input,
-                               log_lik = median(lda_out@loglikelihood))
+                               log_lik = stats::median(lda_out@loglikelihood))
     return(lda_result)
   } else if (method == "nmf") {
     decomp <- NNLM::nnmf(input@counts_table, num_signatures, rel.tol = 1e-5,
@@ -334,16 +336,16 @@ has_tables <- function(bagel) {
 #' @param annotation Sample annotation to split results into
 #' @param k_start Lower range of number of signatures for discovery
 #' @param k_end Upper range of number of signatures for discovery
-#' @param num_iter Number of times to discover signatures and compare based on
-#' loglikihood
+#' @param n_start Number of times to discover signatures and compare based on
+#' posterior loglikihood
 #' @param seed Give a seed to generate reproducible signatures
 #' @param verbose Whether to output loop iterations
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' generate_result_grid(bay, k_start = 2, k_end = 5)
+#' grid <- generate_result_grid(bay, k_start = 2, k_end = 5)
 #' @export
-generate_result_grid <- function(bagel, discovery_type = "lda", annotation,
+generate_result_grid <- function(bagel, discovery_type = "lda", annotation = NA,
                                  k_start, k_end, n_start = 1, seed = NA,
                                  verbose = FALSE) {
   result_grid <- methods::new("Result_Grid")
@@ -365,26 +367,35 @@ generate_result_grid <- function(bagel, discovery_type = "lda", annotation,
   list_elem <- 1
 
   #Generate and set result_list
-  annot_samples <- bagel@sample_annotations$Samples
-  annot <- bagel@sample_annotations$Tumor_Type
-  annot_names <- unique(annot)
-  num_annotation <- length(annot_names)
+  if (!is.na(annotation)) {
+    annot_samples <- bagel@sample_annotations$Samples
+    annot <- bagel@sample_annotations$Tumor_Type
+    annot_names <- unique(annot)
+    num_annotation <- length(annot_names)
+  } else {
+    annot_names <- NA
+    num_annotation <- 1
+  }
 
   #Define new bagels
   for (i in 1:num_annotation) {
-    if (verbose) {
-      cat(paste("Current Annotation: ", annot_names[i], "\n", sep = ""))
+    if (!is.na(annotation)) {
+      if (verbose) {
+        cat(paste("Current Annotation: ", annot_names[i], "\n", sep = ""))
+      }
+      cur_ind <- which(annot == annot_names[i])
+      cur_annot_samples <- annot_samples[cur_ind]
+      cur_annot_variants <- bagel@variants[which(
+        bagel@variants$Tumor_Sample_Barcode %in% cur_annot_samples), ]
+
+      cur_bagel <- methods::new("bagel", variants = cur_annot_variants,
+                       sample_annotations =
+                         bagel@sample_annotations[cur_ind, ],
+                       counts_table = bagel@counts_table[, cur_ind])
+    } else {
+      cur_bagel <- bagel
+      cur_annot_samples <- unique(bagel@variants$Tumor_Sample_Barcode)
     }
-    cur_ind <- which(annot == annot_names[i])
-    cur_annot_samples <- annot_samples[cur_ind]
-    cur_annot_variants <- bagel@variants[which(
-      bagel@variants$Tumor_Sample_Barcode %in% cur_annot_samples), ]
-
-    cur_bagel <- new("bagel", variants = cur_annot_variants,
-                     sample_annotations =
-                       bagel@sample_annotations[cur_ind, ],
-                     counts_table = bagel@counts_table[, cur_ind])
-
     #Used for reconstruction error
     cur_counts <- cur_bagel@counts_table
 
@@ -396,12 +407,9 @@ generate_result_grid <- function(bagel, discovery_type = "lda", annotation,
       result_list[[list_elem]] <- cur_result
       list_elem <- list_elem + 1
 
-      recon_error <- mean(sapply(seq_len(cur_counts), function(x)
-        mean((cur_counts[, x, drop = FALSE] - reconstruct_sample(
-          cur_result, x))^2))^2)
-      #recon_error <- mean(sapply(1:ncol(cur_counts), function(x)
-      #  mean((cur_counts[, x, drop = FALSE] - reconstruct_sample(
-      #    cur_result, x))^2)/sum(cur_counts[, x, drop = FALSE]))^2)
+      recon_error <- mean(sapply(seq_len(ncol(cur_counts)), function(x)
+        mean((cur_counts[, x, drop = FALSE] -
+                reconstruct_sample(cur_result, x))^2))^2)
 
       grid_table <- rbind(grid_table, data.table::data.table(
         annotation = annot_names[i], k = cur_k, num_samples =

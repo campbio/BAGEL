@@ -24,6 +24,8 @@ plot_exposures_by_annotation(
 specific signatures name (e.g. 'Signature1)}
 
 \item{annotation}{Annotation to use for facet_wrap}
+
+\item{by_group}{Plot subplots by annotation or by signature}
 }
 \value{
 Generates plot {no return}

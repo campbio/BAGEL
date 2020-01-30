@@ -21,6 +21,8 @@ vcf_files_to_dt(
 \item{only_snp}{Filter only non-snp variants}
 
 \item{used_fields}{Which fields to extract}
+
+\item{verbose}{Show file list progress}
 }
 \value{
 Returns a data.table of variants from vcfs

@@ -7,12 +7,18 @@
 add_sample_annotations(
   bay,
   annotations,
-  sample_column = Sample_ID,
-  columns_to_add
+  sample_column = "Sample_ID",
+  columns_to_add = colnames(annotations)
 )
 }
 \arguments{
 \item{bay}{Bagel object we input sample into}
+
+\item{annotations}{table of sample-level annotations to add}
+
+\item{sample_column}{name of sample name column}
+
+\item{columns_to_add}{which annotation columns to add, defaults to all}
 }
 \value{
 Sets sample_annotations slot {no return}

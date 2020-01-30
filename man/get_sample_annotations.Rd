@@ -19,5 +19,5 @@ Return sample annotation from bagel object
 annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 bay <- new("bagel")
 init_sample_annotations(bay)
-show_sample_annotations(bay)
+get_sample_annotations(bay)
 }

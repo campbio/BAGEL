@@ -98,6 +98,7 @@ plot_signatures <- function(result) {
 #' Plotting Signature Motif counts/spectra
 #'
 #' @param result S4 Result Object
+#' @param sample_number Sample number within result to plot error
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
@@ -239,6 +240,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
 #' @param sort_samples Defaults to numerical, may be total 'counts', or a
 #' specific signatures name (e.g. 'Signature1)
 #' @param annotation Annotation to use for facet_wrap
+#' @param by_group Plot subplots by annotation or by signature
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))

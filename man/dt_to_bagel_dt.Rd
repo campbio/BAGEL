@@ -37,5 +37,5 @@ Converts a data.table to a filtered BAGEL data.table
 maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 maf = maftools::read.maf(maf_file)
 dt = BAGEL::maf_to_dt(maf)
-maf_dt = BAGEL::dt_to_bagel_dt(maf = maf)
+maf_dt = BAGEL::dt_to_bagel_dt(dt = dt)
 }

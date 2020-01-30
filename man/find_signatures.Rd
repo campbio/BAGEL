@@ -12,6 +12,10 @@ find_signatures(input, num_signatures, method = "lda", seed = NA, nstart = 1)
 \item{num_signatures}{Number of signatures to discover, k}
 
 \item{method}{Discovery of new signatures using either LDA or NMF}
+
+\item{seed}{Seed for reproducible signature discovery}
+
+\item{nstart}{Number of independent runs with optimal chosen (lda only)}
 }
 \value{
 Returns a result object with results and input object (if bagel)

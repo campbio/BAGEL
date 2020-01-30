@@ -1,4 +1,5 @@
 #' @importFrom SummarizedExperiment seqnames rowRanges
+#' @importFrom methods is
 NULL
 
 #' Helper function to load HG19 or HG38
@@ -28,6 +29,7 @@ select_genome <- function(hg) {
 #' @param filter Filter to only passed variants
 #' @param only_snp Filter only non-snp variants
 #' @param used_fields Which fields to extract
+#' @param verbose Show file list progress
 #' @return Returns a data.table of variants from vcfs
 #' @examples
 #' melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
@@ -153,6 +155,7 @@ vcf_to_dt <- function(vcf, vcf_name, filter = TRUE, only_snp = TRUE,
 #' @param filter Filter to only passed variants
 #' @param only_snp Filter only non-snp variants
 #' @param used_fields Which fields to extract
+#' @param auto_fix_errors Attempt to automatically fix file formatting errors
 #' @return Returns a data.table of variants from a vcf
 #' @examples
 #' luad_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
@@ -170,7 +173,7 @@ vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
   vcf_name <- basename(vcf_file)
 
   if (class(vcf) == "try-error" && auto_fix_errors) {
-    alt_input <- read.table(vcf_file, stringsAsFactors = FALSE,
+    alt_input <- utils::read.table(vcf_file, stringsAsFactors = FALSE,
                             check.names = FALSE, comment.char = "", skip = 7,
                             header = TRUE)
     sample_header_name <- names(alt_input[10])
@@ -263,7 +266,7 @@ maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = maftools::read.maf(maf_file)
 #' dt = BAGEL::maf_to_dt(maf)
-#' maf_dt = BAGEL::dt_to_bagel_dt(maf = maf)
+#' maf_dt = BAGEL::dt_to_bagel_dt(dt = dt)
 #' @export
 dt_to_bagel_dt <- function(dt, dt_name = NULL, file_type = "data.table",
                            filter = TRUE, only_snp = TRUE, used_fields = c(

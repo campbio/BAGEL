@@ -8,6 +8,8 @@ plot_sample_reconstruction_error(result, sample_number)
 }
 \arguments{
 \item{result}{S4 Result Object}
+
+\item{sample_number}{Sample number within result to plot error}
 }
 \value{
 Generates plot {no return}

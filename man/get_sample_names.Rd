@@ -17,5 +17,5 @@ Return samples names for bagel object
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-sample_names(bay)
+get_sample_names(bay)
 }
