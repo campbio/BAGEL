@@ -150,7 +150,7 @@ sig_compare <- function(sig1, sig2, threshold=0.9) {
 #' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' compare_results(res, threshold = 0.8)
 #' @export
-compare_results <- function(result, other_result = cosmic_result,
+compare_results <- function(result, other_result = cosmic_v2_sigs,
                             threshold = 0.9, result_name = "User Signatures 1",
                             other_result_name = "User Signatures 2") {
   signatures <- result@signatures
@@ -163,7 +163,7 @@ compare_results <- function(result, other_result = cosmic_result,
                       signatures = other_result@signatures[, comparison$yindex,
                                                             drop = FALSE],
                       samples = matrix(), type = "NMF")
-  if (identical(other_result, cosmic_result)) {
+  if (identical(other_result, cosmic_v2_sigs)) {
     result_name <- "User Signatures"
     other_result_name <- "COSMIC Signatures"
   }
@@ -179,9 +179,9 @@ compare_results <- function(result, other_result = cosmic_result,
 #'
 #' @param tumor_type Cancer subtype to view related signatures
 #' @return Returns signatures related to a partial string match
-#' @examples what_cosmic30_sigs("lung")
+#' @examples what_cosmic_v2_sigs("lung")
 #' @export
-what_cosmic30_sigs <- function(tumor_type) {
+what_cosmic_v2_sigs <- function(tumor_type) {
   subtypes <- c("adrenocortical carcinoma", "all", "aml", "bladder", "breast",
                "cervix", "chondrosarcoma", "cll", "colorectum", "glioblastoma",
                "glioma low grade", "head and neck", "kidney chromophobe",
@@ -225,7 +225,7 @@ what_cosmic30_sigs <- function(tumor_type) {
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' infer_signatures(bay)
 #' @export
-infer_signatures <- function(bagel, signatures=cosmic_result@signatures,
+infer_signatures <- function(bagel, signatures=cosmic_v2_sigs@signatures,
                           signatures_to_use = seq_len(ncol(signatures)),
                           verbose = FALSE) {
   has_tables(bagel)

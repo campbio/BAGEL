@@ -76,7 +76,7 @@ BAGEL::plot_exposures(result, proportional = FALSE)
 BAGEL::compare_results(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
-BAGEL::what_cosmic30_sigs("lung")
+BAGEL::what_cosmic_v2_sigs("lung")
 
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
 cosmic_post = infer_signatures(bagel = bagel, signatures_to_use = c(12, 4, 11, 15))

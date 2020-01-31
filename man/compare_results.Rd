@@ -6,7 +6,7 @@
 \usage{
 compare_results(
   result,
-  other_result = cosmic_result,
+  other_result = cosmic_v2_sigs,
   threshold = 0.9,
   result_name = "User Signatures 1",
   other_result_name = "User Signatures 2"

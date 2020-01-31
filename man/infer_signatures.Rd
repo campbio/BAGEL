@@ -6,7 +6,7 @@
 \usage{
 infer_signatures(
   bagel,
-  signatures = cosmic_result@signatures,
+  signatures = cosmic_v2_sigs@signatures,
   signatures_to_use = seq_len(ncol(signatures)),
   verbose = FALSE
 )
