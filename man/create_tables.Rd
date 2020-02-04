@@ -11,9 +11,6 @@ create_tables(bay, g)
 
 \item{g}{Genome object used for finding variant context}
 }
-\value{
-Returns 96 motif summary tables
-}
 \description{
 Uses a genome object to find context and generate tables for input samples
 }

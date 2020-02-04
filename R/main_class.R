@@ -2,64 +2,58 @@
 setOldClass(c("data.frame"))
 setOldClass(c("data.table", "data.frame"))
 
-#' The primary object for BAGEL that contains all samples and results
+#' The primary object for BAGEL that contains all samples and tables
 #'
-#' @slot samples A list of sample objects containing sample-level information
-#' @slot prop_table Summary tables with motif counts normalized by sample sums
-#' @slot counts_table Summary tables with unnormalized motif counts
+#' @slot variants Data.table of variants and variant-level information
+#' @slot counts_table Summary table with per-sample unnormalized motif counts
+#' @slot sample_annotations Sample-level annotations (e.g. age, sex, primary)
 #' @export
-setClass("bagel", representation(samples = "data.table", prop_table = "matrix",
-                                 counts_table = "matrix"),
-         prototype(samples = NULL, prop_table = matrix(nrow = 0, ncol = 0),
-                   counts_table = matrix(nrow = 0, ncol = 0)))
+setClass("bagel", representation(variants = "data.table", counts_table =
+                                   "matrix", sample_annotations = "data.table"),
+         prototype(variants = data.table::data.table(), counts_table = matrix(),
+                   sample_annotations = data.table::data.table()))
 
 setMethod("show", "bagel",
-          function(object)cat("BayeSig Object containing \nSamples: ",
-                              if (!is.null(object@samples)) {
-                                noquote(paste(length(unique(
-                                  object@samples$Tumor_Sample_Barcode)),
-                                  collapse = ", "))
+          function(object)cat(cat("BAGEL Object containing \n**Variants: \n"),
+                              if (!all(is.na(object@variants))) {
+                                cat(methods::show(object@variants))
                                 }else{
-                                  "Empty"
+                                  cat("Empty")
                                     },
-                              "\nProportional Table Rows: ",
-                              if (!is.null(object@prop_table)) {
-                                round(base::rowSums(object@prop_table), 3)
+                              cat("\n**Counts Table Dim and Subset: \n"),
+                              if (!all(is.na(object@counts_table))) {
+                                cat("Dim: \n")
+                                cat(methods::show(dim(object@counts_table)),
+                                    "\nSubset Results:\n")
+                                cat(methods::show(
+                                  object@counts_table[seq_len(5), seq_len(min(
+                                    3, nrow(object@counts_table))), drop =
+                                    FALSE]))
                                 }else{
-                                  "Empty"
+                                  cat("Empty")
                                   },
-                              "\nCounts Table Rows: ",
-                              if (!is.null(object@counts_table)) {
-                                rowSums(object@counts_table)
-                                }else{
-                                  "Empty"
-                                  })
+                              cat("\n**Sample Level Annotations: \n"),
+                              if (!all(is.na(object@sample_annotations))) {
+                                cat(methods::show(object@sample_annotations))
+                              }else{
+                                cat("Empty")
+                              })
 )
 
-#' Set samples for bagel object
+# Variant-Level object/methods -------------------------------
+
+#' Set variants table for bagel object
 #'
 #' @param bay Bagel object we input sample into
-#' @param samp Sample DataFrame
-#' @return Sets sample slot {no return}
+#' @param variant_dt Variant DataFrame
+#' @return Sets variant slot {no return}
 #' @examples
-#' samp <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
+#' variants <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
 #' bay <- new("bagel")
-#' set_samples(bay, samp)
+#' set_variants(bay, variants)
 #' @export
-set_samples <- function(bay, samp) {
-  eval.parent(substitute(bay@samples <- samp))
-}
-
-#' Return samples names for bagel object
-#'
-#' @param bay Bagel object containing samples
-#' @return Returns names of samples in bagel object
-#' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' sample_names(bay)
-#' @export
-sample_names <- function(bay) {
-  return(unique(bay@samples$Tumor_Sample_Barcode))
+set_variants <- function(bay, variant_dt) {
+  eval.parent(substitute(bay@variants <- variant_dt))
 }
 
 #' Return sample from bagel object
@@ -69,10 +63,114 @@ sample_names <- function(bay) {
 #' @return Returns sample dataframe subset to a single sample
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' subset_samples(bay, "public_LUAD_TCGA-97-7938.vcf")
+#' subset_variants_by_samples(bay, "public_LUAD_TCGA-97-7938.vcf")
 #' @export
-subset_samples <- function(bay, sample_name) {
-  return(bay@samples[which(bay@samples$Tumor_Sample_Barcode == sample_name), ])
+subset_variants_by_samples <- function(bay, sample_name) {
+  return(bay@variants[which(bay@variants$Tumor_Sample_Barcode == sample_name),
+                      ])
+}
+
+# Sample-Level object/methods -------------------------------
+
+#' Set sample level annotations for bagel object
+#'
+#' @param bay Bagel object we input sample into
+#' @param annotations Sample DataFrame
+#' @return Sets sample_annotations slot {no return}
+#' @examples
+#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
+#' bay <- new("bagel")
+#' set_sample_annotations(bay, annotations)
+#' @export
+set_sample_annotations <- function(bay, annotations) {
+  eval.parent(substitute(bay@sample_annotations <- annotations))
+}
+
+#' Initialize sample annotation data.table with sample names from variants
+#'
+#' @param bay Bagel object we input sample into
+#' @return Sets sample_annotations slot {no return}
+#' @examples
+#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
+#' bay <- new("bagel")
+#' init_sample_annotations(bay)
+#' @export
+init_sample_annotations <- function(bay) {
+  #samples <- unique(tools::file_path_sans_ext(
+  #  bay@variants$Tumor_Sample_Barcode))
+  samples <- unique(bay@variants$Tumor_Sample_Barcode)
+  sample_dt <- data.table::data.table(Samples = samples)
+  eval.parent(substitute(bay@sample_annotations <- sample_dt))
+}
+
+#' Adds sample annotation to bagel object with available samples
+#'
+#' @param bay Bagel object we input sample into
+#' @param annotations table of sample-level annotations to add
+#' @param sample_column name of sample name column
+#' @param columns_to_add which annotation columns to add, defaults to all
+#' @return Sets sample_annotations slot {no return}
+#' @examples
+#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
+#' bay <- new("bagel")
+#' init_sample_annotations(bay)
+#' @export
+add_sample_annotations <- function(bay, annotations, sample_column =
+                                     "Sample_ID", columns_to_add =
+                                     colnames(annotations)) {
+  bay_annotations <- get_sample_annotations(bay)
+  if (all(is.na(bay_annotations))) {
+    stop(strwrap(prefix = " ", initial = "", "Please run init_sample_annotations
+                 on this bagel before adding sample annotations."))
+  }
+  if (!sample_column %in% colnames(annotations)) {
+    stop(strwrap(prefix = " ", initial = "", "User-defined sample_column is
+                 not in input annotations, please check and rerun."))
+  }
+  if (!all(bay_annotations$Samples %in%
+          annotations[, sample_column])) {
+    stop(strwrap(prefix = " ", initial = "", "Some samples are missing
+                 annotations, please check input annotations and rerun."))
+  }
+  if (!all(columns_to_add %in% colnames(annotations))) {
+    stop(strwrap(prefix = " ", initial = "", paste("Some user-defined
+                                                   columns_to_add are not in
+                                                   the input annotations, (",
+                 toString(columns_to_add[which(!columns_to_add %in%
+                                        colnames(annotations))]),
+                 ") please check and rerun.", sep = "")))
+  }
+  matches <- match(bay_annotations$Samples,
+                  annotations[, sample_column])
+  bay_annotations <- cbind(bay_annotations, annotations[matches, columns_to_add,
+                                                       drop = FALSE])
+  eval.parent(substitute(bay@sample_annotations <- bay_annotations))
+}
+
+#' Return sample annotation from bagel object
+#'
+#' @param bay Bagel object we input sample into
+#' @return Sets sample_annotations slot {no return}
+#' @examples
+#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
+#' bay <- new("bagel")
+#' init_sample_annotations(bay)
+#' get_sample_annotations(bay)
+#' @export
+get_sample_annotations <- function(bay) {
+  return(bay@sample_annotations)
+}
+
+#' Return samples names for bagel object
+#'
+#' @param bay Bagel object containing samples
+#' @return Returns names of samples in bagel object
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' get_sample_names(bay)
+#' @export
+get_sample_names <- function(bay) {
+  return(unique(bay@variants$Tumor_Sample_Barcode))
 }
 
 # Result object/methods -------------------------------
@@ -84,9 +182,11 @@ subset_samples <- function(bay, sample_name) {
 #' @slot samples A matrix of samples by signature weights
 #' @slot type Describes how the signatures/weights were generated
 #' @slot bagel The bagel object the results were generated from
+#' @slot log_lik Posterior likelihood of the result (LDA only)
 #' @export
 setClass("Result", representation(signatures = "matrix", samples = "matrix",
-                                  type = "character", bagel = "bagel"))
+                                  type = "character", bagel = "bagel",
+                                  log_lik = "numeric"))
 
 #' Return sample from bagel object
 #'
@@ -104,4 +204,18 @@ name_signatures <- function(result, name_vector) {
                num_sigs, ")", sep = ""))
   }
   eval.parent(substitute(colnames(result@signatures) <- name_vector))
+  eval.parent(substitute(rownames(result@samples) <- name_vector))
 }
+
+# Result Grid object/methods -------------------------------
+
+#' Object containing the result objects generated from the combination of
+#' annotations and a range of k values
+#'
+#' @slot grid_params The parameters the result grid was created using
+#' @slot result_list A list of result objects with different parameters
+#' @slot grid_table A summary table of the result objects in result_list
+#' @export
+setClass("Result_Grid", representation(grid_params = "data.table",
+                                       result_list = "list",
+                                       grid_table = "data.table"))

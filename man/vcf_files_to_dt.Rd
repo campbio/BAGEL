@@ -9,7 +9,8 @@ vcf_files_to_dt(
   filter = TRUE,
   only_snp = TRUE,
   used_fields = c("Chromosome", "Start_Position", "End_Position", "Tumor_Seq_Allele1",
-    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode")
+    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode"),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -20,6 +21,8 @@ vcf_files_to_dt(
 \item{only_snp}{Filter only non-snp variants}
 
 \item{used_fields}{Which fields to extract}
+
+\item{verbose}{Show file list progress}
 }
 \value{
 Returns a data.table of variants from vcfs

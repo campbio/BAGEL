@@ -19,5 +19,7 @@ the bagel object the result was generated from
 \item{\code{type}}{Describes how the signatures/weights were generated}
 
 \item{\code{bagel}}{The bagel object the results were generated from}
+
+\item{\code{log_lik}}{Posterior likelihood of the result (LDA only)}
 }}
 
