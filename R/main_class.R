@@ -171,6 +171,7 @@ get_sample_annotations <- function(bay) {
 #' @export
 get_sample_names <- function(bay) {
   return(unique(bay@variants$Tumor_Sample_Barcode))
+<<<<<<< HEAD
 }
 
 subset_bagel_by_counts <- function(bay, num_counts) {
@@ -203,6 +204,8 @@ subset_bagel_by_annotation <- function(bay, annot_col, annot_name) {
   bay@variants = bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
                                       annotation_samples), ]
   return(bay)
+=======
+>>>>>>> master
 }
 
 # Result object/methods -------------------------------
