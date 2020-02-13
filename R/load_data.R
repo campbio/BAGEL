@@ -64,7 +64,7 @@ auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
     dt <- dt_to_bagel_dt(dt = input, dt_name = name, filter = filter,
                          only_snp = only_snp, extra_fields = extra_fields)
   } else if (is(input, "character")) {
-    if(tools::file_ext(input) == "vcf") {
+    if (tools::file_ext(input) == "vcf") {
       dt <- vcf_file_to_dt(vcf_file = input, filter = filter,
                            only_snp = only_snp, extra_fields = extra_fields,
                            auto_fix_errors = TRUE)
@@ -84,11 +84,12 @@ auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
         print(paste("Sample number: ", i, "; Sample name: ", input[[i]],
                     sep = ""))
       }
-      input_list[[i]] <- BAGEL::auto_to_bagel_dt(input = input[[i]], name = name,
-                                             filter = filter, only_snp = only_snp,
-                                             extra_fields = extra_fields)
+      input_list[[i]] <- BAGEL::auto_to_bagel_dt(input = input[[i]],
+                                                 name = name, filter = filter,
+                                                 only_snp = only_snp,
+                                                 extra_fields = extra_fields)
     }
-    combined <- do.call("rbind", input_list)
+    dt <- do.call("rbind", input_list)
   } else {
     stop(paste("There is no function to read this input. Input must be VCF, ",
     "MAF, file.vcf, file.maf, data.frame or a list of inputs. ",
@@ -102,11 +103,7 @@ auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
 #' @param vcf_files A list of vcf file locations
 #' @param filter Filter to only passed variants
 #' @param only_snp Filter only non-snp variants
-<<<<<<< HEAD
 #' @param extra_fields Which additional fields to extract
-=======
-#' @param used_fields Which fields to extract
->>>>>>> master
 #' @param verbose Show file list progress
 #' @return Returns a data.table of variants from vcfs
 #' @examples
@@ -115,16 +112,7 @@ auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
 #' melanoma <- BAGEL::vcf_files_to_dt(vcf_files = melanoma_vcfs)
 #' @export
 vcf_files_to_dt <- function(vcf_files, filter = TRUE, only_snp = TRUE,
-<<<<<<< HEAD
                        extra_fields = NULL, verbose = FALSE) {
-=======
-                       used_fields = c("Chromosome", "Start_Position",
-                                       "End_Position",
-                                       "Tumor_Seq_Allele1",
-                                       "Tumor_Seq_Allele2",
-                                       "Tumor_Sample_Barcode"),
-                       verbose = FALSE) {
->>>>>>> master
   vcf_list <- vector("list", length(vcf_files))
   pb <- utils::txtProgressBar(min = 0, max = length(vcf_list), initial = 0,
                               style = 3)
@@ -234,11 +222,7 @@ vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = TRUE,
 #' @param vcf_file Location of vcf file
 #' @param filter Filter to only passed variants
 #' @param only_snp Filter only non-snp variants
-<<<<<<< HEAD
 #' @param extra_fields Which additional fields to extract
-=======
-#' @param used_fields Which fields to extract
->>>>>>> master
 #' @param auto_fix_errors Attempt to automatically fix file formatting errors
 #' @return Returns a data.table of variants from a vcf
 #' @examples
@@ -247,16 +231,8 @@ vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = TRUE,
 #' luad <- BAGEL::vcf_file_to_dt(vcf_file = luad_vcf)
 #' @export
 vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
-<<<<<<< HEAD
                            extra_fields = NULL, auto_fix_errors = TRUE) {
-=======
-                           used_fields = c("Chromosome", "Start_Position",
-                                                "End_Position",
-                                                "Tumor_Seq_Allele1",
-                                                "Tumor_Seq_Allele2",
-                                                "Tumor_Sample_Barcode"),
-                           auto_fix_errors = TRUE) {
->>>>>>> master
+
   vcf <- try(VariantAnnotation::readVcf(vcf_file), silent = TRUE)
   vcf_name <- basename(vcf_file)
 
@@ -301,14 +277,8 @@ vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
                " is malformed but could be recovered, review optional.",
                " \nAdditional information: \n", vcf[1],
                sep = ""))
-<<<<<<< HEAD
     return(dt_to_bagel_dt(dt = dt, dt_name = vcf_name, filter = filter,
                           only_snp = only_snp, extra_fields = extra_fields))
-=======
-    return(dt_to_bagel_dt(dt = dt, dt_name = vcf_name, file_type = "vcf file",
-                          filter = filter, only_snp = only_snp,
-                          used_fields = used_fields))
->>>>>>> master
   } else if (class(vcf) == "try-error") {
     stop(paste("VCF File: ", vcf_file,
                   " is malformed and auto-recovery is disabled, please review.",
@@ -316,11 +286,7 @@ vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
                   sep = ""))
   } else {
     return(vcf_to_dt(vcf = vcf, filter = filter, vcf_name = vcf_name,
-<<<<<<< HEAD
                      only_snp = only_snp, extra_fields = extra_fields))
-=======
-                     only_snp = only_snp, used_fields = used_fields))
->>>>>>> master
   }
 }
 
@@ -338,39 +304,19 @@ vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
 #' maf_dt = BAGEL::maf_to_dt(maf = maf)
 #' @export
 maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
-<<<<<<< HEAD
                               TRUE, extra_fields = NULL) {
   dt <- rbind(maf@data, maf@maf.silent)
   return(dt_to_bagel_dt(dt = dt, dt_name = maf_name, filter = filter,
                         only_snp = only_snp, extra_fields = extra_fields))
-=======
-                              TRUE, used_fields = c("Chromosome",
-                                                    "Start_Position",
-                                                    "End_Position",
-                                                    "Tumor_Seq_Allele1",
-                                                    "Tumor_Seq_Allele2",
-                                                    "Tumor_Sample_Barcode")) {
-  dt <- rbind(maf@data, maf@maf.silent)
-  return(dt_to_bagel_dt(dt = dt, dt_name = maf_name, file_type = "maf file",
-                 filter = filter, only_snp = only_snp,
-                 used_fields = used_fields))
->>>>>>> master
 }
 
 #' Converts a data.table to a filtered BAGEL data.table
 #'
 #' @param dt data.table input by user or vcf or maf functions to be filtered
 #' @param dt_name Name of the vcf or maf
-<<<<<<< HEAD
 #' @param filter Filter to only passed variants
 #' @param only_snp Filter only non-snp variants
 #' @param extra_fields Which additional fields to extract
-=======
-#' @param file_type Type of file that was input
-#' @param filter Filter to only passed variants
-#' @param only_snp Filter only non-snp variants
-#' @param used_fields Which fields to extract
->>>>>>> master
 #' @return Returns a data.table of variants from a maf
 #' @examples
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
@@ -378,32 +324,21 @@ maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
 #' dt = BAGEL::maf_to_dt(maf)
 #' maf_dt = BAGEL::dt_to_bagel_dt(dt = dt)
 #' @export
-<<<<<<< HEAD
 dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
                            extra_fields = NULL) {
   used_fields <- c(used_fields(), extra_fields)
-=======
-dt_to_bagel_dt <- function(dt, dt_name = NULL, file_type = "data.table",
-                           filter = TRUE, only_snp = TRUE, used_fields = c(
-                             "Chromosome", "Start_Position", "End_Position",
-                             "Tumor_Seq_Allele1", "Tumor_Seq_Allele2",
-                             "Tumor_Sample_Barcode")) {
->>>>>>> master
   if (is(dt, "data.frame") && !is(dt, "data.table")) {
     warning(paste(file_type, ": ", dt_name,
                   " is a data.frame but not a data.table, automatically fixing",
                   sep = ""))
     dt <- data.table::as.data.table(dt)
-<<<<<<< HEAD
-    file_type = "data.table"
+    file_type <- "data.table"
   } else if (is(dt, "data.table")) {
-    file_type = "data.table"
+    file_type <- "data.table"
   } else {
     stop(paste(deparse(substitute(dt)), "/", dt_name,
                ": needs to be a data.frame or data.table it is a", class(dt),
                sep = ""))
-=======
->>>>>>> master
   }
   if (!all(tolower(used_fields) %in% tolower(colnames(dt)))) {
     stop(paste("Required column(s) ",
