@@ -173,6 +173,38 @@ get_sample_names <- function(bay) {
   return(unique(bay@variants$Tumor_Sample_Barcode))
 }
 
+subset_bagel_by_counts <- function(bay, num_counts) {
+  min_counts <- which(colSums(bay@counts_table) >= num_counts)
+  bay@counts_table <- bay@counts_table[, min_counts]
+  bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
+                                      colnames(bay@counts_table)), ]
+  if (!is.na(bay@sample_annotations)) {
+    bay@sample_annotations <- bay@sample_annotations[which(
+      bay@sample_annotations$Samples %in% colnames(bay@counts_table)), ]
+  }
+  return(bay)
+}
+
+subset_bagel_by_annotation <- function(bay, annot_col, annot_name) {
+  if (!annot_col %in% colnames(bay@sample_annotations)) {
+    stop(paste(annot_col, " not found in annotation columns, please review.",
+               sep = ""))
+  }
+  annotation_index <- which(bay@sample_annotations[[which(colnames(
+    bay@sample_annotations) %in% annot_col)]] == annot_name)
+  if (length(annotation_index) == 0) {
+    stop(paste(annot_name, " not present in ", annot_col,
+               " column, please review.", sep = ""))
+  }
+  bay@sample_annotations <- bay@sample_annotations[annotation_index, ]
+  annotation_samples <- bay@sample_annotations$"Samples"
+  bay@counts_table <- bay@counts_table[, which(colnames(bay@counts_table) %in%
+                                              annotation_samples)]
+  bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
+                                      annotation_samples), ]
+  return(bay)
+}
+
 # Result object/methods -------------------------------
 
 #' Object containing deconvolved/predicted signatures, sample weights, and

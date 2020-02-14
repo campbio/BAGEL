@@ -4,13 +4,7 @@
 \alias{maf_file_to_dt}
 \title{Loads a maf file and extracts the data.table of variants}
 \usage{
-maf_file_to_dt(
-  maf_file,
-  filter = TRUE,
-  only_snp = TRUE,
-  used_fields = c("Chromosome", "Start_Position", "End_Position", "Tumor_Seq_Allele1",
-    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode")
-)
+maf_file_to_dt(maf_file, filter = TRUE, only_snp = TRUE, extra_fields = NULL)
 }
 \arguments{
 \item{maf_file}{Location of maf file}
@@ -19,7 +13,7 @@ maf_file_to_dt(
 
 \item{only_snp}{Filter only non-snp variants}
 
-\item{used_fields}{Which fields to extract}
+\item{extra_fields}{Which additional fields to extract}
 }
 \value{
 Returns a data.table of variants from a maf
