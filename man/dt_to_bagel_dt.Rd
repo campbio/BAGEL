@@ -7,11 +7,9 @@
 dt_to_bagel_dt(
   dt,
   dt_name = NULL,
-  file_type = "data.table",
   filter = TRUE,
   only_snp = TRUE,
-  used_fields = c("Chromosome", "Start_Position", "End_Position", "Tumor_Seq_Allele1",
-    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode")
+  extra_fields = NULL
 )
 }
 \arguments{
@@ -19,13 +17,11 @@ dt_to_bagel_dt(
 
 \item{dt_name}{Name of the vcf or maf}
 
-\item{file_type}{Type of file that was input}
-
 \item{filter}{Filter to only passed variants}
 
 \item{only_snp}{Filter only non-snp variants}
 
-\item{used_fields}{Which fields to extract}
+\item{extra_fields}{Which additional fields to extract}
 }
 \value{
 Returns a data.table of variants from a maf

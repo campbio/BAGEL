@@ -8,8 +8,7 @@ vcf_file_to_dt(
   vcf_file,
   filter = TRUE,
   only_snp = TRUE,
-  used_fields = c("Chromosome", "Start_Position", "End_Position", "Tumor_Seq_Allele1",
-    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode"),
+  extra_fields = NULL,
   auto_fix_errors = TRUE
 )
 }
@@ -20,7 +19,7 @@ vcf_file_to_dt(
 
 \item{only_snp}{Filter only non-snp variants}
 
-\item{used_fields}{Which fields to extract}
+\item{extra_fields}{Which additional fields to extract}
 
 \item{auto_fix_errors}{Attempt to automatically fix file formatting errors}
 }

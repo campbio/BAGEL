@@ -51,10 +51,34 @@ select_genome <- function(hg) {
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = maftools::read.maf(maf_file)
 #' dt = BAGEL::auto_to_bagel_dt(maf)
+#'
+#' melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
+#'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
+#' melanoma <- BAGEL::auto_to_bagel_dt(input = melanoma_vcfs)
 #' @export
 auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
-                             extra_fields = NULL) {
-  if (is(input, "CollapsedVCF")) {
+                             extra_fields = NULL, verbose = TRUE) {
+  if (length(input) > 1 && is(input, "vector")) {
+    if(!is(input, "list")) {
+      input <- as.list(input)
+    }
+    input_list <- vector("list", length(input))
+    pb <- utils::txtProgressBar(min = 0, max = length(input_list), initial = 0,
+                                style = 3)
+    for (i in seq_len(length(input))) {
+      utils::setTxtProgressBar(pb, i, )
+      if (verbose) {
+        print(paste("Sample number: ", i, "; Sample name: ", input[[i]],
+                    sep = ""))
+      }
+      input_list[[i]] <- BAGEL::auto_to_bagel_dt(input = input[[i]],
+                                                 name = name, filter = filter,
+                                                 only_snp = only_snp,
+                                                 extra_fields = extra_fields,
+                                                 verbose = verbose)
+    }
+    dt <- do.call("rbind", input_list)
+  } else if (is(input, "CollapsedVCF")) {
     dt <- vcf_to_dt(vcf = input, vcf_name = name, filter = filter,
                     only_snp = only_snp, extra_fields = extra_fields)
   } else if (is(input, "MAF")) {
@@ -74,22 +98,6 @@ auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
     } else if (!tools::file_ext(input) %in% c("vcf", "maf")) {
       stop(paste("Input: ", input, " could not be parsed.", sep = ""))
     }
-  } else if (is(input, "list")) {
-    input_list <- vector("list", length(input))
-    pb <- utils::txtProgressBar(min = 0, max = length(input_list), initial = 0,
-                                style = 3)
-    for (i in seq_len(length(input))) {
-      utils::setTxtProgressBar(pb, i, )
-      if (verbose) {
-        print(paste("Sample number: ", i, "; Sample name: ", input[[i]],
-                    sep = ""))
-      }
-      input_list[[i]] <- BAGEL::auto_to_bagel_dt(input = input[[i]],
-                                                 name = name, filter = filter,
-                                                 only_snp = only_snp,
-                                                 extra_fields = extra_fields)
-    }
-    dt <- do.call("rbind", input_list)
   } else {
     stop(paste("There is no function to read this input. Input must be VCF, ",
     "MAF, file.vcf, file.maf, data.frame or a list of inputs. ",
