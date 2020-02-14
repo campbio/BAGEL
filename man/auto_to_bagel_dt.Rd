@@ -23,6 +23,8 @@ auto_to_bagel_dt(
 
 \item{extra_fields}{Which additional fields to extract}
 
+\item{verbose}{Show file list progress}
+
 \item{auto_fix_errors}{Attempt to automatically fix file formatting errors}
 }
 \value{

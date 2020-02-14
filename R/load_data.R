@@ -31,6 +31,7 @@ select_genome <- function(hg) {
 #' @param only_snp Filter only non-snp variants
 #' @param extra_fields Which additional fields to extract
 #' @param auto_fix_errors Attempt to automatically fix file formatting errors
+#' @param verbose Show file list progress
 #' @return Returns a data.table of variants from a vcf
 #' @examples
 #' luad_vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
