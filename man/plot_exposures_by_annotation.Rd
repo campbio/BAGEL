@@ -6,15 +6,18 @@
 \usage{
 plot_exposures_by_annotation(
   result,
+  annotation,
   proportional = TRUE,
   label_samples = FALSE,
   sort_samples = "numerical",
-  annotation,
-  by_group = TRUE
+  by_group = TRUE,
+  plotly = FALSE
 )
 }
 \arguments{
 \item{result}{S4 Result Object}
+
+\item{annotation}{Annotation to use for facet_wrap}
 
 \item{proportional}{Whether weights are normalized to sum to 1 or not}
 
@@ -23,9 +26,9 @@ plot_exposures_by_annotation(
 \item{sort_samples}{Defaults to numerical, may be total 'counts', or a
 specific signatures name (e.g. 'Signature1)}
 
-\item{annotation}{Annotation to use for facet_wrap}
-
 \item{by_group}{Plot subplots by annotation or by signature}
+
+\item{plotly}{add plotly layer for plot interaction}
 }
 \value{
 Generates plot {no return}
@@ -35,5 +38,5 @@ Plots signature weights for each sample gridded by single annotation
 }
 \examples{
 result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-plot_exposures(result)
+plot_exposures_by_annotation(result)
 }

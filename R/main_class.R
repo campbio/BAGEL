@@ -2,15 +2,151 @@
 setOldClass(c("data.frame"))
 setOldClass(c("data.table", "data.frame"))
 
+# Count Tables object/methods -------------------------------
+
+#' Object containing the result objects generated from the combination of
+#' annotations and a range of k values
+#'
+#' @slot table_list A list of data.tables with counts
+#' @slot table_name The parameters the result grid was created using
+#' @slot description A summary table of the result objects in result_list
+#' @slot compounding Create a compound table from other tables. The format is
+#' a list of lists. The nested lists created combined (rbind) tables, and the
+#' tables at the first list level are modelled independantly. Combined tables
+#' must be named.
+#' list("tableA", comboTable = list("tableC", "tableD"))
+#' @export
+setClass("Count_Tables", representation(table_list = "list",
+                                        table_name = "list",
+                                        description = "list"))
+
+create_count_table <- function(bay, table, name, description = NA) {
+  tab <- bay@count_tables
+
+  #Check that table names are unique
+  if (name %in% tab@table_name) {
+    stop(paste("Table names must be unique. Current table names are: ",
+               paste(tab@table_name, collapse = ", "), sep = ""))
+  }
+
+  if (is(table, "matrix")) {
+    tab@table_list[[name]] <- table
+  } else {
+    stop("Please provide only a table or a compounding for tables")
+  }
+
+  tab@table_name[[name]] <- name
+  tab@description[[name]] <- description
+  #eval.parent(substitute(bay@count_tables <- tab))
+  return(tab)
+}
+
+create_variant_table <- function(bay, variant_annotation, name,
+                                 description = NA, data_factor = NA) {
+  tab <- bay@count_tables
+  variants <- bay@variants
+
+  #Check that table names are unique
+  if (name %in% tab@table_name) {
+    stop(paste("Table names must be unique. Current table names are: ",
+               paste(tab@table_name, collapse = ", "), sep = ""))
+  }
+
+  #Check that variant column exists
+  if (name %in% colnames(variants)) {
+    column_data <- variants[[variant_annotation]]
+    sample_names <- unique(variants$Tumor_Sample_Barcode)
+    num_samples <- length(sample_names)
+    default_factor <- levels(factor(column_data))
+    variant_tables <- vector("list", length = num_samples)
+    for (i in seq_len(num_samples)) {
+      sample_index <- which(variants$Tumor_Sample_Barcode == sample_names[i])
+      if (!is.na(data_factor)) {
+        variant_tables[[i]] <- table(factor(column_data[sample_index],
+                                      levels = data_factor))
+      } else {
+        variant_tables[[i]] <- table(factor(column_data[sample_index],
+                                      levels = default_factor))
+      }
+    }
+    table <- do.call(cbind, variant_tables)
+    colnames(table) <- sample_names
+  } else {
+    stop(paste("That variant annotation does not exists,",
+               " existing annotations are: ", colnames(variants), sep = ""))
+  }
+
+  tab@table_list[[name]] <- table
+  tab@table_name[[name]] <- name
+  tab@description[[name]] <- description
+  eval.parent(substitute(bay@count_tables <- tab))
+}
+
+combine_count_tables <- function(bay, compounding, name, description = NA) {
+  tab <- bay@count_tables
+
+  #Check that table names are unique
+  if (name %in% tab@table_name) {
+    stop(paste("Table names must be unique. Current table names are: ",
+               paste(tab@table_name, collapse = ", "), sep = ""))
+  }
+
+  if (all(to_comb %in% tab@table_name)) {
+    combo_table <- NULL
+    for(i in 1:length(to_comb)) {
+      combo_table <- rbind(combo_table, tab@table_list[[to_comb[i]]])
+    }
+    tab@table_list[[name]] <- combo_table
+  } else {
+    stop(paste("User specified table: ",
+               setdiff(to_comb, tab@table_name, "does not exist, please",
+                       "create prior to creating compound table")))
+  }
+  tab@table_name[[name]] <- name
+  tab@description[[name]] <- description
+  eval.parent(substitute(bay@count_tables <- tab))
+}
+
+semi_split <- function(compound) {
+  return(unlist(strsplit(compound, ";")))
+}
+
+drop_count_table <- function(bay, table_name) {
+  tab <- bay@count_tables
+  if (!table_name %in% tab@table_name) {
+    stop(paste(table_name, " does not exist. Current table names are: ",
+               tab@table_name, sep = ""))
+  }
+  tab@table_list[[table_name]] <- NULL
+  tab@table_name[[table_name]] <- NULL
+  tab@description[[table_name]] <- NULL
+  eval.parent(substitute(bay@count_tables <- tab))
+}
+
+setMethod("show", "Count_Tables",
+          function(object)cat("Count_Tables Object containing: ",
+                              "\n**Count Tables: \n",
+                              cbind(do.call("rbind", lapply(object@table_list,
+                                                            dim)), "\n"),
+                              "\n**Names: \n",
+                              paste(unlist(object@table_name), "\n", sep = ""),
+                              "\n**Descriptions: \n",
+                              paste(unlist(object@description), "\n", sep = ""))
+)
+
+# Primary bagel object/methods -------------------------------
+
 #' The primary object for BAGEL that contains all samples and tables
 #'
 #' @slot variants Data.table of variants and variant-level information
-#' @slot counts_table Summary table with per-sample unnormalized motif counts
+#' @slot count_tables Summary table with per-sample unnormalized motif counts
 #' @slot sample_annotations Sample-level annotations (e.g. age, sex, primary)
 #' @export
-setClass("bagel", representation(variants = "data.table", counts_table =
-                                   "matrix", sample_annotations = "data.table"),
-         prototype(variants = data.table::data.table(), counts_table = matrix(),
+setClass("bagel", representation(variants = "data.table", count_tables =
+                                   "Count_Tables",
+                                 sample_annotations = "data.table"),
+         prototype(variants = data.table::data.table(),
+                   count_tables = new("Count_Tables"),
                    sample_annotations = data.table::data.table()))
 
 setMethod("show", "bagel",
@@ -20,15 +156,17 @@ setMethod("show", "bagel",
                                 }else{
                                   cat("Empty")
                                     },
-                              cat("\n**Counts Table Dim and Subset: \n"),
-                              if (!all(is.na(object@counts_table))) {
-                                cat("Dim: \n")
-                                cat(methods::show(dim(object@counts_table)),
-                                    "\nSubset Results:\n")
-                                cat(methods::show(
-                                  object@counts_table[seq_len(5), seq_len(min(
-                                    3, nrow(object@counts_table))), drop =
-                                    FALSE]))
+                              cat("\n**Count_Tables Object containing: \n"),
+                              if (length(object@count_tables@table_name) > 0) {
+                                cat("\n**Count Tables: \n",
+                                    cbind(do.call("rbind", lapply(
+                                      object@count_tables@table_list, dim)),
+                                      "\n"), "\n**Names: \n", paste(
+                                        unlist(object@count_tables@table_name),
+                                        "\n", sep = ""), "\n**Descriptions: \n",
+                                    paste(unlist(
+                                      object@count_tables@description), "\n",
+                                      sep = ""))
                                 }else{
                                   cat("Empty")
                                   },

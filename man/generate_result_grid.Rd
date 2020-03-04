@@ -6,6 +6,7 @@
 \usage{
 generate_result_grid(
   bagel,
+  table_name,
   discovery_type = "lda",
   annotation = NA,
   k_start,
@@ -17,6 +18,8 @@ generate_result_grid(
 }
 \arguments{
 \item{bagel}{Input bagel to generate grid from}
+
+\item{table_name}{Name of table used for signature discovery}
 
 \item{discovery_type}{Algorithm for signature discovery}
 

@@ -89,7 +89,7 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
     Biostrings::reverseComplement()
 
   final_mut_context[ind] <- as.character(rev_flank)
-  dat$output_column <- final_mut_context
+  dat[[output_column]] <- final_mut_context
   eval.parent(substitute(bay@variants <- dat))
 }
 
@@ -129,9 +129,9 @@ drop_annotation <- function(bay, column_name) {
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("38")
-#' create_tables(bay, g)
+#' create_snv96_table(bay, g)
 #' @export
-create_tables <- function(bay, g) {
+create_snv96_table <- function(bay, g) {
   dat <- bay@variants
 
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
@@ -219,13 +219,12 @@ create_tables <- function(bay, g) {
                               stringsAsFactors = FALSE)
     maf_mut_summaries[[i]] <- mut_summary
   }
-  sigit <- function(mut_summary) {
-    tab <- table(mut_summary[, "mutation"])
-    tab <- tab / sum(tab)
-    return(tab)
-  }
   mut_summary_mat <- do.call(cbind, lapply(maf_mut_summaries, function(x)
     table(x[, "mutation"])))
   colnames(mut_summary_mat) <- sample_names
-  eval.parent(substitute(bay@counts_table <- mut_summary_mat))
+  tab <- create_count_table(bay = bay, table = mut_summary_mat, name = "SNV96",
+                     description = paste("Single Nucleotide Variant table with",
+                     " one base upstream and downstream",
+                                         sep = ""))
+  eval.parent(substitute(bay@count_tables <- tab))
 }
