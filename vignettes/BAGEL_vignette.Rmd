@@ -15,6 +15,15 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
+
+#Find Signatures examples
+#' examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("19")
+#' create_snv96_table(bay, g)
+#' res <- find_signatures(bay, "SNV96", num_signatures = 4)
+
+
 #sample_annotations <- cbind(c("TCGA-94-7557-01A-11D-2122-08", "TCGA-56-7582-01A-11D-2042-08", #"TCGA-77-7335-01A-11D-2042-08", "public_SKCM_TCGA-EE-A3J5-06A-11D-A20D-08.vcf", #"public_SKCM_TCGA-ER-A197-06A-32D-A197-08.vcf", "public_SKCM_TCGA-ER-A19O-06A-11D-A197-08.vcf", #"public_LUAD_TCGA-97-7938.vcf", "public_LUAD_TCGA-MP-A4TJ.vcf"), c(rep("Lung", 4), rep("Breast", 4)))
 #colnames(sample_annotations) <- c("Sample_Names", "Tumor_Subtypes")
 #write.table(sample_annotations, #"/Users/atgc/Documents/Aaron_Tools/BAGEL/inst/testdata/sample_annotations.txt", quote=FALSE, #row.names=FALSE, sep = "\t")

@@ -7,11 +7,6 @@
 #' @param seed Seed for reproducible signature discovery
 #' @param nstart Number of independent runs with optimal chosen (lda only)
 #' @return Returns a result object with results and input object (if bagel)
-#' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("19")
-#' create_snv96_table(bay, g)
-#' find_signatures(bay, "SNV96", num_signatures = 4)
 #' @export
 find_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = NA, nstart = 1) {
@@ -386,7 +381,9 @@ multi_modal_discovery <- function(bay, num_signatures, motif96_name,
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' grid <- generate_result_grid(bay, k_start = 2, k_end = 5)
+#' g <- select_genome("19")
+#' create_snv96_table(bay, g)
+#' grid <- generate_result_grid(bay, "SNV96", k_start = 2, k_end = 5)
 #' @export
 generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                  annotation = NA, k_start, k_end, n_start = 1,
@@ -436,13 +433,14 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
       cur_bagel <- methods::new("bagel", variants = cur_annot_variants,
                        sample_annotations =
                          bagel@sample_annotations[cur_ind, ],
-                       counts_table = bagel@counts_table[, cur_ind])
+                       count_tables = extract_count_table(
+                         bagel, table_name)[, cur_ind])
     } else {
       cur_bagel <- bagel
       cur_annot_samples <- unique(bagel@variants$Tumor_Sample_Barcode)
     }
     #Used for reconstruction error
-    cur_counts <- cur_bagel@counts_table
+    cur_counts <- extract_count_table(cur_bagel, table_name)
 
     #Define new results
     for (cur_k in k_start:k_end) {

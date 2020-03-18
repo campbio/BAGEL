@@ -44,5 +44,7 @@ Generate result_grid from bagel based on annotation and range of k
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-grid <- generate_result_grid(bay, k_start = 2, k_end = 5)
+g <- select_genome("19")
+create_snv96_table(bay, g)
+grid <- generate_result_grid(bay, "SNV96", k_start = 2, k_end = 5)
 }
