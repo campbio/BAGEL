@@ -16,9 +16,7 @@ annotations and a range of k values
 
 \item{\code{table_name}}{The parameters the result grid was created using}
 
-\item{\code{description}}{A summary table of the result objects in result_list}
-
-\item{\code{compounding}}{Create a compound table from other tables. The format is
+\item{\code{description}}{A summary table of the result objects in result_list
 a list of lists. The nested lists created combined (rbind) tables, and the
 tables at the first list level are modelled independantly. Combined tables
 must be named.

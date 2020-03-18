@@ -32,5 +32,7 @@ LDA prediction of samples based on existing signatures (default COSMIC)
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-infer_signatures(bay)
+g <- select_genome("19")
+create_snv96_table(bay, g)
+infer_signatures(bay, "SNV96")
 }

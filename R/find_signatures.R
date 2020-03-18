@@ -9,7 +9,9 @@
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' find_signatures(bay, num_signatures = 4)
+#' g <- select_genome("19")
+#' create_snv96_table(bay, g)
+#' find_signatures(bay, "SNV96", num_signatures = 4)
 #' @export
 find_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = NA, nstart = 1) {
@@ -226,7 +228,9 @@ what_cosmic_v2_sigs <- function(tumor_type) {
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' infer_signatures(bay)
+#' g <- select_genome("19")
+#' create_snv96_table(bay, g)
+#' infer_signatures(bay, "SNV96")
 #' @export
 infer_signatures <- function(bagel, table_name,
                              signatures=cosmic_v2_sigs@signatures,

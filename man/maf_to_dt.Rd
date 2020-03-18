@@ -32,5 +32,5 @@ Extracts the data.table of variants from a maftools maf object
 \examples{
 maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 maf = maftools::read.maf(maf_file)
-maf_dt = BAGEL::maf_to_dt(maf = maf)
+maf_dt = BAGEL::maf_to_dt(maf = maf, maf_name = "test", filter = FALSE)
 }

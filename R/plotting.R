@@ -6,18 +6,19 @@ NULL
 #' Return sample from bagel object
 #'
 #' @param bay Bagel object containing samples
+#' @param table_name Name of table used for plotting counts
 #' @param sample_name Sample name to plot counts
 #' @return Generates sample plot {no return}
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' plot_sample_counts(bay, get_sample_names(bay)[1])
 #' @export
-plot_sample_counts <- function(bay, sample_name) {
+plot_sample_counts <- function(bay, table_name, sample_name) {
   if (length(sample_name) != 1) {
     stop("`please specify exactly one sample")
   }
   sample_number <- which(get_sample_names(bay = bay) == sample_name)
-  sample <- bay@counts_table[, sample_number]
+  sample <- extract_count_table(bay, table_name)[, sample_number]
   plot_full(sample)
 }
 
@@ -102,16 +103,18 @@ plot_signatures <- function(result, plotly = FALSE) {
 #' Plotting Signature Motif counts/spectra
 #'
 #' @param result S4 Result Object
+#' @param table_name Table to use for reconstruction error plotting
 #' @param sample_number Sample number within result to plot error
 #' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' plot_sample_reconstruction_error(result, 1)
+#' plot_sample_reconstruction_error(result, "SNV96", 1)
 #' @export
-plot_sample_reconstruction_error <- function(result, sample_number,
+plot_sample_reconstruction_error <- function(result, table_name, sample_number,
                                              plotly = FALSE) {
-  signatures <- result@bagel@counts_table[, sample_number, drop = FALSE]
+  signatures <- extract_count_table(result@bagel, table_name)[, sample_number,
+                                                              drop = FALSE]
   reconstructed <- reconstruct_sample(result, sample_number)
   error <- signatures - reconstructed
   colnames(error) <- "Error"
@@ -259,8 +262,8 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
 #' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
-#' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' plot_exposures_by_annotation(result)
+#' result <- readRDS(system.file("testdata", "res_annot.rds", package = "BAGEL"))
+#' plot_exposures_by_annotation(result, "Tumor_Subtypes")
 #' @export
 plot_exposures_by_annotation <- function(result, annotation,
                                          proportional = TRUE,

@@ -33,7 +33,8 @@ Imports:
     dplyr,
     rlang,
     topicmodels,
-    GenomeInfoDb
+    GenomeInfoDb,
+    plotly
 Suggests:
     testthat,
     knitr,

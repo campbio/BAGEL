@@ -37,6 +37,6 @@ Generates plot {no return}
 Plots signature weights for each sample gridded by single annotation
 }
 \examples{
-result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-plot_exposures_by_annotation(result)
+result <- readRDS(system.file("testdata", "res_annot.rds", package = "BAGEL"))
+plot_exposures_by_annotation(result, "Tumor_Subtypes")
 }

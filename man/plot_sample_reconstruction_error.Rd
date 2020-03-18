@@ -4,10 +4,17 @@
 \alias{plot_sample_reconstruction_error}
 \title{Plotting Signature Motif counts/spectra}
 \usage{
-plot_sample_reconstruction_error(result, sample_number, plotly = FALSE)
+plot_sample_reconstruction_error(
+  result,
+  table_name,
+  sample_number,
+  plotly = FALSE
+)
 }
 \arguments{
 \item{result}{S4 Result Object}
+
+\item{table_name}{Table to use for reconstruction error plotting}
 
 \item{sample_number}{Sample number within result to plot error}
 
@@ -21,5 +28,5 @@ Plotting Signature Motif counts/spectra
 }
 \examples{
 result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-plot_sample_reconstruction_error(result, 1)
+plot_sample_reconstruction_error(result, "SNV96", 1)
 }

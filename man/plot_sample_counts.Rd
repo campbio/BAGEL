@@ -4,10 +4,12 @@
 \alias{plot_sample_counts}
 \title{Return sample from bagel object}
 \usage{
-plot_sample_counts(bay, sample_name)
+plot_sample_counts(bay, table_name, sample_name)
 }
 \arguments{
 \item{bay}{Bagel object containing samples}
+
+\item{table_name}{Name of table used for plotting counts}
 
 \item{sample_name}{Sample name to plot counts}
 }

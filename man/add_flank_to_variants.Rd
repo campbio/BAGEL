@@ -4,7 +4,7 @@
 \alias{add_flank_to_variants}
 \title{Uses a genome object to find context and add it to the variant table}
 \usage{
-add_flank_to_variants(bay, g, flank_start, flank_end)
+add_flank_to_variants(bay, g, flank_start, flank_end, build_table = TRUE)
 }
 \arguments{
 \item{bay}{Input samples}
@@ -14,6 +14,9 @@ add_flank_to_variants(bay, g, flank_start, flank_end)
 \item{flank_start}{Start of flank area to add, can be positive or negative}
 
 \item{flank_end}{End of flank area to add, can be positive or negative}
+
+\item{build_table}{Automatically build a table using the annotation and add
+it to the bagel}
 }
 \description{
 Uses a genome object to find context and add it to the variant table

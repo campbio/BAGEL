@@ -34,13 +34,16 @@ table_96 <- function(sample_df) {
 #' @param g Genome object used for finding variant context
 #' @param flank_start Start of flank area to add, can be positive or negative
 #' @param flank_end End of flank area to add, can be positive or negative
+#' @param build_table Automatically build a table using the annotation and add
+#' it to the bagel
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("38")
 #' add_flank_to_variants(bay, g, 1, 5)
 #' add_flank_to_variants(bay, g, -5, -1)
 #' @export
-add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
+add_flank_to_variants <- function(bay, g, flank_start, flank_end,
+                                  build_table = TRUE) {
   stopifnot(sign(flank_start) == sign(flank_end), flank_start < flank_end)
 
   direction <- ifelse(sign(flank_start) == 1, "r", "l")
@@ -52,13 +55,6 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
   dat <- bay@variants
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
   chr <- dat$Chromosome
-  tryCatch(
-    GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
-    error = function(e) {
-      warning("found no sequence renaming map compatible with seqname",
-              " style 'UCSC' for the input reference ", g@pkgname)
-    }
-  )
 
   if (sign(flank_start) == 1) {
     center <- dat$End_Position
@@ -91,6 +87,14 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
   final_mut_context[ind] <- as.character(rev_flank)
   dat[[output_column]] <- final_mut_context
   eval.parent(substitute(bay@variants <- dat))
+  if (build_table) {
+    dat_bagel = methods::new("bagel", variants = dat, count_tables =
+                               bay@count_tables,
+                             sample_annotations = bay@sample_annotations)
+    tab <- create_variant_table(dat_bagel, variant_annotation = output_column,
+                         name = output_column, return_instead = FALSE)
+    eval.parent(substitute(bay@count_tables <- tab))
+  }
 }
 
 #' Adds an annotation to the variant table with length of each variant
@@ -102,8 +106,13 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end) {
 #' @export
 annotate_variant_length <- function(bay) {
   dat <- bay@variants
-  var_length <- nchar(dat$Tumor_Seq_Allele2)
-  dat[, "Variant_Length"] <- var_length
+  var_length <- rep(NA, nrow(dat))
+  var_length[which(dat$Variant_Type == "SNV")] <- 1
+  var_length[which(dat$Variant_Type == "DBS")] <- 2
+  indels <- which(dat$Variant_Type == "indel")
+  var_length[indels] <- nchar(dat$Tumor_Seq_Allele2[indels]) -
+    nchar(dat$Tumor_Seq_Allele1[indels])
+  dat[["Variant_Length"]] <- var_length
   eval.parent(substitute(bay@variants <- dat))
 }
 
@@ -225,6 +234,120 @@ create_snv96_table <- function(bay, g) {
   tab <- create_count_table(bay = bay, table = mut_summary_mat, name = "SNV96",
                      description = paste("Single Nucleotide Variant table with",
                      " one base upstream and downstream",
-                                         sep = ""))
+                                         sep = ""), return_instead = TRUE)
   eval.parent(substitute(bay@count_tables <- tab))
+}
+
+#' Generates a variant type table
+#'
+#' @param tab Input variant table
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' BAGEL:::add_variant_type(bay@variants)
+#' @keywords internal
+add_variant_type <- function(tab) {
+  type <- rep(NA, nrow(tab))
+  type[which(nchar(tab$Tumor_Seq_Allele1) == 1 &
+               nchar(tab$Tumor_Seq_Allele2) == 1)] <- "SNV"
+  type[which(nchar(tab$Tumor_Seq_Allele1) == 2 &
+               nchar(tab$Tumor_Seq_Allele2) == 2)] <- "DBS"
+  type[which(tab$Tumor_Seq_Allele1 == "-" |
+               tab$Tumor_Seq_Allele2 == "-")] <- "indel"
+  type[which(is.na(type))] <- "indel"
+  tab$Variant_Type <- type
+  return(tab)
+}
+
+#' Annotate variants with variant type ("SNV", "INS", "DEl", "DBS")
+#'
+#' @param bay Input bagel
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_variant_type(bay)
+#' @export
+annotate_variant_type <- function(bay) {
+  type_added <- add_variant_type(bay@variants)
+  eval.parent(substitute(bay@variants <- type_added))
+}
+
+#' Subsets a variant table based on Variant Type
+#'
+#' @param tab Input variant table
+#' @param type Variant type to return e.g. "SNV", "INS", "DEL", "DBS"
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' subset_variant_by_type(bay, "SNV")
+#' @export
+subset_variant_by_type <- function(tab, type) {
+  if(!"Variant_Type" %in% colnames(tab)) {
+    stop(paste("No Variant_Type annotation found, ",
+               "please run annotate_variant_type first."))
+  }
+  if(!any(tab$Variant_Type %in% type)) {
+    stop(paste("No variants of type: ", type))
+  }
+  return(tab[which(tab$Variant_Type == type), ])
+}
+
+#' Creates and adds a table for standard doublet base subsitution (DBS)
+#'
+#' @param bay Input bagel
+#' @examples
+#' bay <- readRDS(system.file("testdata", "dbs_bagel.rds", package = "BAGEL"))
+#' create_dbs_table(bay)
+#' @export
+create_dbs_table <- function(bay) {
+  dbs <- subset_variant_by_type(bay@variants, "DBS")
+
+  dbs_motifs <- cbind(paste(dbs$Tumor_Seq_Allele1, dbs$Tumor_Seq_Allele2, sep=">"))
+  default_factor <- levels(factor(dbs_motifs))
+  sample_names <- unique(dbs$Tumor_Sample_Barcode)
+  num_samples <- length(sample_names)
+  variant_tables <- vector("list", length = num_samples)
+  for (i in seq_len(num_samples)) {
+    sample_index <- which(dbs$Tumor_Sample_Barcode == sample_names[i])
+    variant_tables[[i]] <- table(factor(dbs_motifs[sample_index],
+                                        levels = default_factor))
+  }
+  table <- do.call(cbind, variant_tables)
+  colnames(table) <- sample_names
+
+  tab <- create_count_table(bay = bay, table = table, name = "DBS",
+                            description = paste("Standard count table for ",
+                                                "double-base substitutions",
+                                                sep = ""),
+                            return_instead = TRUE)
+  eval.parent(substitute(bay@count_tables <- tab))
+}
+
+create_indel_table <- function(bay, g) {
+  temp <- methods::new("bagel", variants = subset_variant_by_type(bay@variants,
+                                                                  "indel"),
+                       count_tables = bay@count_tables)
+  tab <- create_variant_table(bay = temp, variant_annotation = "Variant_Length",
+                              name = "indel", description =
+                                "Standard count table for indels",
+                              return_instead = TRUE)
+  eval.parent(substitute(bay@count_tables <- tab))
+}
+
+#' Add strand annotation to SNV variants
+#'
+#' @param bay Input bagel
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_snv_strand(bay)
+#' @export
+annotate_snv_strand <- function(bay) {
+  dat <- bay@variants
+  snvs <- which(dat$Variant_Type == "SNV")
+  motifs <- paste(dat$Tumor_Seq_Allele1,
+                  dat$Tumor_Seq_Allele2, sep = ">")
+  forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
+  rev_change <- c("A>G", "A>T", "A>C", "G>T", "G>C", "G>A")
+  strand <- rep(NA, nrow(dat))
+  strand[which(motifs %in% forward_change)] <- "+"
+  strand[which(motifs %in% rev_change)] <- "-"
+  dat[["SNV_Strand"]] <- strand
+  eval.parent(substitute(bay@variants <- dat))
 }

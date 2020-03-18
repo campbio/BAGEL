@@ -34,5 +34,7 @@ Discovers signatures and weights from a table of counts using NMF
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-find_signatures(bay, num_signatures = 4)
+g <- select_genome("19")
+create_snv96_table(bay, g)
+find_signatures(bay, "SNV96", num_signatures = 4)
 }

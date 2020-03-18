@@ -10,7 +10,6 @@ setOldClass(c("data.table", "data.frame"))
 #' @slot table_list A list of data.tables with counts
 #' @slot table_name The parameters the result grid was created using
 #' @slot description A summary table of the result objects in result_list
-#' @slot compounding Create a compound table from other tables. The format is
 #' a list of lists. The nested lists created combined (rbind) tables, and the
 #' tables at the first list level are modelled independantly. Combined tables
 #' must be named.
@@ -20,7 +19,8 @@ setClass("Count_Tables", representation(table_list = "list",
                                         table_name = "list",
                                         description = "list"))
 
-create_count_table <- function(bay, table, name, description = NA) {
+create_count_table <- function(bay, table, name, description = NA,
+                               return_instead = FALSE) {
   tab <- bay@count_tables
 
   #Check that table names are unique
@@ -37,12 +37,16 @@ create_count_table <- function(bay, table, name, description = NA) {
 
   tab@table_name[[name]] <- name
   tab@description[[name]] <- description
-  #eval.parent(substitute(bay@count_tables <- tab))
-  return(tab)
+  if (return_instead) {
+    return(tab)
+  } else {
+    eval.parent(substitute(bay@count_tables <- tab))
+  }
 }
 
 create_variant_table <- function(bay, variant_annotation, name,
-                                 description = NA, data_factor = NA) {
+                                 description = NA, data_factor = NA,
+                                 return_instead = FALSE) {
   tab <- bay@count_tables
   variants <- bay@variants
 
@@ -53,7 +57,7 @@ create_variant_table <- function(bay, variant_annotation, name,
   }
 
   #Check that variant column exists
-  if (name %in% colnames(variants)) {
+  if (variant_annotation %in% colnames(variants)) {
     column_data <- variants[[variant_annotation]]
     sample_names <- unique(variants$Tumor_Sample_Barcode)
     num_samples <- length(sample_names)
@@ -72,17 +76,22 @@ create_variant_table <- function(bay, variant_annotation, name,
     table <- do.call(cbind, variant_tables)
     colnames(table) <- sample_names
   } else {
-    stop(paste("That variant annotation does not exists,",
-               " existing annotations are: ", colnames(variants), sep = ""))
+    stop(paste("That variant annotation does not exist,",
+               " existing annotations are: ", paste(colnames(variants),
+                                                    collapse = ", "), sep = ""))
   }
 
   tab@table_list[[name]] <- table
   tab@table_name[[name]] <- name
   tab@description[[name]] <- description
-  eval.parent(substitute(bay@count_tables <- tab))
+  if (return_instead) {
+    return(tab)
+  } else {
+    eval.parent(substitute(bay@count_tables <- tab))
+  }
 }
 
-combine_count_tables <- function(bay, compounding, name, description = NA) {
+combine_count_tables <- function(bay, to_comb, name, description = NA) {
   tab <- bay@count_tables
 
   #Check that table names are unique
@@ -99,8 +108,10 @@ combine_count_tables <- function(bay, compounding, name, description = NA) {
     tab@table_list[[name]] <- combo_table
   } else {
     stop(paste("User specified table: ",
-               setdiff(to_comb, tab@table_name, "does not exist, please",
-                       "create prior to creating compound table")))
+               setdiff(to_comb, tab@table_name), " does not exist, please ",
+                       "create prior to creating compound table. ",
+               "Current table names are: ", paste(tab@table_name,
+                                                  collapse = ", "), sep = ""))
   }
   tab@table_name[[name]] <- name
   tab@description[[name]] <- description
@@ -126,8 +137,8 @@ drop_count_table <- function(bay, table_name) {
 setMethod("show", "Count_Tables",
           function(object)cat("Count_Tables Object containing: ",
                               "\n**Count Tables: \n",
-                              cbind(do.call("rbind", lapply(object@table_list,
-                                                            dim)), "\n"),
+                              apply(cbind(do.call("rbind", lapply(
+                                object@table_list, dim)), "\n"), 1, paste),
                               "\n**Names: \n",
                               paste(unlist(object@table_name), "\n", sep = ""),
                               "\n**Descriptions: \n",
@@ -159,9 +170,10 @@ setMethod("show", "bagel",
                               cat("\n**Count_Tables Object containing: \n"),
                               if (length(object@count_tables@table_name) > 0) {
                                 cat("\n**Count Tables: \n",
-                                    cbind(do.call("rbind", lapply(
+                                    apply(cbind(do.call("rbind", lapply(
                                       object@count_tables@table_list, dim)),
-                                      "\n"), "\n**Names: \n", paste(
+                                      "\n"), 1, paste),
+                                    "\n**Names: \n", paste(
                                         unlist(object@count_tables@table_name),
                                         "\n", sep = ""), "\n**Descriptions: \n",
                                     paste(unlist(
@@ -311,18 +323,48 @@ get_sample_names <- function(bay) {
   return(unique(bay@variants$Tumor_Sample_Barcode))
 }
 
-subset_bagel_by_counts <- function(bay, num_counts) {
-  min_counts <- which(colSums(bay@counts_table) >= num_counts)
-  bay@counts_table <- bay@counts_table[, min_counts]
+#' Creates a new bagel subsetted to only samples with enough variants
+#'
+#' @param bay Input bagel
+#' @param table_name Name of table used for subsetting
+#' @param num_counts Minimum sum count value to drop samples
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' subset_bagel_by_counts(bay, "SNV96", 5)
+#' @export
+subset_bagel_by_counts <- function(bay, table_name, num_counts) {
+  tab <- extract_count_table(bay, table_name)
+  min_samples <- colnames(tab)[which(colSums(tab) >= num_counts)]
+
+  #Subset all tables
+  table_names <- names(bay@count_tables@table_name)
+  for (name in table_names) {
+    sub_tab <- bay@count_tables@table_list[[name]]
+    sub_tab <- sub_tab[, which(colnames(sub_tab) %in% min_samples)]
+    bay@count_tables@table_list[[name]] <- sub_tab
+  }
+
+  #Subset variants
   bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
-                                      colnames(bay@counts_table)), ]
-  if (!is.na(bay@sample_annotations)) {
+                                      min_samples), ]
+
+  #Subset sample annotations
+  if (nrow(bay@sample_annotations) != 0) {
     bay@sample_annotations <- bay@sample_annotations[which(
-      bay@sample_annotations$Samples %in% colnames(bay@counts_table)), ]
+      bay@sample_annotations$Samples %in% min_samples), ]
   }
   return(bay)
 }
 
+#' Creates a new bagel subsetted to only one value of a sample annotation
+#'
+#' @param bay Input bagel
+#' @param annot_col Annotation class to use for subsetting
+#' @param annot_name Annotational value to subset to
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' subset_bagel_by_annotation(bay, "Tumor_Type", "Lung")
+#' @export
 subset_bagel_by_annotation <- function(bay, annot_col, annot_name) {
   if (!annot_col %in% colnames(bay@sample_annotations)) {
     stop(paste(annot_col, " not found in annotation columns, please review.",
