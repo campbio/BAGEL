@@ -20,6 +20,6 @@ Generates sample plot {no return}
 Return sample from bagel object
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-plot_sample_counts(bay, get_sample_names(bay)[1])
+bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+plot_sample_counts(bay, "SNV96", get_sample_names(bay)[1])
 }

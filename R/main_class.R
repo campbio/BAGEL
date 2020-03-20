@@ -323,26 +323,32 @@ get_sample_names <- function(bay) {
   return(unique(bay@variants$Tumor_Sample_Barcode))
 }
 
+#' Return variants for bagel object
+#'
+#' @param bay Bagel object containing variants
+#' @return Returnsvariants in bagel object
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' get_variants(bay)
+#' @export
+get_variants <- function(bay) {
+  return(bay@variants)
+}
+
 #' Creates a new bagel subsetted to only samples with enough variants
 #'
 #' @param bay Input bagel
 #' @param table_name Name of table used for subsetting
 #' @param num_counts Minimum sum count value to drop samples
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
 #' subset_bagel_by_counts(bay, "SNV96", 5)
 #' @export
 subset_bagel_by_counts <- function(bay, table_name, num_counts) {
   tab <- extract_count_table(bay, table_name)
   min_samples <- colnames(tab)[which(colSums(tab) >= num_counts)]
 
-  #Subset all tables
-  table_names <- names(bay@count_tables@table_name)
-  for (name in table_names) {
-    sub_tab <- bay@count_tables@table_list[[name]]
-    sub_tab <- sub_tab[, which(colnames(sub_tab) %in% min_samples)]
-    bay@count_tables@table_list[[name]] <- sub_tab
-  }
+  bay@count_tables <- subset_count_tables(bay, min_samples)
 
   #Subset variants
   bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
@@ -362,8 +368,13 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
 #' @param annot_col Annotation class to use for subsetting
 #' @param annot_name Annotational value to subset to
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' subset_bagel_by_annotation(bay, "Tumor_Type", "Lung")
+#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+#' sample_annotations <- read.table(system.file("testdata",
+#' "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
+#' init_sample_annotations(bay)
+#' add_sample_annotations(bay, sample_annotations, sample_column =
+#' "Sample_Names", columns_to_add = "Tumor_Subtypes")
+#' subset_bagel_by_annotation(bay, "Tumor_Subtypes", "Lung")
 #' @export
 subset_bagel_by_annotation <- function(bay, annot_col, annot_name) {
   if (!annot_col %in% colnames(bay@sample_annotations)) {
@@ -378,8 +389,7 @@ subset_bagel_by_annotation <- function(bay, annot_col, annot_name) {
   }
   bay@sample_annotations <- bay@sample_annotations[annotation_index, ]
   annotation_samples <- bay@sample_annotations$"Samples"
-  bay@counts_table <- bay@counts_table[, which(colnames(bay@counts_table) %in%
-                                              annotation_samples)]
+  bay@count_tables <- subset_count_tables(bay, annotation_samples)
   bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
                                       annotation_samples), ]
   return(bay)

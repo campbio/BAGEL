@@ -17,6 +17,6 @@ subset_bagel_by_counts(bay, table_name, num_counts)
 Creates a new bagel subsetted to only samples with enough variants
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
 subset_bagel_by_counts(bay, "SNV96", 5)
 }

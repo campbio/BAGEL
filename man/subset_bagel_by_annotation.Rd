@@ -17,6 +17,11 @@ subset_bagel_by_annotation(bay, annot_col, annot_name)
 Creates a new bagel subsetted to only one value of a sample annotation
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-subset_bagel_by_annotation(bay, "Tumor_Type", "Lung")
+bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+sample_annotations <- read.table(system.file("testdata",
+"sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
+init_sample_annotations(bay)
+add_sample_annotations(bay, sample_annotations, sample_column =
+"Sample_Names", columns_to_add = "Tumor_Subtypes")
+subset_bagel_by_annotation(bay, "Tumor_Subtypes", "Lung")
 }

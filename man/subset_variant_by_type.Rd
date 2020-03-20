@@ -16,5 +16,6 @@ Subsets a variant table based on Variant Type
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-subset_variant_by_type(bay, "SNV")
+annotate_variant_type(bay)
+subset_variant_by_type(get_variants(bay), "SNV")
 }

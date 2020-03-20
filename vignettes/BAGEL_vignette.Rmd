@@ -14,35 +14,15 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r}
-
-#Find Signatures examples
-#' examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("19")
-#' create_snv96_table(bay, g)
-#' res <- find_signatures(bay, "SNV96", num_signatures = 4)
-
-
-#sample_annotations <- cbind(c("TCGA-94-7557-01A-11D-2122-08", "TCGA-56-7582-01A-11D-2042-08", #"TCGA-77-7335-01A-11D-2042-08", "public_SKCM_TCGA-EE-A3J5-06A-11D-A20D-08.vcf", #"public_SKCM_TCGA-ER-A197-06A-32D-A197-08.vcf", "public_SKCM_TCGA-ER-A19O-06A-11D-A197-08.vcf", #"public_LUAD_TCGA-97-7938.vcf", "public_LUAD_TCGA-MP-A4TJ.vcf"), c(rep("Lung", 4), rep("Breast", 4)))
-#colnames(sample_annotations) <- c("Sample_Names", "Tumor_Subtypes")
-#write.table(sample_annotations, #"/Users/atgc/Documents/Aaron_Tools/BAGEL/inst/testdata/sample_annotations.txt", quote=FALSE, #row.names=FALSE, sep = "\t")
-#
-#sample_annotations <- read.table(system.file("testdata", "sample_annotations.txt", package = "BAGEL"), sep #= "\t", header=TRUE)
-#init_sample_annotations(bay)
-#add_sample_annotations(bay, sample_annotations, sample_column = "Sample_Names", columns_to_add = #"Tumor_Subtypes")
-#create_snv96_table(bay, g)
-#res <- find_signatures(bay, table_name = "SNV96", num_signatures = 3)
-#plot_signatures(res)
-#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
-```
-
-
 ```{r setup}
 library("BAGEL")
 ```
 
 ```{r}
+#Find Signatures examples
+#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+#' res <- find_signatures(bay, "SNV96", num_signatures = 4)
+
 #Load MAF File
 lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL") 
 lusc <- BAGEL::maf_file_to_dt(maf_file = lusc_maf)
@@ -87,18 +67,19 @@ BAGEL::create_snv96_table(bagel, g)
 
 #Generate signatures/weights
 #We can use the bagel object we generated tables for using the SNV96 table
-result=BAGEL::find_signatures(bagel, "SNV96", num_signatures = 4)
+#result=BAGEL::find_signatures(input = bagel, table_name = "SNV96", 
+#                              num_signatures = 4)
 
-#We can name signatures based on prior knowledge
-name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
-
-#Plot results
-BAGEL::plot_signatures(result)
-BAGEL::plot_exposures(result, proportional = TRUE)
-BAGEL::plot_exposures(result, proportional = FALSE)
-
-#Compare to COSMIC signatures by leaving the second result as default
-BAGEL::compare_results(result, threshold = 0.8)
+##We can name signatures based on prior knowledge
+#name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ <- this line fails
+##Plot results
+#BAGEL::plot_signatures(result)
+#BAGEL::plot_exposures(result, proportional = TRUE)
+#BAGEL::plot_exposures(result, proportional = FALSE)
+#
+##Compare to COSMIC signatures by leaving the second result as default
+#BAGEL::compare_results(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
 BAGEL::what_cosmic_v2_sigs("lung")
@@ -111,26 +92,27 @@ cosmic_post = infer_signatures(bagel = bagel, "SNV96", signatures_to_use = c(12,
 #cosmic_post = infer_signatures(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
-our_sigs_post = infer_signatures(bagel = bagel, "SNV96", signatures = result@signatures)
+#our_sigs_post = infer_signatures(bagel = bagel, "SNV96", signatures = result@signatures)
 
 #Plot results from posterior calculation
 BAGEL::plot_signatures(cosmic_post)
 BAGEL::plot_exposures(cosmic_post, proportional = TRUE)
 
-BAGEL::plot_signatures(our_sigs_post)
-BAGEL::plot_exposures(our_sigs_post, proportional = TRUE)
+#BAGEL::plot_signatures(our_sigs_post)
+#BAGEL::plot_exposures(our_sigs_post, proportional = TRUE)
 
 #Compare posterior results to each other
-BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
+#BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
 
 BAGEL::plot_sample_counts(bagel, "SNV96", get_sample_names(bagel)[1])
-
+############################################## Error up here ^^^^^
 sample_annotations <- read.table(system.file("testdata", "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
 init_sample_annotations(bagel)
 add_sample_annotations(bagel, sample_annotations, sample_column = "Sample_Names", columns_to_add = "Tumor_Subtypes")
-
-#Add tumor type annotations to our samples
-res <- find_signatures(bagel, table_name = "SNV96", num_signatures = 3)
+#
+##Add tumor type annotations to our samples
+#res <- find_signatures(bagel, table_name = "SNV96", num_signatures = 3)
+res <- readRDS(system.file("testdata", "test_res.rds", package = "BAGEL"))
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", proportional = FALSE)
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE)

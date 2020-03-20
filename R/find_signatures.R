@@ -7,6 +7,8 @@
 #' @param seed Seed for reproducible signature discovery
 #' @param nstart Number of independent runs with optimal chosen (lda only)
 #' @return Returns a result object with results and input object (if bagel)
+#' @examples
+#' print("test")
 #' @export
 find_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = NA, nstart = 1) {
@@ -57,24 +59,25 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
                                log_lik = stats::median(lda_out@loglikelihood))
     return(lda_result)
   } else if (method == "nmf") {
-    decomp <- NNLM::nnmf(counts_table, num_signatures, rel.tol = 1e-5,
-                         max.iter = 10000L)
-    rownames(decomp$H) <- paste("Signature", seq_len(num_signatures),
-                                 sep = "")
-    colnames(decomp$W) <- paste("Signature", seq_len(num_signatures), sep = "")
-    nmf_result <- methods::new("Result", signatures = decomp$W,
-                               samples = decomp$H, type = "NMF", bagel = input)
-    nmf_result@signatures <- sweep(nmf_result@signatures, 2,
-                                   colSums(nmf_result@signatures), FUN = "/")
-    nmf_result@samples <- sweep(nmf_result@samples, 2,
-                                   colSums(nmf_result@samples), FUN = "/")
-
-    # Multiply Weights by sample counts
-    if (length(used_samples) != 0) {
-      nmf_result@samples <- sweep(nmf_result@samples, 2,
-                                  sample_counts[matched], FUN = "*")
-    }
-    return(nmf_result)
+    stop("NMF is currently unavailable")
+    #decomp <- NNLM::nnmf(counts_table, num_signatures, rel.tol = 1e-5,
+    #                     max.iter = 10000L)
+    #rownames(decomp$H) <- paste("Signature", seq_len(num_signatures),
+    #                             sep = "")
+    #colnames(decomp$W) <- paste("Signature", seq_len(num_signatures), sep = "")
+    #nmf_result <- methods::new("Result", signatures = decomp$W,
+    #                           samples = decomp$H, type = "NMF", bagel = input)
+    #nmf_result@signatures <- sweep(nmf_result@signatures, 2,
+    #                               colSums(nmf_result@signatures), FUN = "/")
+    #nmf_result@samples <- sweep(nmf_result@samples, 2,
+    #                               colSums(nmf_result@samples), FUN = "/")
+#
+    ## Multiply Weights by sample counts
+    #if (length(used_samples) != 0) {
+    #  nmf_result@samples <- sweep(nmf_result@samples, 2,
+    #                              sample_counts[matched], FUN = "*")
+    #}
+    #return(nmf_result)
   } else{
     stop("That method is not supported. Use lda or nmf to generate signatures.")
   }
@@ -329,32 +332,6 @@ infer_signatures <- function(bagel, table_name,
   return(lda_posterior_result)
 }
 
-extract_count_table <- function(bagel, table_name) {
-  #Check that object is a bagel
-  if (!methods::is(bagel, "bagel")) {
-    stop(strwrap(prefix = " ", initial = "", "The input object is not a
-    bagel object, please use new('bagel') to create one."))
-  }
-
-  tabs <- bagel@count_tables
-
-  #Check that at least one table exists
-  if (length(tabs@table_name) == 0) {
-    stop(strwrap(prefix = " ", initial = "", "The counts table is either
-    missing or malformed, please run create tables e.g. [create_snv96_table]
-    prior to this function."))
-  }
-
-  #Check that table exists within this bagel
-  if (!table_name %in% tabs@table_name) {
-    stop(paste(table_name, " does not exist. Current table names are: ",
-               tabs@table_name, sep = ""))
-  }
-
-  counts_table <- tabs@table_list[[table_name]]
-  return(counts_table)
-}
-
 multi_modal_discovery <- function(bay, num_signatures, motif96_name,
                                   rflank_name, lflank_name, max.iter=125,
                                   seed=123) {
@@ -366,25 +343,23 @@ multi_modal_discovery <- function(bay, num_signatures, motif96_name,
   print(dim(lflank))
 }
 
-#' Generate result_grid from bagel based on annotation and range of k
-#'
-#' @param bagel Input bagel to generate grid from
-#' @param table_name Name of table used for signature discovery
-#' @param discovery_type Algorithm for signature discovery
-#' @param annotation Sample annotation to split results into
-#' @param k_start Lower range of number of signatures for discovery
-#' @param k_end Upper range of number of signatures for discovery
-#' @param n_start Number of times to discover signatures and compare based on
-#' posterior loglikihood
-#' @param seed Give a seed to generate reproducible signatures
-#' @param verbose Whether to output loop iterations
-#' @return Results a result object containing signatures and sample weights
-#' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("19")
-#' create_snv96_table(bay, g)
-#' grid <- generate_result_grid(bay, "SNV96", k_start = 2, k_end = 5)
-#' @export
+# #' Generate result_grid from bagel based on annotation and range of k
+# #'
+# #' @param bagel Input bagel to generate grid from
+# #' @param table_name Name of table used for signature discovery
+# #' @param discovery_type Algorithm for signature discovery
+# #' @param annotation Sample annotation to split results into
+# #' @param k_start Lower range of number of signatures for discovery
+# #' @param k_end Upper range of number of signatures for discovery
+# #' @param n_start Number of times to discover signatures and compare based on
+# #' posterior loglikihood
+# #' @param seed Give a seed to generate reproducible signatures
+# #' @param verbose Whether to output loop iterations
+# #' @return Results a result object containing signatures and sample weights
+# #' @examples
+# #' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+# #' grid <- generate_result_grid(bay, "SNV96", k_start = 2, k_end = 5)
+# #' @export
 generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                  annotation = NA, k_start, k_end, n_start = 1,
                                  seed = NA, verbose = FALSE) {

@@ -1,33 +1,3 @@
-#' Generates a 96 motif table based on input counts for plotting
-#'
-#' @param sample_df Input counts table
-#' @return Returns a 96 motif summary table
-table_96 <- function(sample_df) {
-  motif <- names(sample_df)
-  expanded <- rep(motif, sample_df)
-  context <- substr(expanded, 5, 7)
-  final_mut_type <- substr(expanded, 1, 3)
-  final_mut_context <- context
-
-  forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
-
-  ## Define all mutation types for 96 substitution scheme
-  b1 <- rep(c("A", "C", "G", "T"), each = 24)
-  b2 <- rep(rep(c("C", "T"), each = 12), 4)
-  b3 <- rep(c("A", "C", "G", "T"), 24)
-  mut_trinuc <- apply(cbind(b1, b2, b3), 1, paste, collapse = "")
-  mut_type <- rep(rep(forward_change, each = 4), 4)
-
-  mut_id <- apply(cbind(mut_type, mut_trinuc), 1, paste, collapse = "_")
-  expanded <- rep(motif, sample_df)
-  mutation <- factor(expanded, levels = mut_id)
-
-  mut_summary <- data.frame(mutation, Type = final_mut_type,
-                            Context = final_mut_context,
-                            stringsAsFactors = FALSE)
-  return(mut_summary)
-}
-
 #' Uses a genome object to find context and add it to the variant table
 #'
 #' @param bay Input samples
@@ -39,8 +9,8 @@ table_96 <- function(sample_df) {
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("38")
-#' add_flank_to_variants(bay, g, 1, 5)
-#' add_flank_to_variants(bay, g, -5, -1)
+#' add_flank_to_variants(bay, g, 1, 2)
+#' add_flank_to_variants(bay, g, -2, -1)
 #' @export
 add_flank_to_variants <- function(bay, g, flank_start, flank_end,
                                   build_table = TRUE) {
@@ -276,7 +246,8 @@ annotate_variant_type <- function(bay) {
 #' @param type Variant type to return e.g. "SNV", "INS", "DEL", "DBS"
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' subset_variant_by_type(bay, "SNV")
+#' annotate_variant_type(bay)
+#' subset_variant_by_type(get_variants(bay), "SNV")
 #' @export
 subset_variant_by_type <- function(tab, type) {
   if(!"Variant_Type" %in% colnames(tab)) {

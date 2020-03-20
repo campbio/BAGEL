@@ -21,7 +21,6 @@ Imports:
     base,
     methods,
     magrittr,
-    NNLM,
     tibble,
     tidyr,
     reshape2,

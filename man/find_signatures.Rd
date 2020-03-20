@@ -32,3 +32,6 @@ Returns a result object with results and input object (if bagel)
 \description{
 Discovers signatures and weights from a table of counts using NMF
 }
+\examples{
+print("test")
+}

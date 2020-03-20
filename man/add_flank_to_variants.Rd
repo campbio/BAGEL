@@ -24,6 +24,6 @@ Uses a genome object to find context and add it to the variant table
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 g <- select_genome("38")
-add_flank_to_variants(bay, g, 1, 5)
-add_flank_to_variants(bay, g, -5, -1)
+add_flank_to_variants(bay, g, 1, 2)
+add_flank_to_variants(bay, g, -2, -1)
 }
