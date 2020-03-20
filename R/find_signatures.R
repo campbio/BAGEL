@@ -9,6 +9,9 @@
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' print("test")
+#' a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
+#' b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
+#' method = "lda", seed = 12345, nstart = 1)
 #' @export
 find_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = NA, nstart = 1) {
@@ -42,6 +45,9 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
       control <- list(seed = (seq_len(nstart) - 1) + seed, nstart = nstart)
     }
     lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
+    #TODO
+    #lda_out <- readRDS(system.file("testdata", "TODO_lda.rds",
+    #                               package = "BAGEL"))
     lda_sigs <- exp(t(lda_out@beta))
     rownames(lda_sigs) <- colnames(counts_table)
     colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")

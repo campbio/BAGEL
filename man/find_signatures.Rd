@@ -34,4 +34,7 @@ Discovers signatures and weights from a table of counts using NMF
 }
 \examples{
 print("test")
+a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
+b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
+method = "lda", seed = 12345, nstart = 1)
 }
