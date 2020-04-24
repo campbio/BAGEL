@@ -3,9 +3,11 @@
 \docType{class}
 \name{bagel-class}
 \alias{bagel-class}
-\title{The primary object for BAGEL that contains all samples and tables}
+\title{The primary object for BAGEL that contains all variants, samples annotations
+and tables}
 \description{
-The primary object for BAGEL that contains all samples and tables
+The primary object for BAGEL that contains all variants, samples annotations
+and tables
 }
 \section{Slots}{
 

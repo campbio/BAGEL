@@ -259,6 +259,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
 #' specific signatures name (e.g. 'Signature1)
 #' @param annotation Annotation to use for facet_wrap
 #' @param by_group Plot subplots by annotation or by signature
+#' @param num_samples Number of sorted samples to plot
 #' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
@@ -269,7 +270,8 @@ plot_exposures_by_annotation <- function(result, annotation,
                                          proportional = TRUE,
                                          label_samples = FALSE,
                                          sort_samples = "numerical",
-                                         by_group = TRUE, plotly = FALSE) {
+                                         by_group = TRUE, num_samples = FALSE,
+                                         plotly = FALSE) {
   samples <- result@samples
 
   y_label <- "counts"
@@ -311,6 +313,18 @@ plot_exposures_by_annotation <- function(result, annotation,
           sort_samples, ]))))])
     }
   }
+  if (num_samples) {
+    sub_dat <- plot_dat[plot_dat$make == sort_samples, ]
+    data.table::setorderv(sub_dat, cols = "val", order = -1)
+    annots <- unique(plot_dat$annotation)
+    samples_to_use <- NULL
+    for(annot in annots) {
+      samples_to_use = c(samples_to_use, as.character(utils::head(sub_dat[
+        sub_dat$annotation == annot, "var"], num_samples)))
+    }
+    plot_dat <- plot_dat[which(plot_dat$var %in% samples_to_use), ]
+  }
+
   plot_dat_table <- plot_dat %>% dplyr::arrange(.data$make)
 
   #If used, sorts indicated signature to the bottom so it's easier to see

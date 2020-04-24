@@ -7,7 +7,7 @@
 #' @param build_table Automatically build a table using the annotation and add
 #' it to the bagel
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' bay <- readRDS(system.file("testdata", "bagel_snv96_tiny.rds", package = "BAGEL"))
 #' g <- select_genome("38")
 #' add_flank_to_variants(bay, g, 1, 2)
 #' add_flank_to_variants(bay, g, -2, -1)

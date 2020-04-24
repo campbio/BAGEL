@@ -4,7 +4,9 @@ Title: Novel Mutational Signature Analysis
 Version: 0.99.0
 Authors@R: person("Aaron", "Chevalier", email = "atgc@bu.edu", role = "cre", comment = c(ORCHID = "0000-0002-3968-9250"))
 Description: What the package does (one paragraph).
-Depends: R (>= 3.6)
+Depends: 
+    R (>= 3.6),
+    NMF
 License: GPL-3
 Encoding: UTF-8
 LazyData: FALSE
@@ -13,8 +15,8 @@ biocViews:
     BiologicalQuestion,
     SomaticMutation
 Imports:
-    VariantAnnotation,
     SummarizedExperiment,
+    VariantAnnotation,
     ggplot2,
     cowplot,
     Biostrings,
@@ -31,9 +33,9 @@ Imports:
     data.table,
     dplyr,
     rlang,
-    topicmodels,
     GenomeInfoDb,
-    plotly
+    plotly,
+    topicmodels
 Suggests:
     testthat,
     knitr,

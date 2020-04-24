@@ -67,19 +67,19 @@ BAGEL::create_snv96_table(bagel, g)
 
 #Generate signatures/weights
 #We can use the bagel object we generated tables for using the SNV96 table
-#result=BAGEL::find_signatures(input = bagel, table_name = "SNV96", 
-#                              num_signatures = 4)
+result=BAGEL::find_signatures(input = bagel, table_name = "SNV96", 
+                              num_signatures = 4, method = "nmf")
 
 ##We can name signatures based on prior knowledge
-#name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
+name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ <- this line fails
 ##Plot results
-#BAGEL::plot_signatures(result)
-#BAGEL::plot_exposures(result, proportional = TRUE)
-#BAGEL::plot_exposures(result, proportional = FALSE)
+BAGEL::plot_signatures(result)
+BAGEL::plot_exposures(result, proportional = TRUE)
+BAGEL::plot_exposures(result, proportional = FALSE)
 #
 ##Compare to COSMIC signatures by leaving the second result as default
-#BAGEL::compare_results(result, threshold = 0.8)
+BAGEL::compare_results(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
 BAGEL::what_cosmic_v2_sigs("lung")
@@ -92,17 +92,17 @@ cosmic_post = infer_signatures(bagel = bagel, "SNV96", signatures_to_use = c(12,
 #cosmic_post = infer_signatures(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
-#our_sigs_post = infer_signatures(bagel = bagel, "SNV96", signatures = result@signatures)
+our_sigs_post = infer_signatures(bagel = bagel, "SNV96", signatures = result@signatures)
 
 #Plot results from posterior calculation
 BAGEL::plot_signatures(cosmic_post)
 BAGEL::plot_exposures(cosmic_post, proportional = TRUE)
 
-#BAGEL::plot_signatures(our_sigs_post)
-#BAGEL::plot_exposures(our_sigs_post, proportional = TRUE)
+BAGEL::plot_signatures(our_sigs_post)
+BAGEL::plot_exposures(our_sigs_post, proportional = TRUE)
 
 #Compare posterior results to each other
-#BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
+BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
 
 BAGEL::plot_sample_counts(bagel, "SNV96", get_sample_names(bagel)[1])
 ############################################## Error up here ^^^^^

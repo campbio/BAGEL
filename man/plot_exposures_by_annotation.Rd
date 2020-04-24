@@ -11,6 +11,7 @@ plot_exposures_by_annotation(
   label_samples = FALSE,
   sort_samples = "numerical",
   by_group = TRUE,
+  num_samples = FALSE,
   plotly = FALSE
 )
 }
@@ -27,6 +28,8 @@ plot_exposures_by_annotation(
 specific signatures name (e.g. 'Signature1)}
 
 \item{by_group}{Plot subplots by annotation or by signature}
+
+\item{num_samples}{Number of sorted samples to plot}
 
 \item{plotly}{add plotly layer for plot interaction}
 }

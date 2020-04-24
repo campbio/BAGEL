@@ -1,3 +1,6 @@
+#' @importFrom NMF nmf
+NULL
+
 #' Discovers signatures and weights from a table of counts using NMF
 #'
 #' @param input A bagel object or counts table
@@ -6,15 +9,16 @@
 #' @param method Discovery of new signatures using either LDA or NMF
 #' @param seed Seed for reproducible signature discovery
 #' @param nstart Number of independent runs with optimal chosen (lda only)
+#' @param par Number of parallel cores to use (NMF only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
-#' print("test")
-#' a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
-#' b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
-#' method = "lda", seed = 12345, nstart = 1)
+#' #print("test")
+#' #a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
+#' #b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
+#' #method = "nmf", seed = 12345, nstart = 1)
 #' @export
 find_signatures <- function(input, table_name, num_signatures, method="lda",
-                            seed = NA, nstart = 1) {
+                            seed = NULL, nstart = 1, par = FALSE) {
   if (!methods::is(input, "bagel")) {
     if (!methods::is(input, "matrix")) {
       stop("Input to find_signatures must be a bagel object or a matrix")
@@ -39,7 +43,7 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
   }
   if (method == "lda") {
     counts_table <- t(counts_table)
-    if (is.na(seed)) {
+    if (is.null(seed)) {
       control <- list(nstart = nstart)
     } else {
       control <- list(seed = (seq_len(nstart) - 1) + seed, nstart = nstart)
@@ -65,25 +69,46 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
                                log_lik = stats::median(lda_out@loglikelihood))
     return(lda_result)
   } else if (method == "nmf") {
-    stop("NMF is currently unavailable")
-    #decomp <- NNLM::nnmf(counts_table, num_signatures, rel.tol = 1e-5,
-    #                     max.iter = 10000L)
-    #rownames(decomp$H) <- paste("Signature", seq_len(num_signatures),
-    #                             sep = "")
-    #colnames(decomp$W) <- paste("Signature", seq_len(num_signatures), sep = "")
-    #nmf_result <- methods::new("Result", signatures = decomp$W,
-    #                           samples = decomp$H, type = "NMF", bagel = input)
-    #nmf_result@signatures <- sweep(nmf_result@signatures, 2,
-    #                               colSums(nmf_result@signatures), FUN = "/")
-    #nmf_result@samples <- sweep(nmf_result@samples, 2,
-    #                               colSums(nmf_result@samples), FUN = "/")
+    #Needed to prevent issue with generic seed method
+    #https://github.com/renozao/NMF/issues/85
+    #detach("package:DelayedArray")
+
+    #Needed to prevent error with entirely zero rows
+    epsilon = 0.000001
+    #seed <- NMF::nmf.getOption('default.seed')
+    #seed <- "random"
+    #orig_seed <- getGeneric("seed")
+    #setGeneric("seed", NMF::seed)
+    #NMF::setNMFSeed(NMF::nmfSeed("random"))
+    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures)
+    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = "random")
+    #print(getGeneric("seed"))
+    decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+                       nrun = nstart)
+    #if(par) {
+    #  decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+    #                     nrun = nstart, .options = paste("p", par, sep = ""))
 #
-    ## Multiply Weights by sample counts
-    #if (length(used_samples) != 0) {
-    #  nmf_result@samples <- sweep(nmf_result@samples, 2,
-    #                              sample_counts[matched], FUN = "*")
     #}
-    #return(nmf_result)
+    #setGeneric("seed", orig_seed)
+
+    rownames(decomp@fit@H) <- paste("Signature", seq_len(num_signatures),
+                                 sep = "")
+    colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures), sep = "")
+    nmf_result <- methods::new("Result", signatures = decomp@fit@W,
+                               samples = decomp@fit@H, type = "NMF",
+                               bagel = input, log_lik = decomp@residuals)
+    nmf_result@signatures <- sweep(nmf_result@signatures, 2,
+                                   colSums(nmf_result@signatures), FUN = "/")
+    nmf_result@samples <- sweep(nmf_result@samples, 2,
+                                   colSums(nmf_result@samples), FUN = "/")
+#
+    # Multiply Weights by sample counts
+    if (length(used_samples) != 0) {
+      nmf_result@samples <- sweep(nmf_result@samples, 2,
+                                  sample_counts[matched], FUN = "*")
+    }
+    return(nmf_result)
   } else{
     stop("That method is not supported. Use lda or nmf to generate signatures.")
   }

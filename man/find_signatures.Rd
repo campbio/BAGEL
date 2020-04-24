@@ -9,8 +9,9 @@ find_signatures(
   table_name,
   num_signatures,
   method = "lda",
-  seed = NA,
-  nstart = 1
+  seed = NULL,
+  nstart = 1,
+  par = FALSE
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ find_signatures(
 \item{seed}{Seed for reproducible signature discovery}
 
 \item{nstart}{Number of independent runs with optimal chosen (lda only)}
+
+\item{par}{Number of parallel cores to use (NMF only)}
 }
 \value{
 Returns a result object with results and input object (if bagel)
@@ -33,8 +36,8 @@ Returns a result object with results and input object (if bagel)
 Discovers signatures and weights from a table of counts using NMF
 }
 \examples{
-print("test")
-a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
-b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
-method = "lda", seed = 12345, nstart = 1)
+#print("test")
+#a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
+#b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
+#method = "nmf", seed = 12345, nstart = 1)
 }

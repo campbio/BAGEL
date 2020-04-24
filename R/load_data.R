@@ -1,4 +1,4 @@
-#' @importFrom SummarizedExperiment seqnames rowRanges
+# #' @importFrom SummarizedExperiment rowRanges
 #' @importFrom methods is
 NULL
 
