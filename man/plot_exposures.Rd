@@ -10,7 +10,8 @@ plot_exposures(
   label_samples = TRUE,
   samples_plotted = colnames(result@samples),
   sort_samples = "numerical",
-  num_samples = length(colnames(result@samples))
+  num_samples = length(colnames(result@samples)),
+  plotly = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ plot_exposures(
 specific signatures name (e.g. 'Signature1)}
 
 \item{num_samples}{Number of sorted samples to plot}
+
+\item{plotly}{add plotly layer for plot interaction}
 }
 \value{
 Generates plot {no return}

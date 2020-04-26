@@ -3,16 +3,18 @@
 \docType{class}
 \name{bagel-class}
 \alias{bagel-class}
-\title{The primary object for BAGEL that contains all samples and tables}
+\title{The primary object for BAGEL that contains all variants, samples annotations
+and tables}
 \description{
-The primary object for BAGEL that contains all samples and tables
+The primary object for BAGEL that contains all variants, samples annotations
+and tables
 }
 \section{Slots}{
 
 \describe{
 \item{\code{variants}}{Data.table of variants and variant-level information}
 
-\item{\code{counts_table}}{Summary table with per-sample unnormalized motif counts}
+\item{\code{count_tables}}{Summary table with per-sample unnormalized motif counts}
 
 \item{\code{sample_annotations}}{Sample-level annotations (e.g. age, sex, primary)}
 }}

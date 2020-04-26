@@ -6,18 +6,19 @@ NULL
 #' Return sample from bagel object
 #'
 #' @param bay Bagel object containing samples
+#' @param table_name Name of table used for plotting counts
 #' @param sample_name Sample name to plot counts
 #' @return Generates sample plot {no return}
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' plot_sample_counts(bay, get_sample_names(bay)[1])
+#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+#' plot_sample_counts(bay, "SNV96", get_sample_names(bay)[1])
 #' @export
-plot_sample_counts <- function(bay, sample_name) {
+plot_sample_counts <- function(bay, table_name, sample_name) {
   if (length(sample_name) != 1) {
     stop("`please specify exactly one sample")
   }
   sample_number <- which(get_sample_names(bay = bay) == sample_name)
-  sample <- bay@counts_table[, sample_number]
+  sample <- extract_count_table(bay, table_name)[, sample_number]
   plot_full(sample)
 }
 
@@ -63,12 +64,13 @@ plot_full <- function(sample) {
 #' Plotting Signature Motif counts/spectra
 #'
 #' @param result S4 Result Object
+#' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_signatures(result)
 #' @export
-plot_signatures <- function(result) {
+plot_signatures <- function(result, plotly = FALSE) {
   signatures <- result@signatures
   groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
                                                                     "context"))
@@ -92,20 +94,27 @@ plot_signatures <- function(result) {
       axis.text.x = element_blank(), axis.ticks.x = element_blank(),
       strip.text.y = element_text(size = 7)) + ggplot2::scale_y_continuous(
         expand = c(0, 0)) -> p
+  if (plotly) {
+    p <- plotly::ggplotly(p)
+  }
   return(p)
 }
 
 #' Plotting Signature Motif counts/spectra
 #'
 #' @param result S4 Result Object
+#' @param table_name Table to use for reconstruction error plotting
 #' @param sample_number Sample number within result to plot error
+#' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' plot_signatures(result)
+#' plot_sample_reconstruction_error(result, "SNV96", 1)
 #' @export
-plot_sample_reconstruction_error <- function(result, sample_number) {
-  signatures <- result@bagel@counts_table[, sample_number, drop = FALSE]
+plot_sample_reconstruction_error <- function(result, table_name, sample_number,
+                                             plotly = FALSE) {
+  signatures <- extract_count_table(result@bagel, table_name)[, sample_number,
+                                                              drop = FALSE]
   reconstructed <- reconstruct_sample(result, sample_number)
   error <- signatures - reconstructed
   colnames(error) <- "Error"
@@ -142,7 +151,11 @@ plot_sample_reconstruction_error <- function(result, sample_number) {
                                                 strip.text.y =
                                                   element_text(size = 7)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed")
+    ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed") -> p
+  if (plotly) {
+    p <- plotly::ggplotly(p)
+  }
+  return(p)
 }
 
 #' Plots signature weights for each sample
@@ -154,6 +167,7 @@ plot_sample_reconstruction_error <- function(result, sample_number) {
 #' @param sort_samples Defaults to numerical, may be total 'counts', or a
 #' specific signatures name (e.g. 'Signature1)
 #' @param num_samples Number of sorted samples to plot
+#' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
@@ -162,7 +176,8 @@ plot_sample_reconstruction_error <- function(result, sample_number) {
 plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
                            samples_plotted = colnames(result@samples),
                            sort_samples = "numerical",
-                           num_samples = length(colnames(result@samples))) {
+                           num_samples = length(colnames(result@samples)),
+                           plotly = FALSE) {
   samples <- result@samples
   if (!all(samples_plotted %in% colnames(samples))) {
     stop(strwrap(prefix = " ", initial = "", "Some samples specified are
@@ -229,6 +244,9 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
     p <- p + theme(axis.text.x = element_blank(), axis.ticks.x =
                      element_blank())
   }
+  if (plotly) {
+    p <- plotly::ggplotly(p, tooltip = c('x', 'y'))
+  }
   return(p)
 }
 
@@ -241,15 +259,19 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
 #' specific signatures name (e.g. 'Signature1)
 #' @param annotation Annotation to use for facet_wrap
 #' @param by_group Plot subplots by annotation or by signature
+#' @param num_samples Number of sorted samples to plot
+#' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
-#' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' plot_exposures(result)
+#' result <- readRDS(system.file("testdata", "res_annot.rds", package = "BAGEL"))
+#' plot_exposures_by_annotation(result, "Tumor_Subtypes")
 #' @export
-plot_exposures_by_annotation <- function(result, proportional = TRUE,
+plot_exposures_by_annotation <- function(result, annotation,
+                                         proportional = TRUE,
                                          label_samples = FALSE,
                                          sort_samples = "numerical",
-                                         annotation, by_group = TRUE) {
+                                         by_group = TRUE, num_samples = FALSE,
+                                         plotly = FALSE) {
   samples <- result@samples
 
   y_label <- "counts"
@@ -291,6 +313,18 @@ plot_exposures_by_annotation <- function(result, proportional = TRUE,
           sort_samples, ]))))])
     }
   }
+  if (num_samples) {
+    sub_dat <- plot_dat[plot_dat$make == sort_samples, ]
+    data.table::setorderv(sub_dat, cols = "val", order = -1)
+    annots <- unique(plot_dat$annotation)
+    samples_to_use <- NULL
+    for(annot in annots) {
+      samples_to_use = c(samples_to_use, as.character(utils::head(sub_dat[
+        sub_dat$annotation == annot, "var"], num_samples)))
+    }
+    plot_dat <- plot_dat[which(plot_dat$var %in% samples_to_use), ]
+  }
+
   plot_dat_table <- plot_dat %>% dplyr::arrange(.data$make)
 
   #If used, sorts indicated signature to the bottom so it's easier to see
@@ -301,7 +335,7 @@ plot_exposures_by_annotation <- function(result, proportional = TRUE,
   }
   if (by_group) {
     plot_dat_table %>%
-      ggplot() + geom_bar(aes_string(y = "val", x = "var", fill = "make"),
+      ggplot(aes_string(y = "val", x = "var", fill = "make")) + geom_bar(
                           stat = "identity") + theme_bw() + theme(
                             legend.title = element_blank(), axis.text.x =
               element_text(angle = 90, hjust = 1, vjust = 0.5),
@@ -323,6 +357,9 @@ plot_exposures_by_annotation <- function(result, proportional = TRUE,
   if (!label_samples) {
     p <- p + theme(axis.text.x = element_blank(), axis.ticks.x =
                      element_blank())
+  }
+  if (plotly) {
+    p <- plotly::ggplotly(p)
   }
   return(p)
 }

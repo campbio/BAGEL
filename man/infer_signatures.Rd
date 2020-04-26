@@ -6,6 +6,7 @@
 \usage{
 infer_signatures(
   bagel,
+  table_name,
   signatures = cosmic_v2_sigs@signatures,
   signatures_to_use = seq_len(ncol(signatures)),
   verbose = FALSE
@@ -13,6 +14,9 @@ infer_signatures(
 }
 \arguments{
 \item{bagel}{Input samples to predit signature weights}
+
+\item{table_name}{Name of table used for posterior prediction.
+Must match the table type used to generate the prediction signatures}
 
 \item{signatures}{Signatures to use for prediction (default COSMIC)}
 
@@ -28,5 +32,7 @@ LDA prediction of samples based on existing signatures (default COSMIC)
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-infer_signatures(bay)
+g <- select_genome("19")
+create_snv96_table(bay, g)
+infer_signatures(bay, "SNV96")
 }

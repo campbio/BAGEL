@@ -4,10 +4,12 @@
 \alias{plot_signatures}
 \title{Plotting Signature Motif counts/spectra}
 \usage{
-plot_signatures(result)
+plot_signatures(result, plotly = FALSE)
 }
 \arguments{
 \item{result}{S4 Result Object}
+
+\item{plotly}{add plotly layer for plot interaction}
 }
 \value{
 Generates plot {no return}

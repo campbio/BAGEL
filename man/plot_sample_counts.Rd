@@ -4,10 +4,12 @@
 \alias{plot_sample_counts}
 \title{Return sample from bagel object}
 \usage{
-plot_sample_counts(bay, sample_name)
+plot_sample_counts(bay, table_name, sample_name)
 }
 \arguments{
 \item{bay}{Bagel object containing samples}
+
+\item{table_name}{Name of table used for plotting counts}
 
 \item{sample_name}{Sample name to plot counts}
 }
@@ -18,6 +20,6 @@ Generates sample plot {no return}
 Return sample from bagel object
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-plot_sample_counts(bay, get_sample_names(bay)[1])
+bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+plot_sample_counts(bay, "SNV96", get_sample_names(bay)[1])
 }

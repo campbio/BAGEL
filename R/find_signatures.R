@@ -1,47 +1,57 @@
+#' @importFrom NMF nmf
+NULL
+
 #' Discovers signatures and weights from a table of counts using NMF
 #'
 #' @param input A bagel object or counts table
+#' @param table_name Name of table used for signature discovery
 #' @param num_signatures Number of signatures to discover, k
 #' @param method Discovery of new signatures using either LDA or NMF
 #' @param seed Seed for reproducible signature discovery
 #' @param nstart Number of independent runs with optimal chosen (lda only)
+#' @param par Number of parallel cores to use (NMF only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' find_signatures(bay, num_signatures = 4)
+#' #print("test")
+#' #a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
+#' #b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
+#' #method = "nmf", seed = 12345, nstart = 1)
 #' @export
-find_signatures <- function(input, num_signatures, method="lda", seed = NA,
-                            nstart = 1) {
-  if (methods::is(input, "bagel")) {
-    has_tables(input)
-  }else{
+find_signatures <- function(input, table_name, num_signatures, method="lda",
+                            seed = NULL, nstart = 1, par = FALSE) {
+  if (!methods::is(input, "bagel")) {
     if (!methods::is(input, "matrix")) {
       stop("Input to find_signatures must be a bagel object or a matrix")
     }
     bagel <- methods::new("bagel")
-    bagel@counts_table <- input
+    bagel@count_tables@table_list[[1]] <- input
+    bagel@count_tables@table_name[1] <- table_name
     input <- bagel
   }
+  counts_table <- extract_count_table(input, table_name)
 
   #Determine if samples are present and can be used to scale weights
   used_samples <- which(input@variants$Tumor_Sample_Barcode %in%
-                          colnames(input@counts_table))
+                          colnames(counts_table))
   if (length(used_samples) == 0) {
     warning(strwrap(prefix = " ", initial = "", "No samples overlap with
                       counts table, exposures will not be scaled by sample
                       counts."))
   } else {
     sample_counts <- table(input@variants$Tumor_Sample_Barcode[used_samples])
-    matched <- match(colnames(input@counts_table), names(sample_counts))
+    matched <- match(colnames(counts_table), names(sample_counts))
   }
   if (method == "lda") {
-    counts_table <- t(input@counts_table)
-    if (is.na(seed)) {
+    counts_table <- t(counts_table)
+    if (is.null(seed)) {
       control <- list(nstart = nstart)
     } else {
       control <- list(seed = (seq_len(nstart) - 1) + seed, nstart = nstart)
     }
     lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
+    #TODO
+    #lda_out <- readRDS(system.file("testdata", "TODO_lda.rds",
+    #                               package = "BAGEL"))
     lda_sigs <- exp(t(lda_out@beta))
     rownames(lda_sigs) <- colnames(counts_table)
     colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")
@@ -59,18 +69,40 @@ find_signatures <- function(input, num_signatures, method="lda", seed = NA,
                                log_lik = stats::median(lda_out@loglikelihood))
     return(lda_result)
   } else if (method == "nmf") {
-    decomp <- NNLM::nnmf(input@counts_table, num_signatures, rel.tol = 1e-5,
-                         max.iter = 10000L)
-    rownames(decomp$H) <- paste("Signature", seq_len(num_signatures),
+    #Needed to prevent issue with generic seed method
+    #https://github.com/renozao/NMF/issues/85
+    #detach("package:DelayedArray")
+
+    #Needed to prevent error with entirely zero rows
+    epsilon = 0.000001
+    #seed <- NMF::nmf.getOption('default.seed')
+    #seed <- "random"
+    #orig_seed <- getGeneric("seed")
+    #setGeneric("seed", NMF::seed)
+    #NMF::setNMFSeed(NMF::nmfSeed("random"))
+    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures)
+    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = "random")
+    #print(getGeneric("seed"))
+    decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+                       nrun = nstart)
+    #if(par) {
+    #  decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+    #                     nrun = nstart, .options = paste("p", par, sep = ""))
+#
+    #}
+    #setGeneric("seed", orig_seed)
+
+    rownames(decomp@fit@H) <- paste("Signature", seq_len(num_signatures),
                                  sep = "")
-    colnames(decomp$W) <- paste("Signature", seq_len(num_signatures), sep = "")
-    nmf_result <- methods::new("Result", signatures = decomp$W,
-                               samples = decomp$H, type = "NMF", bagel = input)
+    colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures), sep = "")
+    nmf_result <- methods::new("Result", signatures = decomp@fit@W,
+                               samples = decomp@fit@H, type = "NMF",
+                               bagel = input, log_lik = decomp@residuals)
     nmf_result@signatures <- sweep(nmf_result@signatures, 2,
                                    colSums(nmf_result@signatures), FUN = "/")
     nmf_result@samples <- sweep(nmf_result@samples, 2,
                                    colSums(nmf_result@samples), FUN = "/")
-
+#
     # Multiply Weights by sample counts
     if (length(used_samples) != 0) {
       nmf_result@samples <- sweep(nmf_result@samples, 2,
@@ -217,21 +249,35 @@ what_cosmic_v2_sigs <- function(tumor_type) {
 #' LDA prediction of samples based on existing signatures (default COSMIC)
 #'
 #' @param bagel Input samples to predit signature weights
+#' @param table_name Name of table used for posterior prediction.
+#' Must match the table type used to generate the prediction signatures
 #' @param signatures Signatures to use for prediction (default COSMIC)
 #' @param signatures_to_use Which signatures in set to use (default all)
 #' @param verbose Whether to show intermediate results
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' infer_signatures(bay)
+#' g <- select_genome("19")
+#' create_snv96_table(bay, g)
+#' infer_signatures(bay, "SNV96")
 #' @export
-infer_signatures <- function(bagel, signatures=cosmic_v2_sigs@signatures,
+infer_signatures <- function(bagel, table_name,
+                             signatures=cosmic_v2_sigs@signatures,
                           signatures_to_use = seq_len(ncol(signatures)),
                           verbose = FALSE) {
-  has_tables(bagel)
+  counts_table <- extract_count_table(bagel, table_name)
+
+  #Make sure table exists in bagel object and load it if it does
+  if (!table_name %in% bagel@count_tables@table_name) {
+    stop(paste(table_name, " does not exist. Current table names are: ",
+               bagel@count_tables@table_name, sep = ""))
+  } else {
+    counts_table <- bagel@count_tables@
+      table_list[[which(bagel@count_tables@table_name == table_name)]]
+  }
 
   # Load sample counts matrix
-  counts_matrix <- bagel@counts_table
+  counts_matrix <- counts_table
 
   # convert data structures
   sig_name <- colnames(signatures[, signatures_to_use])
@@ -303,52 +349,54 @@ infer_signatures <- function(bagel, signatures=cosmic_v2_sigs@signatures,
 
   # Multiply Weights by sample counts
   used_samples <- which(bagel@variants$Tumor_Sample_Barcode %in%
-                          colnames(bagel@counts_table))
+                          colnames(counts_table))
   if (length(used_samples) == 0) {
     warning(strwrap(prefix = " ", initial = "", "No samples overlap with
                       counts table, exposures will not be scaled by sample
                       counts."))
   } else {
     sample_counts <- table(bagel@variants$Tumor_Sample_Barcode[used_samples])
-    matched <- match(colnames(bagel@counts_table), names(sample_counts))
+    matched <- match(colnames(counts_table), names(sample_counts))
     lda_posterior_result@samples <- sweep(lda_posterior_result@samples, 2,
                                           sample_counts[matched], FUN = "*")
   }
   return(lda_posterior_result)
 }
 
-has_tables <- function(bagel) {
-  if (!methods::is(bagel, "bagel")) {
-    stop(strwrap(prefix = " ", initial = "", "The input object is not a
-    bagel object, please use new('bagel') to create one."))
-  }
-  if (length(bagel@counts_table) == 0) {
-    stop(strwrap(prefix = " ", initial = "", "The counts table is
-    either missing or malformed, please run create_tables prior to this
-                         function."))
-  }
+multi_modal_discovery <- function(bay, num_signatures, motif96_name,
+                                  rflank_name, lflank_name, max.iter=125,
+                                  seed=123) {
+  motif96 <- extract_count_table(bay, motif96_name)
+  rflank <- extract_count_table(bay, rflank_name)
+  lflank <- extract_count_table(bay, lflank_name)
+  print(dim(motif96))
+  print(dim(rflank))
+  print(dim(lflank))
 }
 
-#' Generate result_grid from bagel based on annotation and range of k
-#'
-#' @param bagel Input bagel to generate grid from
-#' @param discovery_type Algorithm for signature discovery
-#' @param annotation Sample annotation to split results into
-#' @param k_start Lower range of number of signatures for discovery
-#' @param k_end Upper range of number of signatures for discovery
-#' @param n_start Number of times to discover signatures and compare based on
-#' posterior loglikihood
-#' @param seed Give a seed to generate reproducible signatures
-#' @param verbose Whether to output loop iterations
-#' @return Results a result object containing signatures and sample weights
-#' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' grid <- generate_result_grid(bay, k_start = 2, k_end = 5)
-#' @export
-generate_result_grid <- function(bagel, discovery_type = "lda", annotation = NA,
-                                 k_start, k_end, n_start = 1, seed = NA,
-                                 verbose = FALSE) {
+# #' Generate result_grid from bagel based on annotation and range of k
+# #'
+# #' @param bagel Input bagel to generate grid from
+# #' @param table_name Name of table used for signature discovery
+# #' @param discovery_type Algorithm for signature discovery
+# #' @param annotation Sample annotation to split results into
+# #' @param k_start Lower range of number of signatures for discovery
+# #' @param k_end Upper range of number of signatures for discovery
+# #' @param n_start Number of times to discover signatures and compare based on
+# #' posterior loglikihood
+# #' @param seed Give a seed to generate reproducible signatures
+# #' @param verbose Whether to output loop iterations
+# #' @return Results a result object containing signatures and sample weights
+# #' @examples
+# #' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+# #' grid <- generate_result_grid(bay, "SNV96", k_start = 2, k_end = 5)
+# #' @export
+generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
+                                 annotation = NA, k_start, k_end, n_start = 1,
+                                 seed = NA, verbose = FALSE) {
   result_grid <- methods::new("Result_Grid")
+
+  counts_table <- extract_count_table(bagel, table_name)
 
   #Set Parameters
   params <- data.table::data.table("discovery_type" = discovery_type,
@@ -391,17 +439,19 @@ generate_result_grid <- function(bagel, discovery_type = "lda", annotation = NA,
       cur_bagel <- methods::new("bagel", variants = cur_annot_variants,
                        sample_annotations =
                          bagel@sample_annotations[cur_ind, ],
-                       counts_table = bagel@counts_table[, cur_ind])
+                       count_tables = extract_count_table(
+                         bagel, table_name)[, cur_ind])
     } else {
       cur_bagel <- bagel
       cur_annot_samples <- unique(bagel@variants$Tumor_Sample_Barcode)
     }
     #Used for reconstruction error
-    cur_counts <- cur_bagel@counts_table
+    cur_counts <- extract_count_table(cur_bagel, table_name)
 
     #Define new results
     for (cur_k in k_start:k_end) {
-      cur_result <- find_signatures(input = cur_bagel, num_signatures = cur_k,
+      cur_result <- find_signatures(input = cur_bagel, table_name = table_name,
+                                    num_signatures = cur_k,
                                     method = discovery_type, nstart = n_start,
                                     seed = seed)
       result_list[[list_elem]] <- cur_result

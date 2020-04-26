@@ -1,4 +1,4 @@
-#' @importFrom SummarizedExperiment seqnames rowRanges
+# #' @importFrom SummarizedExperiment rowRanges
 #' @importFrom methods is
 NULL
 
@@ -27,10 +27,12 @@ select_genome <- function(hg) {
 #' extension
 #'
 #' @param input VCF, MAF, file.vcf, file.maf, or list of inputs
+#' @param name Optional name for better error-reporting
 #' @param filter Filter to only passed variants
 #' @param only_snp Filter only non-snp variants
 #' @param extra_fields Which additional fields to extract
 #' @param auto_fix_errors Attempt to automatically fix file formatting errors
+#' @param verbose Show file list progress
 #' @return Returns a data.table of variants from a vcf
 #' @examples
 #' luad_vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
@@ -46,18 +48,15 @@ select_genome <- function(hg) {
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = maftools::read.maf(maf_file)
 #' dt = BAGEL::maf_to_dt(maf)
-#' maf_dt = BAGEL::auto_to_bagel_dt(input = dt)
-#'
-#' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
-#' maf = maftools::read.maf(maf_file)
-#' dt = BAGEL::auto_to_bagel_dt(maf)
+#' maf_dt = BAGEL::auto_to_bagel_dt(input = dt, filter = FALSE)
 #'
 #' melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
 #'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 #' melanoma <- BAGEL::auto_to_bagel_dt(input = melanoma_vcfs)
 #' @export
 auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
-                             extra_fields = NULL, verbose = TRUE) {
+                             extra_fields = NULL, auto_fix_errors = TRUE,
+                             verbose = TRUE) {
   if (length(input) > 1 && is(input, "vector")) {
     if(!is(input, "list")) {
       input <- as.list(input)
@@ -200,6 +199,8 @@ vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = TRUE,
                   "End_Position" = "end")
   }
 
+  dt <- add_variant_type(dt)
+
   if (only_snp) {
     variant_type <- rep(NA, nrow(dt))
     variant_type[which((nchar(dt$Tumor_Seq_Allele1) == 1) &
@@ -221,7 +222,8 @@ vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = TRUE,
   }
 
   #Drop factor levels which cause problems down the line
-  dt[, "Chromosome"] <- as.character(dt[, "Chromosome"])
+  dt[["Chromosome"]] <- as.character(dt[["Chromosome"]])
+  GenomeInfoDb::seqlevelsStyle(dt$Chromosome) <- "UCSC"
   return(dt)
 }
 
@@ -309,7 +311,7 @@ vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
 #' @examples
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = maftools::read.maf(maf_file)
-#' maf_dt = BAGEL::maf_to_dt(maf = maf)
+#' maf_dt = BAGEL::maf_to_dt(maf = maf, maf_name = "test", filter = FALSE)
 #' @export
 maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
                               TRUE, extra_fields = NULL) {
@@ -330,7 +332,7 @@ maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = maftools::read.maf(maf_file)
 #' dt = BAGEL::maf_to_dt(maf)
-#' maf_dt = BAGEL::dt_to_bagel_dt(dt = dt)
+#' maf_dt = BAGEL::dt_to_bagel_dt(dt = dt, filter = FALSE)
 #' @export
 dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
                            extra_fields = NULL) {
@@ -377,19 +379,21 @@ dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
 
   if (only_snp) {
     if (!is.null(dt$Variant_Type)) {
-      dt <- dt[which(dt$Variant_Type == "SNP"), ]
+      snp_vars <- which(dt$Variant_Type == "SNP")
+      if (length(snp_vars) > 0) {
+        data.table::set(dt, snp_vars, "Variant_Type", "SNV")
+      }
+      dt <- dt[which(dt$Variant_Type == "SNV"), ]
     } else {
-      variant_type <- rep(NA, nrow(dt))
-      variant_type[which((nchar(dt$Tumor_Seq_Allele1) == 1) &
-                           (nchar(dt$Tumor_Seq_Allele2) == 1))] <- "SNP"
-      dt <- dt[which(variant_type == "SNP"), ]
+      dt <- add_variant_type(dt)
     }
     if (nrow(dt) == 0) {
       warning(paste("No variants found in ", file_type, ":", dt_name,
                     sep = ""))
     }
+  } else {
+    dt <- add_variant_type(dt)
   }
-
   dt <- dt[, used_fields, with = FALSE]
 
   #For some reason non-variants are included (e.g. T>T), remove them
@@ -397,10 +401,11 @@ dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
   if (length(non_variant) > 0) {
     dt <- dt[-non_variant, ]
   }
-  return(dt)
-
   #Drop factor levels which cause problems down the line
-  dt[, "Chromosome"] <- as.character(dt[, "Chromosome"])
+  dt[["Chromosome"]] <- as.character(dt[["Chromosome"]])
+  GenomeInfoDb::seqlevelsStyle(dt$Chromosome) <- "UCSC"
+
+  return(dt)
 }
 
 #' Loads a maf file and extracts the data.table of variants
@@ -424,5 +429,5 @@ maf_file_to_dt <- function(maf_file, filter = TRUE, only_snp = TRUE,
 
 used_fields <- function() {
   return(c("Chromosome", "Start_Position", "End_Position", "Tumor_Seq_Allele1",
-    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode"))
+    "Tumor_Seq_Allele2", "Tumor_Sample_Barcode", "Variant_Type"))
 }

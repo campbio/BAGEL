@@ -11,11 +11,14 @@ auto_to_bagel_dt(
   filter = TRUE,
   only_snp = TRUE,
   extra_fields = NULL,
+  auto_fix_errors = TRUE,
   verbose = TRUE
 )
 }
 \arguments{
 \item{input}{VCF, MAF, file.vcf, file.maf, or list of inputs}
+
+\item{name}{Optional name for better error-reporting}
 
 \item{filter}{Filter to only passed variants}
 
@@ -24,6 +27,8 @@ auto_to_bagel_dt(
 \item{extra_fields}{Which additional fields to extract}
 
 \item{auto_fix_errors}{Attempt to automatically fix file formatting errors}
+
+\item{verbose}{Show file list progress}
 }
 \value{
 Returns a data.table of variants from a vcf
@@ -46,11 +51,7 @@ luad <- BAGEL::auto_to_bagel_dt(input = luad_vcf, name = luad_vcf_name)
 maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 maf = maftools::read.maf(maf_file)
 dt = BAGEL::maf_to_dt(maf)
-maf_dt = BAGEL::auto_to_bagel_dt(input = dt)
-
-maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
-maf = maftools::read.maf(maf_file)
-dt = BAGEL::auto_to_bagel_dt(maf)
+maf_dt = BAGEL::auto_to_bagel_dt(input = dt, filter = FALSE)
 
 melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
