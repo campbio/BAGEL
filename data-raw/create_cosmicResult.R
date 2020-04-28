@@ -25,3 +25,5 @@ usethis::use_data(cosmic_v3_dbs_sigs, internal = TRUE)
 v3_indel_tab <- read.table("./data-raw/sigProfiler_ID_signatures.csv", header = TRUE, sep = ",", row.names = 1, stringsAsFactors = FALSE)
 cosmic_v3_indel_sigs <- new("Result", signatures = as.matrix(v3_indel_tab), type = "Cosmic_v3_Indel_Genome")
 usethis::use_data(cosmic_v3_indel_sigs, internal = TRUE)
+
+usethis::use_data(cosmic_v2_sigs, cosmic_v3_snv_sigs_exome, cosmic_v3_snv_sigs, cosmic_v3_dbs_sigs, cosmic_v3_indel_sigs, internal = TRUE, overwrite = TRUE)
