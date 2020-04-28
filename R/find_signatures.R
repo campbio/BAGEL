@@ -74,7 +74,9 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
     #detach("package:DelayedArray")
 
     #Needed to prevent error with entirely zero rows
-    epsilon = 0.000001
+    epsilon = 0.00000001
+    #counts_table <- counts_table + epsilon
+
     #seed <- NMF::nmf.getOption('default.seed')
     #seed <- "random"
     #orig_seed <- getGeneric("seed")
@@ -170,21 +172,22 @@ sig_compare <- function(sig1, sig2, threshold=0.9) {
   return(comparison)
 }
 
-#' Compare two result files or input one to compare to COSMIC
+#' Compare two result files to find similar signatures
 #'
 #' @param result Result to compare
-#' @param other_result Second result, leave blank to use cosmic results
+#' @param other_result Second result
 #' @param threshold threshold for similarity
 #' @param result_name title for plot of first result signatures
 #' @param other_result_name title for plot of second result signatures
 #' @return Returns the comparisons
 #' @examples
 #' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' compare_results(res, threshold = 0.8)
+#' compare_results(res, res, threshold = 0.8)
 #' @export
-compare_results <- function(result, other_result = cosmic_v2_sigs,
-                            threshold = 0.9, result_name = "User Signatures 1",
-                            other_result_name = "User Signatures 2") {
+compare_results <- function(result, other_result,
+                            threshold = 0.9, result_name =
+                              deparse(substitute(result)), other_result_name =
+                              deparse(substitute(other_result))) {
   signatures <- result@signatures
   comparison <- sig_compare(signatures, other_result@signatures, threshold)
   result_subset <- methods::new("Result",
@@ -195,14 +198,100 @@ compare_results <- function(result, other_result = cosmic_v2_sigs,
                       signatures = other_result@signatures[, comparison$yindex,
                                                             drop = FALSE],
                       samples = matrix(), type = "NMF")
-  if (identical(other_result, cosmic_v2_sigs)) {
-    result_name <- "User Signatures"
-    other_result_name <- "COSMIC Signatures"
-  }
   result_plot <- BAGEL::plot_signatures(result_subset)
   result_plot <- result_plot + ggplot2::ggtitle(result_name)
   cosmic_plot <- BAGEL::plot_signatures(other_subset)
   cosmic_plot <- cosmic_plot + ggplot2::ggtitle(other_result_name)
+  gridExtra::grid.arrange(result_plot, cosmic_plot, ncol = 2)
+  return(comparison)
+}
+
+#' Compare a result object to COSMIC V3 Signatures; Select exome or genome for
+#' SNV and only genome for DBS or Indel classes
+#'
+#' @param result Result to compare
+#' @param variant_class Compare to SNV, DBS, or Indel
+#' @param sample_type exome (SNV only) or genome
+#' @param threshold threshold for similarity
+#' @param result_name title for plot user result signatures
+#' @return Returns the comparisons
+#' @examples
+#' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
+#' compare_cosmic_v3(res, "SNV", "genome", threshold = 0.8)
+#' @export
+compare_cosmic_v3 <- function(result, variant_class, sample_type,
+                              threshold = 0.9, result_name =
+                              deparse(substitute(result))) {
+  if(sample_type == "exome") {
+    if (variant_class %in% c("snv", "SNV", "SNV96", "SBS")) {
+      cosmic_res <- cosmic_v3_snv_sigs_exome
+    } else {
+      stop(paste("Only SNV class is available for whole-exome, please choose",
+                 " `genome` for DBS or Indel", sep = ""))
+    }
+  } else if (sample_type == "genome") {
+    if (variant_class %in% c("snv", "SNV", "SNV96", "SBS")) {
+      cosmic_res <- cosmic_v3_snv_sigs
+    } else if (variant_class %in% c("DBS", "dbs", "doublet")) {
+      cosmic_res <- cosmic_v3_dbs_sigs
+    } else if (variant_class %in% c("INDEL", "Indel", "indel", "ind", "IND",
+                                  "ID")) {
+      cosmic_res <- cosmic_v3_indel_sigs
+    } else {
+      stop("Only SNV, DBS, and Indel classes are supported")
+    }
+  } else {
+    stop("Sample type must be exome or genome")
+  }
+  signatures <- result@signatures
+  comparison <- sig_compare(signatures, cosmic_res@signatures, threshold)
+  result_subset <- methods::new(
+    "Result", signatures = result@signatures[,
+                                             comparison$xindex, drop = FALSE],
+    samples = matrix(), type = "NMF")
+  other_subset <- methods::new(
+    "Result", signatures = cosmic_res@signatures[, comparison$yindex,
+                                                 drop = FALSE],
+    samples = matrix(), type = "NMF")
+  result_plot <- BAGEL::plot_signatures(result_subset)
+  result_plot <- result_plot + ggplot2::ggtitle(result_name)
+  cosmic_plot <- BAGEL::plot_signatures(other_subset)
+  cosmic_plot <- cosmic_plot + ggplot2::ggtitle(paste("COSMIC Signatures v3",
+                                                      variant_class, " ",
+                                                      sample_type, sep = ""))
+  gridExtra::grid.arrange(result_plot, cosmic_plot, ncol = 2)
+  return(comparison)
+}
+
+#' Compare a result object to COSMIC V2 SNV Signatures (combination whole-exome
+#' and whole-genome)
+#'
+#' @param result Result to compare
+#' @param threshold threshold for similarity
+#' @param result_name title for plot user result signatures
+#' @return Returns the comparisons
+#' @examples
+#' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
+#' compare_cosmic_v2(res, threshold = 0.8)
+#' @export
+compare_cosmic_v2 <- function(result, threshold = 0.9, result_name =
+                                deparse(substitute(result))) {
+  signatures <- result@signatures
+  comparison <- sig_compare(signatures, cosmic_v2_sigs@signatures, threshold)
+  result_subset <- methods::new("Result",
+                                signatures =
+                                  result@signatures[, comparison$xindex, drop =
+                                                      FALSE], samples =
+                                  matrix(), type = "NMF")
+  other_subset <- methods::new("Result",
+                               signatures =
+                                 cosmic_v2_sigs@signatures[, comparison$yindex,
+                                                           drop = FALSE],
+                               samples = matrix(), type = "NMF")
+  result_plot <- BAGEL::plot_signatures(result_subset)
+  result_plot <- result_plot + ggplot2::ggtitle(result_name)
+  cosmic_plot <- BAGEL::plot_signatures(other_subset)
+  cosmic_plot <- cosmic_plot + ggplot2::ggtitle("COSMIC Signatures v2")
   gridExtra::grid.arrange(result_plot, cosmic_plot, ncol = 2)
   return(comparison)
 }

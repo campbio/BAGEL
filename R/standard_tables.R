@@ -13,8 +13,6 @@ create_snv96_table <- function(bay, g) {
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
 
   #Fix Chromosomes
-  #### TODO
-
   chr <- dat$Chromosome
   tryCatch(
     GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
@@ -115,25 +113,100 @@ create_snv96_table <- function(bay, g) {
 create_dbs_table <- function(bay) {
   dbs <- subset_variant_by_type(bay@variants, "DBS")
 
-  dbs_motifs <- cbind(paste(dbs$Tumor_Seq_Allele1, dbs$Tumor_Seq_Allele2, sep=">"))
-  default_factor <- levels(factor(dbs_motifs))
+  ref <- dbs$Tumor_Seq_Allele1
+  alt <- dbs$Tumor_Seq_Allele2
+
+  #Reverse Complement broad categories to the other strand
+  rc_ref <- which(ref %in% c("GT", "GG", "AG", "GA", "CA", "AA"))
+  ref[rc_ref] <- rc(ref[rc_ref])
+  alt[rc_ref] <- rc(alt[rc_ref])
+
+  #Reverse complement more specific categories to the other strand
+  rc_alt <- NULL
+  rc_ref_AT <- which(ref == "AT")
+  rc_alt <- c(rc_alt, rc_ref_AT[which(alt[rc_ref_AT] %in% c("TG", "GG", "TC"))])
+
+  rc_ref_CG <- which(ref == "CG")
+  rc_alt <- c(rc_alt, rc_ref_CG[which(alt[rc_ref_CG] %in% c("AC", "GA", "AA"))])
+
+  rc_ref_GC <- which(ref == "GC")
+  rc_alt <- c(rc_alt, rc_ref_GC[which(alt[rc_ref_GC] %in% c("TT", "CT", "TG"))])
+
+  rc_ref_TA <- which(ref == "TA")
+  rc_alt <- c(rc_alt, rc_ref_TA[which(alt[rc_ref_TA] %in% c("AG", "CC", "AC"))])
+
+  if (length(rc_alt) > 0) {
+    alt[rc_alt] <- rc(alt[rc_alt])
+  }
+
+
+  full <- paste(ref, ">NN_", alt, sep ="")
+  #length(unique(full))
+  major <- paste(c("AC", "AT", "CC", "CG", "CT", "GC", "TA", "TC", "TG", "TT"), ">NN", sep="")
+  minor <- c(     paste0("AC>", c("CA", "CG", "CT", "GA", "GG", "GT", "TA", "TG", "TT")),
+                  paste0("AT>", c("CA", "CC", "CG", "GA", "GC", "TA")),
+                  paste0("CC>", c("AA", "AG", "AT", "GA", "GG", "GT", "TA", "TG", "TT")),
+                  paste0("CG>", c("AT", "GC", "GT", "TA", "TC", "TT")),
+                  paste0("CT>", c("AA", "AC", "AG", "GA", "GC", "GG", "TA", "TC", "TG")),
+                  paste0("GC>", c("AA", "AG", "AT", "CA", "CG", "TA")),
+                  paste0("TA>", c("AT", "CG", "CT", "GC", "GG", "GT")),
+                  paste0("TC>", c("AA", "AG", "AT", "CA", "CG", "CT", "GA", "GG", "GT")),
+                  paste0("TG>", c("AA", "AC", "AT", "CA", "CC", "CT", "GA", "GC", "GT")),
+                  paste0("TT>", c("AA", "AC", "AG", "CA", "CC", "CG", "GA", "GC", "GG")))
+
+  full_motif <- c(paste0("AC>NN", "_", c("CA", "CG", "CT", "GA", "GG", "GT", "TA", "TG", "TT")),
+            paste0("AT>NN", "_", c("CA", "CC", "CG", "GA", "GC", "TA")),
+            paste0("CC>NN", "_", c("AA", "AG", "AT", "GA", "GG", "GT", "TA", "TG", "TT")),
+            paste0("CG>NN", "_", c("AT", "GC", "GT", "TA", "TC", "TT")),
+            paste0("CT>NN", "_", c("AA", "AC", "AG", "GA", "GC", "GG", "TA", "TC", "TG")),
+            paste0("GC>NN", "_", c("AA", "AG", "AT", "CA", "CG", "TA")),
+            paste0("TA>NN", "_", c("AT", "CG", "CT", "GC", "GG", "GT")),
+            paste0("TC>NN", "_", c("AA", "AG", "AT", "CA", "CG", "CT", "GA", "GG", "GT")),
+            paste0("TG>NN", "_", c("AA", "AC", "AT", "CA", "CC", "CT", "GA", "GC", "GT")),
+            paste0("TT>NN", "_", c("AA", "AC", "AG", "CA", "CC", "CG", "GA", "GC", "GG")))
+
+  #full <- c(paste0("AC>NN", "_", minor[grep("AC>", minor)]),
+  #          paste0("AT>NN", "_", minor[grep("AT>", minor)]),
+  #          paste0("CC>NN", "_", minor[grep("CC>", minor)]),
+  #          paste0("CG>NN", "_", minor[grep("CG>", minor)]),
+  #          paste0("CT>NN", "_", minor[grep("CT>", minor)]),
+  #          paste0("GC>NN", "_", minor[grep("GC>", minor)]),
+  #          paste0("TA>NN", "_", minor[grep("TA>", minor)]),
+  #          paste0("TC>NN", "_", minor[grep("TC>", minor)]),
+  #          paste0("TG>NN", "_", minor[grep("TG>", minor)]),
+  #          paste0("TT>NN", "_", minor[grep("TT>", minor)]))
+
   sample_names <- unique(dbs$Tumor_Sample_Barcode)
   num_samples <- length(sample_names)
   variant_tables <- vector("list", length = num_samples)
   for (i in seq_len(num_samples)) {
     sample_index <- which(dbs$Tumor_Sample_Barcode == sample_names[i])
-    variant_tables[[i]] <- table(factor(dbs_motifs[sample_index],
-                                        levels = default_factor))
+    variant_tables[[i]] <- table(factor(full[sample_index],
+                                        levels = full_motif))
   }
   table <- do.call(cbind, variant_tables)
   colnames(table) <- sample_names
-
   tab <- create_count_table(bay = bay, table = table, name = "DBS",
                             description = paste("Standard count table for ",
                                                 "double-base substitutions",
                                                 sep = ""),
                             return_instead = TRUE)
+
+  #rowSums(tab@table_list$DBS)
+
   eval.parent(substitute(bay@count_tables <- tab))
+}
+
+rc <- function(dna) {
+  if (class(dna) == "character" && length(dna) == 1) {
+    rev_com <- as.character(Biostrings::reverseComplement(Biostrings::DNAString(dna)))
+  } else if (class(dna) == "character" && length(dna) > 1) {
+    rev_com <- sapply(dna, rc)
+    names(rev_com) <- NULL
+  } else {
+    stop("Must be character or character vector")
+  }
+  return(rev_com)
 }
 
 create_indel_table <- function(bay, g) {

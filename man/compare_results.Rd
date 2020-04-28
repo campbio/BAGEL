@@ -2,20 +2,20 @@
 % Please edit documentation in R/find_signatures.R
 \name{compare_results}
 \alias{compare_results}
-\title{Compare two result files or input one to compare to COSMIC}
+\title{Compare two result files to find similar signatures}
 \usage{
 compare_results(
   result,
-  other_result = cosmic_v2_sigs,
+  other_result,
   threshold = 0.9,
-  result_name = "User Signatures 1",
-  other_result_name = "User Signatures 2"
+  result_name = deparse(substitute(result)),
+  other_result_name = deparse(substitute(other_result))
 )
 }
 \arguments{
 \item{result}{Result to compare}
 
-\item{other_result}{Second result, leave blank to use cosmic results}
+\item{other_result}{Second result}
 
 \item{threshold}{threshold for similarity}
 
@@ -27,9 +27,9 @@ compare_results(
 Returns the comparisons
 }
 \description{
-Compare two result files or input one to compare to COSMIC
+Compare two result files to find similar signatures
 }
 \examples{
 res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-compare_results(res, threshold = 0.8)
+compare_results(res, res, threshold = 0.8)
 }
