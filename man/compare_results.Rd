@@ -2,7 +2,7 @@
 % Please edit documentation in R/find_signatures.R
 \name{compare_results}
 \alias{compare_results}
-\title{Compare two result files or input one to compare to COSMIC}
+\title{Compare two result files to find similar signatures}
 \usage{
 compare_results(
   result,
@@ -27,9 +27,9 @@ compare_results(
 Returns the comparisons
 }
 \description{
-Compare two result files or input one to compare to COSMIC
+Compare two result files to find similar signatures
 }
 \examples{
 res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-compare_results(res, cosmic_v2_sigs, threshold = 0.8)
+compare_results(res, res, threshold = 0.8)
 }

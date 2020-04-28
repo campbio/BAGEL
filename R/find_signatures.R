@@ -172,7 +172,7 @@ sig_compare <- function(sig1, sig2, threshold=0.9) {
   return(comparison)
 }
 
-#' Compare two result files or input one to compare to COSMIC
+#' Compare two result files to find similar signatures
 #'
 #' @param result Result to compare
 #' @param other_result Second result
@@ -182,7 +182,7 @@ sig_compare <- function(sig1, sig2, threshold=0.9) {
 #' @return Returns the comparisons
 #' @examples
 #' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' compare_results(res, cosmic_v2_sigs, threshold = 0.8)
+#' compare_results(res, res, threshold = 0.8)
 #' @export
 compare_results <- function(result, other_result,
                             threshold = 0.9, result_name =
@@ -206,8 +206,8 @@ compare_results <- function(result, other_result,
   return(comparison)
 }
 
-#' Compare a result object to COSMIC V2 SNV Signatures (combination whole-exome
-#' and whole-genome)
+#' Compare a result object to COSMIC V3 Signatures; Select exome or genome for
+#' SNV and only genome for DBS or Indel classes
 #'
 #' @param result Result to compare
 #' @param variant_class Compare to SNV, DBS, or Indel

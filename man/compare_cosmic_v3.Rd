@@ -2,8 +2,8 @@
 % Please edit documentation in R/find_signatures.R
 \name{compare_cosmic_v3}
 \alias{compare_cosmic_v3}
-\title{Compare a result object to COSMIC V2 SNV Signatures (combination whole-exome
-and whole-genome)}
+\title{Compare a result object to COSMIC V3 Signatures; Select exome or genome for
+SNV and only genome for DBS or Indel classes}
 \usage{
 compare_cosmic_v3(
   result,
@@ -28,8 +28,8 @@ compare_cosmic_v3(
 Returns the comparisons
 }
 \description{
-Compare a result object to COSMIC V2 SNV Signatures (combination whole-exome
-and whole-genome)
+Compare a result object to COSMIC V3 Signatures; Select exome or genome for
+SNV and only genome for DBS or Indel classes
 }
 \examples{
 res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
