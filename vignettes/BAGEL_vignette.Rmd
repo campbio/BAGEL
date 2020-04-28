@@ -79,7 +79,7 @@ BAGEL::plot_exposures(result, proportional = TRUE)
 BAGEL::plot_exposures(result, proportional = FALSE)
 #
 ##Compare to COSMIC signatures by leaving the second result as default
-BAGEL::compare_results(result, threshold = 0.8)
+BAGEL::compare_cosmic_v2(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
 BAGEL::what_cosmic_v2_sigs("lung")
