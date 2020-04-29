@@ -482,7 +482,7 @@ multi_modal_discovery <- function(bay, num_signatures, motif96_name,
 # #' @export
 generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                  annotation = NA, k_start, k_end, n_start = 1,
-                                 seed = NA, verbose = FALSE) {
+                                 seed = NULL, verbose = FALSE) {
   result_grid <- methods::new("Result_Grid")
 
   counts_table <- extract_count_table(bagel, table_name)
