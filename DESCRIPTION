@@ -36,19 +36,20 @@ Imports:
     GenomeInfoDb,
     plotly,
     topicmodels,
+    XVector,
     GenomicFeatures,
     GenomicRanges,
     IRanges,
-    BSgenome.Hsapiens.UCSC.hg19,
-    BSgenome.Hsapiens.UCSC.hg38,
-    TxDb.Hsapiens.UCSC.hg19.knownGene,
-    TxDb.Hsapiens.UCSC.hg38.knownGene,
     S4Vectors
 Suggests:
     testthat,
     knitr,
     rmarkdown,
     survival,
+    BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Hsapiens.UCSC.hg38,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
+    TxDb.Hsapiens.UCSC.hg38.knownGene,
     qpdf
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
