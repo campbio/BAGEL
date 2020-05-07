@@ -36,10 +36,6 @@ Imports:
     GenomeInfoDb,
     plotly,
     topicmodels,
-    XVector,
-    GenomicFeatures,
-    GenomicRanges,
-    IRanges,
     S4Vectors
 Suggests:
     testthat,
@@ -50,6 +46,10 @@ Suggests:
     BSgenome.Hsapiens.UCSC.hg38,
     TxDb.Hsapiens.UCSC.hg19.knownGene,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
+    XVector,
+    GenomicFeatures,
+    GenomicRanges,
+    IRanges,
     qpdf
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
