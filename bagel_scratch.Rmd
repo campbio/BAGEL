@@ -45,7 +45,7 @@ drop_na_variants <- function(bay, annotation) {
 drop_na_variants(bay@variants, "Transcribed_Strand")
 
 subset_
-res = find_signatures(a, "transcribed_strand", 3, "nmf")
+res = discover_signatures(a, "transcribed_strand", 3, "nmf")
 plot_signatures(res)
 
 

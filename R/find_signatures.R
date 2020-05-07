@@ -21,7 +21,7 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = NULL, nstart = 1, par_cores = FALSE) {
   if (!methods::is(input, "bagel")) {
     if (!methods::is(input, "matrix")) {
-      stop("Input to find_signatures must be a bagel object or a matrix")
+      stop("Input to discover_signatures must be a bagel object or a matrix")
     }
     bagel <- methods::new("bagel")
     bagel@count_tables@table_list[[1]] <- input
