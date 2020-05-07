@@ -1,3 +1,9 @@
+#' @importFrom IRanges IRanges findOverlaps
+#' @importFrom GenomicFeatures genes
+#' @importFrom S4Vectors queryHits decode subjectHits
+#' @importFrom GenomicRanges strand
+NULL
+
 #' Uses a genome object to find context and add it to the variant table
 #'
 #' @param bay Input samples
@@ -166,10 +172,10 @@ subset_variant_by_type <- function(tab, type) {
 #' @export
 annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (genome_build %in% c("19", "hg19")) {
-    genes <- GenomicFeatures::genes(
+    genes <- genes(
       TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)
   } else if (genome_build %in% c("38", "hg38")) {
-    genes <- GenomicFeatures::genes(
+    genes <- genes(
       TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene)
   } else if (methods::isClass(genome_build, "TxDb")) {
     genes <- genome_build
@@ -183,15 +189,14 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
 
   #Create VRanges object to determine strand of variants within genes
   vrange <- VariantAnnotation::VRanges(seqnames = snvs$Chromosome, ranges =
-                                         IRanges::IRanges(snvs$Start_Position,
+                                         IRanges(snvs$Start_Position,
                                                  snvs$End_Position), ref =
                                          snvs$Tumor_Seq_Allele1, alt =
                                          snvs$Tumor_Seq_Allele2)
-  overlaps <- IRanges::findOverlaps(vrange, genes)
+  overlaps <- findOverlaps(vrange, genes)
   transcribed_variants <- rep("NA", nrow(dat))
-  transcribed_variants[snv_index[S4Vectors::queryHits(overlaps)]] <-
-    as.character(S4Vectors::decode(GenomicRanges::strand(
-      genes[S4Vectors::subjectHits(overlaps)])))
+  transcribed_variants[snv_index[queryHits(overlaps)]] <- as.character(decode(
+    strand(genes[subjectHits(overlaps)])))
 
   #Match transcription and +, -, to account for reverse complement
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2,

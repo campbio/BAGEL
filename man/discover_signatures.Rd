@@ -36,8 +36,9 @@ Returns a result object with results and input object (if bagel)
 Discovers signatures and weights from a table of counts using NMF
 }
 \examples{
-#print("test")
-#a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
-#b <- discover_signatures(input = a, table_name = "SNV96", num_signatures = 3,
-#method = "nmf", seed = 12345, nstart = 1)
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+g <- select_genome("19")
+create_snv96_table(bay, g)
+discover_signatures(input = bay, table_name = "SNV96",
+num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 }

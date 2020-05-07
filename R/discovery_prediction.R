@@ -12,10 +12,11 @@ NULL
 #' @param par_cores Number of parallel cores to use (NMF only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
-#' #print("test")
-#' #a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
-#' #b <- discover_signatures(input = a, table_name = "SNV96", num_signatures = 3,
-#' #method = "nmf", seed = 12345, nstart = 1)
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("19")
+#' create_snv96_table(bay, g)
+#' discover_signatures(input = bay, table_name = "SNV96",
+#' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
 discover_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = NULL, nstart = 1, par_cores = FALSE) {
@@ -72,7 +73,7 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
     #Needed to prevent error with entirely zero rows
     epsilon <- 0.00000001
 
-    if(par_cores) {
+    if (par_cores) {
       decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
                          nrun = nstart, .options = paste("p", par_cores,
                                                          sep = ""))
@@ -461,7 +462,7 @@ multi_modal_discovery <- function(bay, num_signatures, motif96_name,
 #' @param n_start Number of times to discover signatures and compare based on
 #' posterior loglikihood
 #' @param seed Give a seed to generate reproducible signatures
-#' @param par Number of parallel cores to use (NMF only)
+#' @param par_cores Number of parallel cores to use (NMF only)
 #' @param verbose Whether to output loop iterations
 #' @return Results a result object containing signatures and sample weights
 #' @examples
@@ -470,7 +471,8 @@ multi_modal_discovery <- function(bay, num_signatures, motif96_name,
 #' @export
 generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                  annotation = NA, k_start, k_end, n_start = 1,
-                                 seed = NULL, par = FALSE, verbose = FALSE) {
+                                 seed = NULL, par_cores = FALSE,
+                                 verbose = FALSE) {
   result_grid <- methods::new("Result_Grid")
 
   #Set Parameters
@@ -528,7 +530,8 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
       cur_result <- discover_signatures(input = cur_bagel, table_name =
                                           table_name, num_signatures = cur_k,
                                         method = discovery_type, nstart =
-                                          n_start, seed = seed, par = par)
+                                          n_start, seed = seed, par_cores =
+                                          par_cores)
       result_list[[list_elem]] <- cur_result
       list_elem <- list_elem + 1
 

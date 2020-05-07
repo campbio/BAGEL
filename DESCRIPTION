@@ -35,7 +35,11 @@ Imports:
     rlang,
     GenomeInfoDb,
     plotly,
-    topicmodels
+    topicmodels,
+    GenomicFeatures,
+    GenomicRanges,
+    IRanges,
+    S4Vectors
 Suggests:
     testthat,
     knitr,

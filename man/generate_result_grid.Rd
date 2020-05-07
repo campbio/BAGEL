@@ -13,7 +13,7 @@ generate_result_grid(
   k_end,
   n_start = 1,
   seed = NULL,
-  par = FALSE,
+  par_cores = FALSE,
   verbose = FALSE
 )
 }
@@ -35,7 +35,7 @@ posterior loglikihood}
 
 \item{seed}{Give a seed to generate reproducible signatures}
 
-\item{par}{Number of parallel cores to use (NMF only)}
+\item{par_cores}{Number of parallel cores to use (NMF only)}
 
 \item{verbose}{Whether to output loop iterations}
 }

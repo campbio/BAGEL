@@ -275,7 +275,8 @@ create_dbs_table <- function(bay) {
 #' @export
 rc <- function(dna) {
   if (class(dna) == "character" && length(dna) == 1) {
-    rev_com <- as.character(Biostrings::reverseComplement(Biostrings::DNAString(dna)))
+    rev_com <- as.character(Biostrings::reverseComplement(
+      Biostrings::DNAString(dna)))
   } else if (class(dna) == "character" && length(dna) > 1) {
     rev_com <- sapply(dna, rc)
     names(rev_com) <- NULL

@@ -1,4 +1,3 @@
-# #' @importFrom SummarizedExperiment rowRanges
 #' @importFrom methods is
 NULL
 
