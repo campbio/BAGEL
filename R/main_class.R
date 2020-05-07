@@ -284,6 +284,14 @@ subset_bagel_by_annotation <- function(bay, annot_col, annot_name) {
   return(bay)
 }
 
+drop_na_variants <- function(variants, annot_col) {
+  if (!annot_col %in% colnames(variants)) {
+    stop(paste(annot_col, " not found in annotation columns, please review.",
+               sep = ""))
+  }
+  return(variants[-which(variants[[annot_col]] == "NA"), ])
+}
+
 # Result object/methods -------------------------------
 
 #' Object containing deconvolved/predicted signatures, sample weights, and

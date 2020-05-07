@@ -58,7 +58,7 @@ auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
                              extra_fields = NULL, auto_fix_errors = TRUE,
                              verbose = TRUE) {
   if (length(input) > 1 && is(input, "vector")) {
-    if(!is(input, "list")) {
+    if (!is(input, "list")) {
       input <- as.list(input)
     }
     input_list <- vector("list", length(input))

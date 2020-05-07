@@ -7,7 +7,8 @@
 #' @param build_table Automatically build a table using the annotation and add
 #' it to the bagel
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96_tiny.rds", package = "BAGEL"))
+#' bay <- readRDS(system.file("testdata", "bagel_snv96_tiny.rds",
+#' package = "BAGEL"))
 #' g <- select_genome("38")
 #' add_flank_to_variants(bay, g, 1, 2)
 #' add_flank_to_variants(bay, g, -2, -1)
@@ -58,7 +59,7 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end,
   dat[[output_column]] <- final_mut_context
   eval.parent(substitute(bay@variants <- dat))
   if (build_table) {
-    dat_bagel = methods::new("bagel", variants = dat, count_tables =
+    dat_bagel <- methods::new("bagel", variants = dat, count_tables =
                                bay@count_tables,
                              sample_annotations = bay@sample_annotations)
     tab <- create_variant_table(dat_bagel, variant_annotation = output_column,
@@ -143,33 +144,64 @@ annotate_variant_type <- function(bay) {
 #' subset_variant_by_type(get_variants(bay), "SNV")
 #' @export
 subset_variant_by_type <- function(tab, type) {
-  if(!"Variant_Type" %in% colnames(tab)) {
+  if (!"Variant_Type" %in% colnames(tab)) {
     stop(paste("No Variant_Type annotation found, ",
                "please run annotate_variant_type first."))
   }
-  if(!any(tab$Variant_Type %in% type)) {
+  if (!any(tab$Variant_Type %in% type)) {
     stop(paste("No variants of type: ", type))
   }
   return(tab[which(tab$Variant_Type == type), ])
 }
 
-#' Add strand annotation to SNV variants
+#' Add transcript strand annotation to SNV variants (defined in genes only)
 #'
 #' @param bay Input bagel
+#' @param genome_build Which genome build to use: hg19, hg38, or a custom TxDb
+#' object
+#' @param build_table Automatically build a table from this annotation
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' annotate_snv_strand(bay)
+#' annotate_transcript_strand(bay, 19)
 #' @export
-annotate_snv_strand <- function(bay) {
+annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
+  if (genome_build %in% c("19", "hg19")) {
+    genes <- genes(
+      TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)
+  } else if (genome_build %in% c("38", "hg38")) {
+    genes <- genes(
+      TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene)
+  } else if (methods::isClass(genome_build, "TxDb")) {
+    genes <- genome_build
+  } else {
+    stop("Please select hg19, hg38, or provde a TxDb object")
+  }
+
   dat <- bay@variants
-  snvs <- which(dat$Variant_Type == "SNV")
-  motifs <- paste(dat$Tumor_Seq_Allele1,
-                  dat$Tumor_Seq_Allele2, sep = ">")
-  forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
-  rev_change <- c("A>G", "A>T", "A>C", "G>T", "G>C", "G>A")
-  strand <- rep(NA, nrow(dat))
-  strand[which(motifs %in% forward_change)] <- "+"
-  strand[which(motifs %in% rev_change)] <- "-"
-  dat[["SNV_Strand"]] <- strand
+  snv_index <- which(dat$Variant_Type == "SNV")
+  snvs <- subset_variant_by_type(dat, "SNV")
+
+  #Create VRanges object to determine strand of variants within genes
+  vrange <- VariantAnnotation::VRanges(seqnames = snvs$Chromosome, ranges =
+                                         IRanges(snvs$Start_Position,
+                                                 snvs$End_Position), ref =
+                                         snvs$Tumor_Seq_Allele1, alt =
+                                         snvs$Tumor_Seq_Allele2)
+  overlaps <- IRanges::findOverlaps(vrange, genes)
+  transcribed_variants <- rep("NA", nrow(dat))
+  transcribed_variants[snv_index[S4Vectors::queryHits(overlaps)]] <-
+    as.character(S4Vectors::decode(GenomicRanges::strand(
+      genes[S4Vectors::subjectHits(overlaps)])))
+
+  dat[["Transcript_Strand"]] <- transcribed_variants
   eval.parent(substitute(bay@variants <- dat))
+  if (build_table) {
+    dat_bagel <- methods::new("bagel", variants = drop_na_variants(
+      dat, "Transcript_Strand"), count_tables = bay@count_tables,
+      sample_annotations = bay@sample_annotations)
+    tab <- create_variant_table(dat_bagel, variant_annotation =
+                                  "Transcript_Strand", name =
+                                  "Transcript_Strand", return_instead = FALSE)
+    eval.parent(substitute(bay@count_tables <- tab))
+  }
 }

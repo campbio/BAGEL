@@ -9,16 +9,16 @@ NULL
 #' @param method Discovery of new signatures using either LDA or NMF
 #' @param seed Seed for reproducible signature discovery
 #' @param nstart Number of independent runs with optimal chosen (lda only)
-#' @param par Number of parallel cores to use (NMF only)
+#' @param par_cores Number of parallel cores to use (NMF only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' #print("test")
 #' #a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
-#' #b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
+#' #b <- discover_signatures(input = a, table_name = "SNV96", num_signatures = 3,
 #' #method = "nmf", seed = 12345, nstart = 1)
 #' @export
-find_signatures <- function(input, table_name, num_signatures, method="lda",
-                            seed = NULL, nstart = 1, par = FALSE) {
+discover_signatures <- function(input, table_name, num_signatures, method="lda",
+                            seed = NULL, nstart = 1, par_cores = FALSE) {
   if (!methods::is(input, "bagel")) {
     if (!methods::is(input, "matrix")) {
       stop("Input to find_signatures must be a bagel object or a matrix")
@@ -69,34 +69,21 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
                                log_lik = stats::median(lda_out@loglikelihood))
     return(lda_result)
   } else if (method == "nmf") {
-    #Needed to prevent issue with generic seed method
-    #https://github.com/renozao/NMF/issues/85
-    #detach("package:DelayedArray")
-
     #Needed to prevent error with entirely zero rows
-    epsilon = 0.00000001
-    #counts_table <- counts_table + epsilon
+    epsilon <- 0.00000001
 
-    #seed <- NMF::nmf.getOption('default.seed')
-    #seed <- "random"
-    #orig_seed <- getGeneric("seed")
-    #setGeneric("seed", NMF::seed)
-    #NMF::setNMFSeed(NMF::nmfSeed("random"))
-    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures)
-    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = "random")
-    #print(getGeneric("seed"))
-    decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
-                       nrun = nstart)
-    #if(par) {
-    #  decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
-    #                     nrun = nstart, .options = paste("p", par, sep = ""))
-#
-    #}
-    #setGeneric("seed", orig_seed)
-
+    if(par_cores) {
+      decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+                         nrun = nstart, .options = paste("p", par_cores,
+                                                         sep = ""))
+    } else {
+      decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+                         nrun = nstart)
+    }
     rownames(decomp@fit@H) <- paste("Signature", seq_len(num_signatures),
                                  sep = "")
-    colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures), sep = "")
+    colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures),
+                                    sep = "")
     nmf_result <- methods::new("Result", signatures = decomp@fit@W,
                                samples = decomp@fit@H, type = "NMF",
                                bagel = input, log_lik = decomp@residuals)
@@ -104,7 +91,7 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
                                    colSums(nmf_result@signatures), FUN = "/")
     nmf_result@samples <- sweep(nmf_result@samples, 2,
                                    colSums(nmf_result@samples), FUN = "/")
-#
+
     # Multiply Weights by sample counts
     if (length(used_samples) != 0) {
       nmf_result@samples <- sweep(nmf_result@samples, 2,
@@ -222,7 +209,7 @@ compare_results <- function(result, other_result,
 compare_cosmic_v3 <- function(result, variant_class, sample_type,
                               threshold = 0.9, result_name =
                               deparse(substitute(result))) {
-  if(sample_type == "exome") {
+  if (sample_type == "exome") {
     if (variant_class %in% c("snv", "SNV", "SNV96", "SBS")) {
       cosmic_res <- cosmic_v3_snv_sigs_exome
     } else {
@@ -348,9 +335,9 @@ what_cosmic_v2_sigs <- function(tumor_type) {
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("19")
 #' create_snv96_table(bay, g)
-#' infer_signatures(bay, "SNV96")
+#' predict_exposure(bay, "SNV96")
 #' @export
-infer_signatures <- function(bagel, table_name,
+predict_exposure <- function(bagel, table_name,
                              signatures=cosmic_v2_sigs@signatures,
                           signatures_to_use = seq_len(ncol(signatures)),
                           verbose = FALSE) {
@@ -486,8 +473,6 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                  seed = NULL, par = FALSE, verbose = FALSE) {
   result_grid <- methods::new("Result_Grid")
 
-  counts_table <- extract_count_table(bagel, table_name)
-
   #Set Parameters
   params <- data.table::data.table("discovery_type" = discovery_type,
                                    "annotation_used" = annotation, "k_start" =
@@ -540,10 +525,10 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
 
     #Define new results
     for (cur_k in k_start:k_end) {
-      cur_result <- find_signatures(input = cur_bagel, table_name = table_name,
-                                    num_signatures = cur_k,
-                                    method = discovery_type, nstart = n_start,
-                                    seed = seed, par = par)
+      cur_result <- discover_signatures(input = cur_bagel, table_name =
+                                          table_name, num_signatures = cur_k,
+                                        method = discovery_type, nstart =
+                                          n_start, seed = seed, par = par)
       result_list[[list_elem]] <- cur_result
       list_elem <- list_elem + 1
 

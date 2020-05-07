@@ -1,0 +1,99 @@
+---
+title: "Bagel_Scratch"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+bay = readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
+
+vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", 
+                         package = "BAGEL")
+#vcf <- VariantAnnotation::readVcf(vcf_file)
+#vcf <- VariantAnnotation::readVcfAsVRanges(vcf_file)
+vcf_dt <- vcf_file_to_dt(vcf_file)
+
+
+
+vcf <- VariantAnnotation::VRanges(seqnames = vcf_dt$Chromosome, ranges = IRanges(vcf_dt$Start_Position, vcf_dt$End_Position), ref = vcf_dt$Tumor_Seq_Allele1, alt = vcf_dt$Tumor_Seq_Allele2)
+
+#Reference bases are always stranded exactly one way, so for 
+#determining transcription strand, we don't have to worry about reverse complements
+#refs <- BSgenome.Hsapiens.UCSC.hg19::BSgenome.Hsapiens.UCSC.hg19
+#bs_overlaps <- BSgenome::getSeq(refs, vcf)
+
+library("TxDb.Hsapiens.UCSC.hg19.knownGene")
+genes_hg19 <- genes(TxDb.Hsapiens.UCSC.hg19.knownGene)
+overlaps <- findOverlaps(vcf, genes_hg19)
+head(overlaps)
+transcribed_variants = rep("NA", length(vcf))
+
+transcribed_variants[queryHits(overlaps)] = as.character(decode(strand(genes_hg19[subjectHits(overlaps)])))
+
+vcf_dt$Transcribed_Strand <- transcribed_variants
+a=new("bagel", variants = vcf_dt)
+BAGEL:::create_variant_table(a, "Transcribed_Strand", "transcribed_strand")
+a@variants[-which(a@variants$Transcribed_Strand == "NA"), ]
+drop_na_variants <- function(bay, annotation) {
+  bay@variants[-which(bay@variants[[annotation]] == "NA"), ]
+  
+}
+
+drop_na_variants(bay@variants, "Transcribed_Strand")
+
+subset_
+res = find_signatures(a, "transcribed_strand", 3, "nmf")
+plot_signatures(res)
+
+
+#variants = cbind(as.character(decode(seqnames(vcf))), start(ranges(vcf)), VariantAnnotation::ref(vcf), VariantAnnotation::alt(vcf), as.character(decode(VariantAnnotation::sampleNames(vcf))))
+variants_stranded = cbind(variants, transcribed_variants)
+only_matched = variants_stranded[variants_stranded[, "transcribed_variants"] %in% c("+", "-"), ]
+table(only_matched[, 6])
+table(paste0(only_matched[, 3], ">", only_matched[, 4], "_", only_matched[, 6]))
+```
+
+```{r}
+annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
+  if (genome_build %in% c("19", "hg19")) {
+    genes <- genes(
+      TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)
+  } else if (genome_build %in% c("38", "hg38")) {
+    genes <- genes(
+      TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene)
+  } else if (methods::isClass(genome_build, "TxDb")) {
+    genes <- genome_build
+  } else {
+    stop("Please select hg19, hg38, or provde a TxDb object")
+  }
+  
+  dat <- bay@variants
+  
+  #Create VRanges object to determine strand of variants within genes
+  vrange <- VariantAnnotation::VRanges(seqnames = dat$Chromosome, ranges = 
+                                      IRanges(dat$Start_Position, 
+                                              dat$End_Position), ref = 
+                                      dat$Tumor_Seq_Allele1, alt = 
+                                      dat$Tumor_Seq_Allele2)
+  overlaps <- IRanges::findOverlaps(vrange, genes)
+  transcribed_variants = rep("NA", length(vrange))
+  transcribed_variants[S4Vectors::queryHits(overlaps)] = 
+    as.character(S4Vectors::decode(GenomicRanges::strand(
+      genes[S4Vectors::subjectHits(overlaps)])))
+  
+  dat[[Transcribed_Strand]] <- transcribed_variants
+  eval.parent(substitute(bay@variants <- dat))
+  if (build_table) {
+    dat_bagel <- methods::new("bagel", variants = dat, count_tables =
+                               bay@count_tables,
+                             sample_annotations = bay@sample_annotations)
+    tab <- create_variant_table(dat_bagel, variant_annotation = Transcribed_Strand,
+                         name = Transcribed_Strand, return_instead = FALSE)
+    eval.parent(substitute(bay@count_tables <- tab))
+  }
+}
+```
+

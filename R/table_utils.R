@@ -148,7 +148,7 @@ combine_count_tables <- function(bay, to_comb, name, description = NA) {
 
   if (all(to_comb %in% tab@table_name)) {
     combo_table <- NULL
-    for(i in 1:length(to_comb)) {
+    for (i in seq_len(to_comb)) {
       combo_table <- rbind(combo_table, tab@table_list[[to_comb[i]]])
     }
     tab@table_list[[name]] <- combo_table
