@@ -93,7 +93,7 @@ plot_signatures <- function(result, plotly = FALSE) {
     theme_bw() + xlab("Motifs") + ylab("Proportion") + theme(
       axis.text.x = element_blank(), axis.ticks.x = element_blank(),
       strip.text.y = element_text(size = 7)) + ggplot2::scale_y_continuous(
-        expand = c(0, 0)) -> p
+        expand = c(0, 0)) + ggplot2::scale_x_discrete(breaks = NULL) -> p
   if (plotly) {
     p <- plotly::ggplotly(p)
   }
@@ -151,7 +151,8 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
                                                 strip.text.y =
                                                   element_text(size = 7)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed") -> p
+    ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed") +
+    ggplot2::scale_x_discrete(breaks = NULL) -> p
   if (plotly) {
     p <- plotly::ggplotly(p)
   }

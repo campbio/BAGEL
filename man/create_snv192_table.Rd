@@ -19,6 +19,6 @@ using transcript strand
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 g <- select_genome("38")
-annotate_transcript_strand(bay, g)
+annotate_transcript_strand(bay, "19")
 create_snv192_table(bay, g)
 }

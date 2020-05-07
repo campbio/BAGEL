@@ -289,7 +289,11 @@ drop_na_variants <- function(variants, annot_col) {
     stop(paste(annot_col, " not found in annotation columns, please review.",
                sep = ""))
   }
-  return(variants[-which(variants[[annot_col]] == "NA"), ])
+  if (length(which(variants[[annot_col]] == "NA")) == 0) {
+    return(variants)
+  } else {
+    return(variants[-which(variants[[annot_col]] == "NA"), ])
+  }
 }
 
 # Result object/methods -------------------------------

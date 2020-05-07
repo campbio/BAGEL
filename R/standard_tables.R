@@ -21,7 +21,6 @@ create_snv96_table <- function(bay, g) {
               " style 'UCSC' for the input reference ", (g@pkgname))
     }
   )
-
   range_start <- dat$Start_Position
   range_end <- dat$End_Position
   ref <- dat$Tumor_Seq_Allele1
@@ -72,7 +71,6 @@ create_snv96_table <- function(bay, g) {
                                   final_mut_rflank, sep = "")
   maf_mut_id <- paste(final_mut_type, final_mut_context, sep = "_")
 
-
   ###### Now we separate into samples
   ## Define all mutation types for 96 substitution scheme
   b1 <- rep(c("A", "C", "G", "T"), each = 24)
@@ -111,7 +109,7 @@ create_snv96_table <- function(bay, g) {
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("38")
-#' annotate_transcript_strand(bay, g)
+#' annotate_transcript_strand(bay, "19")
 #' create_snv192_table(bay, g)
 #' @export
 create_snv192_table <- function(bay, g) {
@@ -135,12 +133,10 @@ create_snv192_table <- function(bay, g) {
                                       as.character = TRUE)
   rflank <- VariantAnnotation::getSeq(g, chr, range_end + 1, range_end + 1,
                                       as.character = TRUE)
-
   ref_context <- paste(lflank, dat$Tumor_Seq_Allele1, rflank, sep = "")
 
   final_mut_type <- rep(NA, nrow(dat))
   final_mut_context <- rep(NA, nrow(dat))
-  final_mut_strand <- rep(NA, nrow(dat))
 
   ## Get mutation type
   initial_maf_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2,
@@ -152,7 +148,6 @@ create_snv192_table <- function(bay, g) {
 
   final_mut_type[ind] <- initial_maf_type[ind]
   final_mut_context[ind] <- ref_context[ind]
-  final_mut_strand[ind] <- ifelse(dat$Transcript_Strand[ind] == "+", "U", "T")
 
   ## Get mutation context info for those on "-" strand
   rev_change <- c("A>G", "A>T", "A>C", "G>T", "G>C", "G>A")
@@ -169,10 +164,8 @@ create_snv192_table <- function(bay, g) {
   final_mut_type[ind] <- paste(as.character(rev_refbase), ">",
                               as.character(rev_altbase), sep = "")
   final_mut_context[ind] <- rev_context
-  final_mut_strand[ind] <- ifelse(dat$Transcript_Strand[ind] == "-", "U", "T")
 
-
-  maf_mut_id <- paste(final_mut_type, final_mut_context, final_mut_strand,
+  maf_mut_id <- paste(final_mut_type, final_mut_context, dat$Transcript_Strand,
                      sep = "_")
   tumor_id <- as.factor(dat$Tumor_Sample_Barcode)
 
@@ -201,7 +194,6 @@ create_snv192_table <- function(bay, g) {
     return_instead = TRUE)
   eval.parent(substitute(bay@count_tables <- tab))
 }
-
 
 #' Creates and adds a table for standard doublet base subsitution (DBS)
 #'

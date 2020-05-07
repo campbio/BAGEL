@@ -166,10 +166,10 @@ subset_variant_by_type <- function(tab, type) {
 #' @export
 annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (genome_build %in% c("19", "hg19")) {
-    genes <- genes(
+    genes <- GenomicFeatures::genes(
       TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)
   } else if (genome_build %in% c("38", "hg38")) {
-    genes <- genes(
+    genes <- GenomicFeatures::genes(
       TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene)
   } else if (methods::isClass(genome_build, "TxDb")) {
     genes <- genome_build
@@ -183,7 +183,7 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
 
   #Create VRanges object to determine strand of variants within genes
   vrange <- VariantAnnotation::VRanges(seqnames = snvs$Chromosome, ranges =
-                                         IRanges(snvs$Start_Position,
+                                         IRanges::IRanges(snvs$Start_Position,
                                                  snvs$End_Position), ref =
                                          snvs$Tumor_Seq_Allele1, alt =
                                          snvs$Tumor_Seq_Allele2)
@@ -193,7 +193,18 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
     as.character(S4Vectors::decode(GenomicRanges::strand(
       genes[S4Vectors::subjectHits(overlaps)])))
 
-  dat[["Transcript_Strand"]] <- transcribed_variants
+  #Match transcription and +, -, to account for reverse complement
+  mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2,
+                            sep = "")
+  final_strand <- rep(NA, nrow(dat))
+  forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
+  ind <- mut_type %in% forward_change
+  final_strand[ind] <- ifelse(transcribed_variants[ind] == "+", "U", "T")
+  rev_change <- c("A>G", "A>T", "A>C", "G>T", "G>C", "G>A")
+  ind <- mut_type %in% rev_change
+  final_strand[ind] <- ifelse(transcribed_variants[ind] == "-", "U", "T")
+
+  dat[["Transcript_Strand"]] <- final_strand
   eval.parent(substitute(bay@variants <- dat))
   if (build_table) {
     dat_bagel <- methods::new("bagel", variants = drop_na_variants(

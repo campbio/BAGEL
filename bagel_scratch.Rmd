@@ -97,3 +97,38 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
 }
 ```
 
+```{r}
+#Make sure transcript strand was done correctly, compare to MutationalPatterns stranding
+vcfs <- readRDS(system.file("states/read_vcfs_as_granges_output.rds",
+                package="MutationalPatterns"))
+ref_genome = "BSgenome.Hsapiens.UCSC.hg19"
+library(ref_genome, character.only = TRUE)
+genes_hg19 <- readRDS(system.file("states/genes_hg19.rds",
+                        package="MutationalPatterns"))
+
+mut_mat_s = MutationalPatterns::mut_matrix_stranded(vcfs, ref_genome, genes_hg19, 
+                                mode = "transcription")
+
+
+mv = vcfs@unlistData
+vcf_names <- names(vcfs)
+mv_dats <- list()
+for(name in vcf_names) {
+  mv = vcfs[[name]]
+  mv_dats[[name]] <- data.table::data.table(Chromosome = as.character(seqnames(mv)), Start_Position = start(ranges(mv)), End_Position = end(ranges(mv)), Tumor_Seq_Allele1 = as.character(mv@elementMetadata@listData$REF), Tumor_Seq_Allele2 =
+                                   sapply(mv@elementMetadata@listData$ALT, function(x) substr(as.character(x[[1]]), 1, 1)), Tumor_Sample_Barcode = name)
+}
+mutpatdat <- do.call(rbind, mv_dats)
+mut_bay <- new('bagel', variants = mutpatdat)
+annotate_variant_type(mut_bay)
+annotate_transcript_strand(mut_bay, 19)
+g = select_genome("19")
+create_snv192_table(mut_bay, g)
+
+dat
+
+substr(as.character(mv@elementMetadata@listData$ALT[[1]]), 1, 1)
+
+
+```
+
