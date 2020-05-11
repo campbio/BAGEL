@@ -2,13 +2,13 @@
 % Please edit documentation in R/discovery_prediction.R
 \name{predict_exposure}
 \alias{predict_exposure}
-\title{LDA prediction of samples based on existing signatures (default COSMIC)}
+\title{LDA prediction of samples based on existing signatures}
 \usage{
 predict_exposure(
   bagel,
   table_name,
-  signatures = cosmic_v2_sigs@signatures,
-  signatures_to_use = seq_len(ncol(signatures)),
+  signature_res,
+  signatures_to_use = seq_len(ncol(signature_res@signatures)),
   verbose = FALSE
 )
 }
@@ -18,7 +18,7 @@ predict_exposure(
 \item{table_name}{Name of table used for posterior prediction.
 Must match the table type used to generate the prediction signatures}
 
-\item{signatures}{Signatures to use for prediction (default COSMIC)}
+\item{signature_res}{Signatures to use for prediction}
 
 \item{signatures_to_use}{Which signatures in set to use (default all)}
 
@@ -28,11 +28,11 @@ Must match the table type used to generate the prediction signatures}
 Results a result object containing signatures and sample weights
 }
 \description{
-LDA prediction of samples based on existing signatures (default COSMIC)
+LDA prediction of samples based on existing signatures
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 g <- select_genome("19")
 create_snv96_table(bay, g)
-predict_exposure(bay, "SNV96")
+predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs)
 }

@@ -82,17 +82,20 @@ BAGEL::plot_exposures(result, proportional = FALSE)
 BAGEL::compare_cosmic_v2(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
-BAGEL::what_cosmic_v2_sigs("lung")
+BAGEL::cosmic_v2_subtype_map("lung")
 
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
-cosmic_post = predict_exposure(bagel = bagel, "SNV96", signatures_to_use = c(12, 4, 11, 15))
+cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
+                                 cosmic_v2_sigs, signatures_to_use = 
+                                 c(12, 4, 11, 15))
 #cosmic_post = predict_exposure(bagel = bagel)
 #to_use = as.numeric(substr(names(which(rowSums(cosmic_post@samples) > 10^-10)), 11, 12))
 #to_use = as.numeric(substr(names(which(apply(cosmic_post@samples, 1, max) > 10^-10)), 11, 12))
 #cosmic_post = predict_exposure(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
-our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signatures = result@signatures)
+our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
+                                   result)
 
 #Plot results from posterior calculation
 BAGEL::plot_signatures(cosmic_post)

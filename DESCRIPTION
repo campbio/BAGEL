@@ -9,7 +9,7 @@ Depends:
     NMF
 License: GPL-3
 Encoding: UTF-8
-LazyData: FALSE
+LazyData: TRUE
 biocViews:
     Software,
     BiologicalQuestion,
@@ -34,6 +34,9 @@ Imports:
     dplyr,
     rlang,
     GenomeInfoDb,
+    GenomicFeatures,
+    GenomicRanges,
+    IRanges,
     plotly,
     topicmodels,
     S4Vectors
@@ -47,9 +50,6 @@ Suggests:
     TxDb.Hsapiens.UCSC.hg19.knownGene,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,
-    GenomicFeatures,
-    GenomicRanges,
-    IRanges,
     qpdf
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
