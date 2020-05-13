@@ -14,8 +14,3 @@ create_snv96_table(bay, g)
 \description{
 Uses a genome object to find context and generate standard SNV96 tables
 }
-\examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-g <- select_genome("38")
-create_snv96_table(bay, g)
-}

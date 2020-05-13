@@ -2,11 +2,6 @@
 #'
 #' @param bay Input samples
 #' @param g Genome object used for finding variant context
-#' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' create_snv96_table(bay, g)
-#' @export
 create_snv96_table <- function(bay, g) {
   dat <- bay@variants
 
@@ -98,7 +93,7 @@ create_snv96_table <- function(bay, g) {
                      description = paste("Single Nucleotide Variant table with",
                      " one base upstream and downstream",
                                          sep = ""), return_instead = TRUE)
-  eval.parent(substitute(bay@count_tables <- tab))
+  return(tab)
 }
 
 #' Uses a genome object to find context and generate standard SNV192 table
@@ -106,12 +101,6 @@ create_snv96_table <- function(bay, g) {
 #'
 #' @param bay Input samples
 #' @param g Genome object used for finding variant context
-#' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' annotate_transcript_strand(bay, "19")
-#' create_snv192_table(bay, g)
-#' @export
 create_snv192_table <- function(bay, g) {
   dat <- bay@variants
   dat <- drop_na_variants(dat, "Transcript_Strand")
@@ -192,16 +181,12 @@ create_snv192_table <- function(bay, g) {
       paste("Single Nucleotide Variant table with one base upstream and",
             " downstream and transcript strand", sep = ""),
     return_instead = TRUE)
-  eval.parent(substitute(bay@count_tables <- tab))
+  return(tab)
 }
 
 #' Creates and adds a table for standard doublet base subsitution (DBS)
 #'
 #' @param bay Input bagel
-#' @examples
-#' bay <- readRDS(system.file("testdata", "dbs_bagel.rds", package = "BAGEL"))
-#' create_dbs_table(bay)
-#' @export
 create_dbs_table <- function(bay) {
   dbs <- subset_variant_by_type(bay@variants, "DBS")
 
@@ -264,7 +249,7 @@ create_dbs_table <- function(bay) {
                                                 "double-base substitutions",
                                                 sep = ""),
                             return_instead = TRUE)
-  eval.parent(substitute(bay@count_tables <- tab))
+  return(tab)
 }
 
 #' Reverse complement of a string using biostrings
@@ -290,9 +275,46 @@ create_indel_table <- function(bay, g) {
   temp <- methods::new("bagel", variants = subset_variant_by_type(bay@variants,
                                                                   "indel"),
                        count_tables = bay@count_tables)
-  tab <- create_variant_table(bay = temp, variant_annotation = "Variant_Length",
+  tab <- build_custom_table(bay = temp, variant_annotation = "Variant_Length",
                               name = "indel", description =
                                 "Standard count table for indels",
                               return_instead = TRUE)
+  return(tab)
+}
+
+#' Builds a standard table from user variants
+#'
+#' @param bay Input samples
+#' @param g Genome object used for finding variant context
+#' @param table_name Name of standard table to build SNV96, SNV192, DBS
+#' Indel
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("38")
+#' build_standard_table(bay, g, "SNV96")
+#'
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("38")
+#' annotate_transcript_strand(bay, "19")
+#' build_standard_table(bay, g, "SNV192")
+#'
+#' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
+#' package = "BAGEL"))
+#' build_standard_table(bay, table_name = "DBS")
+#'
+#' @export
+build_standard_table <- function(bay, g, table_name) {
+  if (table_name %in% c("SNV96", "SNV", "96", "SBS")) {
+    tab <- create_snv96_table(bay, g)
+  } else if (table_name %in% c("SNV192", "192")) {
+    tab <- create_snv192_table(bay, g)
+  } else if (table_name %in% c("DBS", "doublet")) {
+    tab <- create_dbs_table(bay)
+  } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {
+    tab <- create_indel_table(bay, g)
+  } else {
+    stop(paste0("There is no standard table named: ", table_name,
+               " please select from SNV96, SNV192, DBS, Indel."))
+  }
   eval.parent(substitute(bay@count_tables <- tab))
 }

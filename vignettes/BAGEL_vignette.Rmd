@@ -63,7 +63,7 @@ BAGEL::get_sample_names(bagel)
 #BAGEL::create_tables(bagel, g)
 g=BAGEL::select_genome("38")
 #Generates the "SNV96" table
-BAGEL::create_snv96_table(bagel, g)
+BAGEL::build_standard_table(bagel, g, "SNV96")
 
 #Generate signatures/weights
 #We can use the bagel object we generated tables for using the SNV96 table

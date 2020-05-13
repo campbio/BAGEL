@@ -35,7 +35,7 @@ transcribed_variants[queryHits(overlaps)] = as.character(decode(strand(genes_hg1
 
 vcf_dt$Transcribed_Strand <- transcribed_variants
 a=new("bagel", variants = vcf_dt)
-BAGEL:::create_variant_table(a, "Transcribed_Strand", "transcribed_strand")
+BAGEL:::build_custom_table(a, "Transcribed_Strand", "transcribed_strand")
 a@variants[-which(a@variants$Transcribed_Strand == "NA"), ]
 drop_na_variants <- function(bay, annotation) {
   bay@variants[-which(bay@variants[[annotation]] == "NA"), ]
@@ -90,7 +90,7 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
     dat_bagel <- methods::new("bagel", variants = dat, count_tables =
                                bay@count_tables,
                              sample_annotations = bay@sample_annotations)
-    tab <- create_variant_table(dat_bagel, variant_annotation = Transcribed_Strand,
+    tab <- build_custom_table(dat_bagel, variant_annotation = Transcribed_Strand,
                          name = Transcribed_Strand, return_instead = FALSE)
     eval.parent(substitute(bay@count_tables <- tab))
   }

@@ -68,7 +68,7 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end,
     dat_bagel <- methods::new("bagel", variants = dat, count_tables =
                                bay@count_tables,
                              sample_annotations = bay@sample_annotations)
-    tab <- create_variant_table(dat_bagel, variant_annotation = output_column,
+    tab <- build_custom_table(dat_bagel, variant_annotation = output_column,
                          name = output_column, return_instead = FALSE)
     eval.parent(substitute(bay@count_tables <- tab))
   }
@@ -215,7 +215,7 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
     dat_bagel <- methods::new("bagel", variants = drop_na_variants(
       dat, "Transcript_Strand"), count_tables = bay@count_tables,
       sample_annotations = bay@sample_annotations)
-    tab <- create_variant_table(dat_bagel, variant_annotation =
+    tab <- build_custom_table(dat_bagel, variant_annotation =
                                   "Transcript_Strand", name =
                                   "Transcript_Strand", return_instead = FALSE)
     eval.parent(substitute(bay@count_tables <- tab))

@@ -16,9 +16,3 @@ create_snv192_table(bay, g)
 Uses a genome object to find context and generate standard SNV192 table
 using transcript strand
 }
-\examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-g <- select_genome("38")
-annotate_transcript_strand(bay, "19")
-create_snv192_table(bay, g)
-}
