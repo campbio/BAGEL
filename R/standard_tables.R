@@ -101,9 +101,14 @@ create_snv96_table <- function(bay, g) {
 #'
 #' @param bay Input samples
 #' @param g Genome object used for finding variant context
-create_snv192_table <- function(bay, g) {
+#' @param strand_type Transcript_Strand or Replication_Strand
+create_snv192_table <- function(bay, g, strand_type) {
+  if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
+    stop("Please select either Transcript_Strand or Replication_Strand")
+  }
+
   dat <- bay@variants
-  dat <- drop_na_variants(dat, "Transcript_Strand")
+  dat <- drop_na_variants(dat, strand_type)
 
   #Fix Chromosomes
   chr <- dat$Chromosome
@@ -154,7 +159,7 @@ create_snv192_table <- function(bay, g) {
                               as.character(rev_altbase), sep = "")
   final_mut_context[ind] <- rev_context
 
-  maf_mut_id <- paste(final_mut_type, final_mut_context, dat$Transcript_Strand,
+  maf_mut_id <- paste(final_mut_type, final_mut_context, dat[[strand_type]],
                      sep = "_")
   tumor_id <- as.factor(dat$Tumor_Sample_Barcode)
 
@@ -164,8 +169,13 @@ create_snv192_table <- function(bay, g) {
   b3 <- rep(c("A", "C", "G", "T"), 48)
   mut_trinuc <- apply(cbind(b1, b2, b3), 1, paste, collapse = "")
   mut_type <- rep(rep(rep(forward_change, each = 4), 4), 2)
-  mut_strand <- rep(c("T", "U"), each = 96)
-
+  if (strand_type == "Transcript_Strand") {
+    mut_strand <- rep(c("T", "U"), each = 96)
+  } else if (strand_type == "Replication_Strand") {
+    mut_strand <- rep(c("leading", "lagging"), each = 96)
+  } else {
+    stop("strand_type must be either Transcript_Strand or Replication_Strand")
+  }
   mut_id <- apply(cbind(mut_type, mut_trinuc, mut_strand), 1, paste,
                  collapse = "_")
 
@@ -287,6 +297,7 @@ create_indel_table <- function(bay, g) {
 #' @param bay Input samples
 #' @param g Genome object used for finding variant context
 #' @param table_name Name of standard table to build SNV96, SNV192, DBS
+#' @param strand_type Only for SNV192 Transcript_Strand or Replication_Strand
 #' Indel
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
@@ -296,18 +307,23 @@ create_indel_table <- function(bay, g) {
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("38")
 #' annotate_transcript_strand(bay, "19")
-#' build_standard_table(bay, g, "SNV192")
+#' build_standard_table(bay, g, "SNV192", "Transcript_Strand")
+#'
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("38")
+#' annotate_replication_strand(bay, BAGEL::rep_range)
+#' build_standard_table(bay, g, "SNV192", "Replication_Strand")
 #'
 #' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 #' package = "BAGEL"))
 #' build_standard_table(bay, table_name = "DBS")
 #'
 #' @export
-build_standard_table <- function(bay, g, table_name) {
+build_standard_table <- function(bay, g, table_name, strand_type = NULL) {
   if (table_name %in% c("SNV96", "SNV", "96", "SBS")) {
     tab <- create_snv96_table(bay, g)
   } else if (table_name %in% c("SNV192", "192")) {
-    tab <- create_snv192_table(bay, g)
+    tab <- create_snv192_table(bay, g, strand_type)
   } else if (table_name %in% c("DBS", "doublet")) {
     tab <- create_dbs_table(bay)
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {

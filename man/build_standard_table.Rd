@@ -4,14 +4,16 @@
 \alias{build_standard_table}
 \title{Builds a standard table from user variants}
 \usage{
-build_standard_table(bay, g, table_name)
+build_standard_table(bay, g, table_name, strand_type = NULL)
 }
 \arguments{
 \item{bay}{Input samples}
 
 \item{g}{Genome object used for finding variant context}
 
-\item{table_name}{Name of standard table to build SNV96, SNV192, DBS
+\item{table_name}{Name of standard table to build SNV96, SNV192, DBS}
+
+\item{strand_type}{Only for SNV192 Transcript_Strand or Replication_Strand
 Indel}
 }
 \description{
@@ -25,7 +27,12 @@ build_standard_table(bay, g, "SNV96")
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 g <- select_genome("38")
 annotate_transcript_strand(bay, "19")
-build_standard_table(bay, g, "SNV192")
+build_standard_table(bay, g, "SNV192", "Transcript_Strand")
+
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+g <- select_genome("38")
+annotate_replication_strand(bay, BAGEL::rep_range)
+build_standard_table(bay, g, "SNV192", "Replication_Strand")
 
 bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 package = "BAGEL"))

@@ -221,3 +221,43 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
     eval.parent(substitute(bay@count_tables <- tab))
   }
 }
+
+#' Add replication strand annotation to SNV variants based on bedgraph file
+#'
+#' @param bay Input bagel
+#' @param rep_range A GRanges object with replication timing as metadata
+#' @param build_table Automatically build a table from this annotation
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_replication_strand(bay, BAGEL::rep_range)
+#' @export
+annotate_replication_strand <- function(bay, rep_range, build_table = TRUE) {
+  dat <- bay@variants
+  snv_index <- which(dat$Variant_Type == "SNV")
+  snvs <- subset_variant_by_type(dat, "SNV")
+
+  #Create GRanges object to determine strand of variants within genes
+  dat_range <- GenomicRanges::GRanges(seqnames = snvs$Chromosome, ranges =
+                                         IRanges(snvs$Start_Position,
+                                                 snvs$End_Position), ref =
+                                         snvs$Tumor_Seq_Allele1, alt =
+                                         snvs$Tumor_Seq_Allele2)
+  overlaps <- GenomicRanges::findOverlaps(dat_range, rep_range)
+  repl_variants <- rep("NA", length(dat_range))
+  repl_variants[snv_index[S4Vectors::queryHits(overlaps)]] <-
+    GenomicRanges::elementMetadata(BAGEL::rep_range)@listData[[1]][
+      S4Vectors::subjectHits(overlaps)]
+  dat[["Replication_Strand"]] <- repl_variants
+  eval.parent(substitute(bay@variants <- dat))
+  if (build_table) {
+    dat_bagel <- methods::new("bagel", variants = drop_na_variants(
+      dat, "Replication_Strand"), count_tables = bay@count_tables,
+      sample_annotations = bay@sample_annotations)
+    tab <- build_custom_table(dat_bagel, variant_annotation =
+                                "Replication_Strand", name =
+                                "Replication_Strand", data_factor =
+                                factor(c("leading", "lagging")),
+                              return_instead = FALSE)
+    eval.parent(substitute(bay@count_tables <- tab))
+  }
+}

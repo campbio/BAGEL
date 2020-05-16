@@ -97,3 +97,27 @@
 #'
 #' @source COSMIC v3, <https://cancer.sanger.ac.uk/cosmic/signatures>
 "cosmic_v3_indel_sigs"
+
+#' Replication Timing Data as GRanges Object
+#'
+#' Supplementary data converted from bigWig to bedgraph to GRanges, with low
+#' RFD indicating the leading strand and high RFD indicating lagging strand and
+#' removing uninformative zero RFD intervals. Timing data is 10kb bins from
+#' a colon cancer sample.
+#'
+#' @docType data
+#'
+#' @usage data(rep_range)
+#'
+#' @format An object of class \code{"GRanges"}; see
+#' [BAGEL::annotate_replication_strand()].
+#'
+#' @keywords datasets
+#'
+#' @references Sriramachandran, A. M. et al. (2020)
+#' Genome-wide Nucleotide-Resolution Mapping of DNA Replication Patterns,
+#' Single-Strand Breaks, and Lesions by GLOE-Seq. ([Molecular Cell]
+#' (doi:10.1016/j.molcel.2020.03.027))
+#'
+#' @source GEO, <https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE134225>
+"rep_range"

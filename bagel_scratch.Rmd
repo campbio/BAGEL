@@ -132,3 +132,29 @@ substr(as.character(mv@elementMetadata@listData$ALT[[1]]), 1, 1)
 
 ```
 
+```{r}
+graph <- read.table("/Users/atgc/Downloads/GSM4305465_WT_siLIG1_rep1_rfd_10kb.bedgraph", stringsAsFactors = FALSE)
+colnames(graph) <- c("chr", "start", "end", "RFD")
+
+#This order is important because the word "leading" > 0 because R
+graph[which(graph$RFD > 0), "RFD"] = "lagging"
+graph[which(graph$RFD < 0), "RFD"] = "leading"
+graph = graph[-which(graph$RFD == 0), ]
+
+dat <- bay@variants
+#Create VRanges object to determine strand of variants within genes
+vrange <- VariantAnnotation::VRanges(seqnames = dat$Chromosome, ranges = 
+                                    IRanges(dat$Start_Position, 
+                                            dat$End_Position), ref = 
+                                    dat$Tumor_Seq_Allele1, alt = 
+                                    dat$Tumor_Seq_Allele2)
+overlaps <- IRanges::findOverlaps(vrange, graph_ranges)
+repl_variants = rep("NA", length(vrange))
+repl_variants[S4Vectors::queryHits(overlaps)] = 
+    graph_ranges$RFD[S4Vectors::subjectHits(overlaps)]
+
+dat[["Replication_Timing"]] <- repl_variants
+snv = subset_variant_by_type(drop_na_variants(dat, "Replication_Timing"), "SNV")
+
+```
+

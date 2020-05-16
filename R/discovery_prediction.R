@@ -50,9 +50,6 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
       control <- list(seed = (seq_len(nstart) - 1) + seed, nstart = nstart)
     }
     lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
-    #TODO
-    #lda_out <- readRDS(system.file("testdata", "TODO_lda.rds",
-    #                               package = "BAGEL"))
     lda_sigs <- exp(t(lda_out@beta))
     rownames(lda_sigs) <- colnames(counts_table)
     colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")

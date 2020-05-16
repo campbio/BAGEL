@@ -3,6 +3,7 @@
 export("%>%")
 export(add_flank_to_variants)
 export(add_sample_annotations)
+export(annotate_replication_strand)
 export(annotate_transcript_strand)
 export(annotate_variant_length)
 export(annotate_variant_type)

@@ -92,8 +92,9 @@ plot_signatures <- function(result, plotly = FALSE) {
                                                              plot_dat$var)))) +
     theme_bw() + xlab("Motifs") + ylab("Proportion") + theme(
       axis.text.x = element_blank(), axis.ticks.x = element_blank(),
-      strip.text.y = element_text(size = 7)) + ggplot2::scale_y_continuous(
-        expand = c(0, 0)) + ggplot2::scale_x_discrete(breaks = NULL) -> p
+      strip.text.y = element_text(size = 7), panel.grid.minor.x =
+        element_blank(), panel.grid.major.x = element_blank()) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
   if (plotly) {
     p <- plotly::ggplotly(p)
   }
