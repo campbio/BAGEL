@@ -40,7 +40,7 @@ extract_count_table <- function(bagel, table_name) {
   #Check that at least one table exists
   if (length(tabs@table_name) == 0) {
     stop(strwrap(prefix = " ", initial = "", "The counts table is either
-    missing or malformed, please run create tables e.g. [create_snv96_table]
+    missing or malformed, please run create tables e.g. [build_standard_table]
     prior to this function."))
   }
 
@@ -90,7 +90,24 @@ create_count_table <- function(bay, table, name, description = NA,
   }
 }
 
-create_variant_table <- function(bay, variant_annotation, name,
+#' Builds a custom table from specified user variants
+#'
+#' @param bay Input samples
+#' @param variant_annotation User column to use for building table
+#' @param name Table name to refer to (must be unique)
+#' @param description Optional description of the table content
+#' @param data_factor Full set of table values, in case some are missing from
+#' the data. If NA, a superset of all available unique data values will be used
+#' @param return_instead Instead of adding to bagel object, return the created
+#' table
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("38")
+#' annotate_transcript_strand(bay, "19", build_table = FALSE)
+#' build_custom_table(bay, "Transcript_Strand", "Transcript_Strand",
+#' data_factor = factor(c("T", "U")))
+#' @export
+build_custom_table <- function(bay, variant_annotation, name,
                                  description = NA, data_factor = NA,
                                  return_instead = FALSE) {
   tab <- bay@count_tables
@@ -111,7 +128,7 @@ create_variant_table <- function(bay, variant_annotation, name,
     variant_tables <- vector("list", length = num_samples)
     for (i in seq_len(num_samples)) {
       sample_index <- which(variants$Tumor_Sample_Barcode == sample_names[i])
-      if (!is.na(data_factor)) {
+      if (!all(is.na(data_factor))) {
         variant_tables[[i]] <- table(factor(column_data[sample_index],
                                             levels = data_factor))
       } else {
@@ -148,7 +165,7 @@ combine_count_tables <- function(bay, to_comb, name, description = NA) {
 
   if (all(to_comb %in% tab@table_name)) {
     combo_table <- NULL
-    for(i in 1:length(to_comb)) {
+    for (i in seq_len(to_comb)) {
       combo_table <- rbind(combo_table, tab@table_list[[to_comb[i]]])
     }
     tab@table_list[[name]] <- combo_table

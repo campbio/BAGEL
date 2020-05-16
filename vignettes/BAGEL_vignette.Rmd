@@ -21,7 +21,7 @@ library("BAGEL")
 ```{r}
 #Find Signatures examples
 #' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
-#' res <- find_signatures(bay, "SNV96", num_signatures = 4)
+#' res <- discover_signatures(bay, "SNV96", num_signatures = 4)
 
 #Load MAF File
 lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL") 
@@ -63,11 +63,11 @@ BAGEL::get_sample_names(bagel)
 #BAGEL::create_tables(bagel, g)
 g=BAGEL::select_genome("38")
 #Generates the "SNV96" table
-BAGEL::create_snv96_table(bagel, g)
+BAGEL::build_standard_table(bagel, g, "SNV96")
 
 #Generate signatures/weights
 #We can use the bagel object we generated tables for using the SNV96 table
-result=BAGEL::find_signatures(input = bagel, table_name = "SNV96", 
+result=BAGEL::discover_signatures(input = bagel, table_name = "SNV96", 
                               num_signatures = 4, method = "nmf")
 
 ##We can name signatures based on prior knowledge
@@ -82,17 +82,20 @@ BAGEL::plot_exposures(result, proportional = FALSE)
 BAGEL::compare_cosmic_v2(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
-BAGEL::what_cosmic_v2_sigs("lung")
+BAGEL::cosmic_v2_subtype_map("lung")
 
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
-cosmic_post = infer_signatures(bagel = bagel, "SNV96", signatures_to_use = c(12, 4, 11, 15))
-#cosmic_post = infer_signatures(bagel = bagel)
+cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
+                                 cosmic_v2_sigs, signatures_to_use = 
+                                 c(12, 4, 11, 15))
+#cosmic_post = predict_exposure(bagel = bagel)
 #to_use = as.numeric(substr(names(which(rowSums(cosmic_post@samples) > 10^-10)), 11, 12))
 #to_use = as.numeric(substr(names(which(apply(cosmic_post@samples, 1, max) > 10^-10)), 11, 12))
-#cosmic_post = infer_signatures(bagel = bagel, signatures_to_use = to_use)
+#cosmic_post = predict_exposure(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
-our_sigs_post = infer_signatures(bagel = bagel, "SNV96", signatures = result@signatures)
+our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
+                                   result)
 
 #Plot results from posterior calculation
 BAGEL::plot_signatures(cosmic_post)
@@ -111,7 +114,7 @@ init_sample_annotations(bagel)
 add_sample_annotations(bagel, sample_annotations, sample_column = "Sample_Names", columns_to_add = "Tumor_Subtypes")
 #
 ##Add tumor type annotations to our samples
-#res <- find_signatures(bagel, table_name = "SNV96", num_signatures = 3)
+#res <- discover_signatures(bagel, table_name = "SNV96", num_signatures = 3)
 res <- readRDS(system.file("testdata", "test_res.rds", package = "BAGEL"))
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", proportional = FALSE)

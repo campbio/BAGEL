@@ -2,7 +2,7 @@
 % Please edit documentation in R/standard_tables.R
 \name{create_snv96_table}
 \alias{create_snv96_table}
-\title{Uses a genome object to find context and generate tables for input samples}
+\title{Uses a genome object to find context and generate standard SNV96 tables}
 \usage{
 create_snv96_table(bay, g)
 }
@@ -12,10 +12,5 @@ create_snv96_table(bay, g)
 \item{g}{Genome object used for finding variant context}
 }
 \description{
-Uses a genome object to find context and generate tables for input samples
-}
-\examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-g <- select_genome("38")
-create_snv96_table(bay, g)
+Uses a genome object to find context and generate standard SNV96 tables
 }

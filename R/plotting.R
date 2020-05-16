@@ -92,8 +92,9 @@ plot_signatures <- function(result, plotly = FALSE) {
                                                              plot_dat$var)))) +
     theme_bw() + xlab("Motifs") + ylab("Proportion") + theme(
       axis.text.x = element_blank(), axis.ticks.x = element_blank(),
-      strip.text.y = element_text(size = 7)) + ggplot2::scale_y_continuous(
-        expand = c(0, 0)) -> p
+      strip.text.y = element_text(size = 7), panel.grid.minor.x =
+        element_blank(), panel.grid.major.x = element_blank()) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
   if (plotly) {
     p <- plotly::ggplotly(p)
   }
@@ -151,7 +152,8 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
                                                 strip.text.y =
                                                   element_text(size = 7)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
-    ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed") -> p
+    ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed") +
+    ggplot2::scale_x_discrete(breaks = NULL) -> p
   if (plotly) {
     p <- plotly::ggplotly(p)
   }
@@ -245,7 +247,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
                      element_blank())
   }
   if (plotly) {
-    p <- plotly::ggplotly(p, tooltip = c('x', 'y'))
+    p <- plotly::ggplotly(p, tooltip = c("x", "y"))
   }
   return(p)
 }
@@ -263,7 +265,8 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
 #' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
-#' result <- readRDS(system.file("testdata", "res_annot.rds", package = "BAGEL"))
+#' result <- readRDS(system.file("testdata", "res_annot.rds",
+#' package = "BAGEL"))
 #' plot_exposures_by_annotation(result, "Tumor_Subtypes")
 #' @export
 plot_exposures_by_annotation <- function(result, annotation,
@@ -318,8 +321,8 @@ plot_exposures_by_annotation <- function(result, annotation,
     data.table::setorderv(sub_dat, cols = "val", order = -1)
     annots <- unique(plot_dat$annotation)
     samples_to_use <- NULL
-    for(annot in annots) {
-      samples_to_use = c(samples_to_use, as.character(utils::head(sub_dat[
+    for (annot in annots) {
+      samples_to_use <- c(samples_to_use, as.character(utils::head(sub_dat[
         sub_dat$annotation == annot, "var"], num_samples)))
     }
     plot_dat <- plot_dat[which(plot_dat$var %in% samples_to_use), ]

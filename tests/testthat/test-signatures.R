@@ -2,14 +2,16 @@ context("Test Find Signature Functions")
 library("BAGEL")
 
 test_that(desc = "Inputs are correct", {
-  incomplete_bagel <- readRDS(system.file("testdata", "incomplete-bagel.rds",
+  incomplete_bagel <- readRDS(system.file("testdata", "bagel.rds",
                           package = "BAGEL"))
 
-  expect_error(find_signatures(incomplete_bagel, "SNV96"),
-               regexp = "count_tables")
-  expect_error(infer_signatures(incomplete_bagel, "SNV96"),
-               regexp = "count_tables")
+  expect_error(discover_signatures(incomplete_bagel, "SNV96"),
+               regexp = "malformed")
+  expect_error(predict_exposure(incomplete_bagel, "SNV96", cosmic_v2_sigs),
+               regexp = "malformed")
 
-  expect_error(find_signatures(data.frame(0)), regexp = "bagel object")
-  expect_error(infer_signatures(data.frame(0)), regexp = "bagel object")
+  expect_error(discover_signatures(data.frame(0)), regexp = "bagel object")
+  expect_error(predict_exposure(methods::new("bagel", variants =
+                                               data.table::data.table(0)),
+                                "SNV96", cosmic_v2_sigs), regexp = "malformed")
 })

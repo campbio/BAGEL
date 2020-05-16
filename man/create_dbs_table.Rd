@@ -12,7 +12,3 @@ create_dbs_table(bay)
 \description{
 Creates and adds a table for standard doublet base subsitution (DBS)
 }
-\examples{
-bay <- readRDS(system.file("testdata", "dbs_bagel.rds", package = "BAGEL"))
-create_dbs_table(bay)
-}

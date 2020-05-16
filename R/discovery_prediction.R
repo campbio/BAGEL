@@ -9,19 +9,20 @@ NULL
 #' @param method Discovery of new signatures using either LDA or NMF
 #' @param seed Seed for reproducible signature discovery
 #' @param nstart Number of independent runs with optimal chosen (lda only)
-#' @param par Number of parallel cores to use (NMF only)
+#' @param par_cores Number of parallel cores to use (NMF only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
-#' #print("test")
-#' #a <- readRDS(system.file("testdata", "TODO_BAGEL.rds", package = "BAGEL"))
-#' #b <- find_signatures(input = a, table_name = "SNV96", num_signatures = 3,
-#' #method = "nmf", seed = 12345, nstart = 1)
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' g <- select_genome("19")
+#' build_standard_table(bay, g, "SNV96")
+#' discover_signatures(input = bay, table_name = "SNV96",
+#' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
-find_signatures <- function(input, table_name, num_signatures, method="lda",
-                            seed = NULL, nstart = 1, par = FALSE) {
+discover_signatures <- function(input, table_name, num_signatures, method="lda",
+                            seed = NULL, nstart = 1, par_cores = FALSE) {
   if (!methods::is(input, "bagel")) {
     if (!methods::is(input, "matrix")) {
-      stop("Input to find_signatures must be a bagel object or a matrix")
+      stop("Input to discover_signatures must be a bagel object or a matrix")
     }
     bagel <- methods::new("bagel")
     bagel@count_tables@table_list[[1]] <- input
@@ -49,9 +50,6 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
       control <- list(seed = (seq_len(nstart) - 1) + seed, nstart = nstart)
     }
     lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
-    #TODO
-    #lda_out <- readRDS(system.file("testdata", "TODO_lda.rds",
-    #                               package = "BAGEL"))
     lda_sigs <- exp(t(lda_out@beta))
     rownames(lda_sigs) <- colnames(counts_table)
     colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")
@@ -69,34 +67,21 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
                                log_lik = stats::median(lda_out@loglikelihood))
     return(lda_result)
   } else if (method == "nmf") {
-    #Needed to prevent issue with generic seed method
-    #https://github.com/renozao/NMF/issues/85
-    #detach("package:DelayedArray")
-
     #Needed to prevent error with entirely zero rows
-    epsilon = 0.00000001
-    #counts_table <- counts_table + epsilon
+    epsilon <- 0.00000001
 
-    #seed <- NMF::nmf.getOption('default.seed')
-    #seed <- "random"
-    #orig_seed <- getGeneric("seed")
-    #setGeneric("seed", NMF::seed)
-    #NMF::setNMFSeed(NMF::nmfSeed("random"))
-    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures)
-    #decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = "random")
-    #print(getGeneric("seed"))
-    decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
-                       nrun = nstart)
-    #if(par) {
-    #  decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
-    #                     nrun = nstart, .options = paste("p", par, sep = ""))
-#
-    #}
-    #setGeneric("seed", orig_seed)
-
+    if (par_cores) {
+      decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+                         nrun = nstart, .options = paste("p", par_cores,
+                                                         sep = ""))
+    } else {
+      decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
+                         nrun = nstart)
+    }
     rownames(decomp@fit@H) <- paste("Signature", seq_len(num_signatures),
                                  sep = "")
-    colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures), sep = "")
+    colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures),
+                                    sep = "")
     nmf_result <- methods::new("Result", signatures = decomp@fit@W,
                                samples = decomp@fit@H, type = "NMF",
                                bagel = input, log_lik = decomp@residuals)
@@ -104,7 +89,7 @@ find_signatures <- function(input, table_name, num_signatures, method="lda",
                                    colSums(nmf_result@signatures), FUN = "/")
     nmf_result@samples <- sweep(nmf_result@samples, 2,
                                    colSums(nmf_result@samples), FUN = "/")
-#
+
     # Multiply Weights by sample counts
     if (length(used_samples) != 0) {
       nmf_result@samples <- sweep(nmf_result@samples, 2,
@@ -222,7 +207,7 @@ compare_results <- function(result, other_result,
 compare_cosmic_v3 <- function(result, variant_class, sample_type,
                               threshold = 0.9, result_name =
                               deparse(substitute(result))) {
-  if(sample_type == "exome") {
+  if (sample_type == "exome") {
     if (variant_class %in% c("snv", "SNV", "SNV96", "SBS")) {
       cosmic_res <- cosmic_v3_snv_sigs_exome
     } else {
@@ -300,9 +285,9 @@ compare_cosmic_v2 <- function(result, threshold = 0.9, result_name =
 #'
 #' @param tumor_type Cancer subtype to view related signatures
 #' @return Returns signatures related to a partial string match
-#' @examples what_cosmic_v2_sigs("lung")
+#' @examples cosmic_v2_subtype_map ("lung")
 #' @export
-what_cosmic_v2_sigs <- function(tumor_type) {
+cosmic_v2_subtype_map <- function(tumor_type) {
   subtypes <- c("adrenocortical carcinoma", "all", "aml", "bladder", "breast",
                "cervix", "chondrosarcoma", "cll", "colorectum", "glioblastoma",
                "glioma low grade", "head and neck", "kidney chromophobe",
@@ -335,25 +320,25 @@ what_cosmic_v2_sigs <- function(tumor_type) {
   }
 }
 
-#' LDA prediction of samples based on existing signatures (default COSMIC)
+#' LDA prediction of samples based on existing signatures
 #'
 #' @param bagel Input samples to predit signature weights
 #' @param table_name Name of table used for posterior prediction.
 #' Must match the table type used to generate the prediction signatures
-#' @param signatures Signatures to use for prediction (default COSMIC)
+#' @param signature_res Signatures to use for prediction
 #' @param signatures_to_use Which signatures in set to use (default all)
 #' @param verbose Whether to show intermediate results
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' g <- select_genome("19")
-#' create_snv96_table(bay, g)
-#' infer_signatures(bay, "SNV96")
+#' build_standard_table(bay, g, "SNV96")
+#' predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs)
 #' @export
-infer_signatures <- function(bagel, table_name,
-                             signatures=cosmic_v2_sigs@signatures,
-                          signatures_to_use = seq_len(ncol(signatures)),
-                          verbose = FALSE) {
+predict_exposure <- function(bagel, table_name, signature_res,
+                             signatures_to_use = seq_len(ncol(
+                               signature_res@signatures)), verbose = FALSE) {
+  signature <- signature_res@signatures
   counts_table <- extract_count_table(bagel, table_name)
 
   #Make sure table exists in bagel object and load it if it does
@@ -369,8 +354,8 @@ infer_signatures <- function(bagel, table_name,
   counts_matrix <- counts_table
 
   # convert data structures
-  sig_name <- colnames(signatures[, signatures_to_use])
-  sig_props <- as.matrix(signatures[, colnames(signatures) %in% sig_name])
+  sig_name <- colnames(signature[, signatures_to_use])
+  sig_props <- as.matrix(signature[, colnames(signature) %in% sig_name])
   samples_counts <- as.matrix(counts_matrix)
 
   est_sig_prop <- function(samples_counts, sig_props, max.iter = 100,
@@ -432,7 +417,7 @@ infer_signatures <- function(bagel, table_name,
   res2 <- est_sig_prop(samples_counts = samples_counts, sig_props = sig_props,
                        max.iter = 100)
   lda_posterior_result <- methods::new("Result", signatures =
-                               signatures[, signatures_to_use], samples =
+                               signature[, signatures_to_use], samples =
                                t(res2$samp_sig_prob_mat), type =
                                "posterior_LDA", bagel = bagel)
 
@@ -474,7 +459,7 @@ multi_modal_discovery <- function(bay, num_signatures, motif96_name,
 #' @param n_start Number of times to discover signatures and compare based on
 #' posterior loglikihood
 #' @param seed Give a seed to generate reproducible signatures
-#' @param par Number of parallel cores to use (NMF only)
+#' @param par_cores Number of parallel cores to use (NMF only)
 #' @param verbose Whether to output loop iterations
 #' @return Results a result object containing signatures and sample weights
 #' @examples
@@ -483,10 +468,9 @@ multi_modal_discovery <- function(bay, num_signatures, motif96_name,
 #' @export
 generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                  annotation = NA, k_start, k_end, n_start = 1,
-                                 seed = NULL, par = FALSE, verbose = FALSE) {
+                                 seed = NULL, par_cores = FALSE,
+                                 verbose = FALSE) {
   result_grid <- methods::new("Result_Grid")
-
-  counts_table <- extract_count_table(bagel, table_name)
 
   #Set Parameters
   params <- data.table::data.table("discovery_type" = discovery_type,
@@ -540,10 +524,11 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
 
     #Define new results
     for (cur_k in k_start:k_end) {
-      cur_result <- find_signatures(input = cur_bagel, table_name = table_name,
-                                    num_signatures = cur_k,
-                                    method = discovery_type, nstart = n_start,
-                                    seed = seed, par = par)
+      cur_result <- discover_signatures(input = cur_bagel, table_name =
+                                          table_name, num_signatures = cur_k,
+                                        method = discovery_type, nstart =
+                                          n_start, seed = seed, par_cores =
+                                          par_cores)
       result_list[[list_elem]] <- cur_result
       list_elem <- list_elem + 1
 
@@ -568,4 +553,85 @@ reconstruct_sample <- function(result, sample_number) {
                                  1, sum), dimnames =
                              list(rownames(result@signatures), "Reconstructed"))
   return(reconstruction)
+}
+
+#' Automatic filtering of signatures for exposure prediction gridded across
+#' specific annotation
+#'
+#' @param bagel Input samples to predit signature weights
+#' @param table_name Name of table used for posterior prediction (e.g. SNV96)
+#' @param signature_res Signatures to automatically subset from for prediction
+#' @param sample_annotation Annotation to grid across
+#' @param min_exists Threshold to consider a signature active in a sample
+#' @param proportion_samples Threshold of samples to consider a signature
+#' active in the cohort
+#' @param rare_exposure A sample will be considered active in the cohort if at
+#' least one sample has more than this threshold proportion
+#' @param verbose Print current annotation value being predicted on
+#' @return Results a list of results, one per unique annotation value
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
+#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "Tumor_Subtypes")
+#' @export
+auto_predict_grid <- function(bagel, table_name, signature_res,
+                              sample_annotation, min_exists = 0.05,
+                              proportion_samples = 0.25, rare_exposure = 0.4,
+                              verbose = TRUE) {
+  available_annotations <- setdiff(colnames(bagel@sample_annotations),
+                                   "Samples")
+  if (!sample_annotation %in% available_annotations) {
+    stop(paste0("Sample annotation ", sample_annotation, " not found, ",
+               "available annotations: ", available_annotations))
+  }
+  annot <- unique(bagel@sample_annotations[[sample_annotation]])
+  result_list <- list()
+  for (i in seq_along(annot)) {
+    if (verbose) {
+      print(as.character(annot[i]))
+    }
+    current_bagel <- BAGEL::subset_bagel_by_annotation(bagel, annot_col =
+                                                         sample_annotation,
+                                                       annot_name = annot[i])
+    current_predicted <- auto_subset_sigs(bagel = current_bagel, table_name =
+                                            table_name, signature_res =
+                                            signature_res, min_exists =
+                                            min_exists, proportion_samples =
+                                            proportion_samples, rare_exposure =
+                                            rare_exposure)
+    result_list[[as.character(annot[i])]] <- current_predicted
+  }
+  return(result_list)
+}
+
+#' Automatic filtering of inactive signatures
+#'
+#' @param bagel Input samples to predit signature weights
+#' @param table_name Name of table used for posterior prediction (e.g. SNV96)
+#' @param signature_res Signatures to automatically subset from for prediction
+#' @param min_exists Threshold to consider a signature active in a sample
+#' @param proportion_samples Threshold of samples to consider a signature
+#' active in the cohort
+#' @param rare_exposure A sample will be considered active in the cohort if at
+#' least one sample has more than this threshold proportion
+#' @return Results a result object containing automatically subset signatures
+#' and corresponding sample weights
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
+#' auto_subset_sigs(bay, "SNV96", BAGEL::cosmic_v2_sigs)
+#' @export
+auto_subset_sigs <- function(bagel, table_name, signature_res,
+                             min_exists = 0.05, proportion_samples = 0.25,
+                             rare_exposure = 0.4) {
+  test_predicted <- predict_exposure(bagel = bagel, table_name = table_name,
+                                    signature_res = signature_res)
+  exposures <- test_predicted@samples
+  num_samples <- ncol(exposures)
+  exposures <- sweep(exposures, 2, colSums(exposures), "/")
+  to_use <- as.numeric(which(apply(exposures, 1, function(x)
+    sum(x > min_exists) / num_samples) > proportion_samples |
+      apply(exposures, 1, max) > rare_exposure))
+  final_inferred <- predict_exposure(bagel = bagel, table_name = table_name,
+                                     signature_res = signature_res,
+                                     signatures_to_use = to_use)
+  return(final_inferred)
 }
