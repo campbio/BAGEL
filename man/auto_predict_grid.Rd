@@ -9,7 +9,7 @@ auto_predict_grid(
   bagel,
   table_name,
   signature_res,
-  sample_annotation,
+  sample_annotation = NULL,
   min_exists = 0.05,
   proportion_samples = 0.25,
   rare_exposure = 0.4,
@@ -23,7 +23,8 @@ auto_predict_grid(
 
 \item{signature_res}{Signatures to automatically subset from for prediction}
 
-\item{sample_annotation}{Annotation to grid across}
+\item{sample_annotation}{Annotation to grid across, if none given,
+prediction subsetting on all samples together}
 
 \item{min_exists}{Threshold to consider a signature active in a sample}
 
@@ -36,7 +37,8 @@ least one sample has more than this threshold proportion}
 \item{verbose}{Print current annotation value being predicted on}
 }
 \value{
-Results a list of results, one per unique annotation value
+Results a list of results, one per unique annotation value, if no
+annotation value is given, returns a single result for all samples
 }
 \description{
 Automatic filtering of signatures for exposure prediction gridded across
@@ -45,4 +47,6 @@ specific annotation
 \examples{
 bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
 auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "Tumor_Subtypes")
+
+auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs)
 }

@@ -35,7 +35,3 @@ and corresponding sample weights
 \description{
 Automatic filtering of inactive signatures
 }
-\examples{
-bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-auto_subset_sigs(bay, "SNV96", BAGEL::cosmic_v2_sigs)
-}

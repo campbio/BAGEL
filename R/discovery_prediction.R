@@ -561,44 +561,57 @@ reconstruct_sample <- function(result, sample_number) {
 #' @param bagel Input samples to predit signature weights
 #' @param table_name Name of table used for posterior prediction (e.g. SNV96)
 #' @param signature_res Signatures to automatically subset from for prediction
-#' @param sample_annotation Annotation to grid across
+#' @param sample_annotation Annotation to grid across, if none given,
+#' prediction subsetting on all samples together
 #' @param min_exists Threshold to consider a signature active in a sample
 #' @param proportion_samples Threshold of samples to consider a signature
 #' active in the cohort
 #' @param rare_exposure A sample will be considered active in the cohort if at
 #' least one sample has more than this threshold proportion
 #' @param verbose Print current annotation value being predicted on
-#' @return Results a list of results, one per unique annotation value
+#' @return Results a list of results, one per unique annotation value, if no
+#' annotation value is given, returns a single result for all samples
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
 #' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "Tumor_Subtypes")
+#'
+#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs)
 #' @export
 auto_predict_grid <- function(bagel, table_name, signature_res,
-                              sample_annotation, min_exists = 0.05,
+                              sample_annotation = NULL, min_exists = 0.05,
                               proportion_samples = 0.25, rare_exposure = 0.4,
                               verbose = TRUE) {
-  available_annotations <- setdiff(colnames(bagel@sample_annotations),
-                                   "Samples")
-  if (!sample_annotation %in% available_annotations) {
-    stop(paste0("Sample annotation ", sample_annotation, " not found, ",
-               "available annotations: ", available_annotations))
-  }
-  annot <- unique(bagel@sample_annotations[[sample_annotation]])
-  result_list <- list()
-  for (i in seq_along(annot)) {
-    if (verbose) {
-      print(as.character(annot[i]))
+  if (is.null(sample_annotation)) {
+    result_list = auto_subset_sigs(bagel = bagel, table_name =
+                       table_name, signature_res =
+                       signature_res, min_exists =
+                       min_exists, proportion_samples =
+                       proportion_samples, rare_exposure =
+                       rare_exposure)
+  } else {
+    available_annotations <- setdiff(colnames(bagel@sample_annotations),
+                                     "Samples")
+    if (!sample_annotation %in% available_annotations) {
+      stop(paste0("Sample annotation ", sample_annotation, " not found, ",
+                 "available annotations: ", available_annotations))
     }
-    current_bagel <- BAGEL::subset_bagel_by_annotation(bagel, annot_col =
-                                                         sample_annotation,
-                                                       annot_name = annot[i])
-    current_predicted <- auto_subset_sigs(bagel = current_bagel, table_name =
-                                            table_name, signature_res =
-                                            signature_res, min_exists =
-                                            min_exists, proportion_samples =
-                                            proportion_samples, rare_exposure =
-                                            rare_exposure)
-    result_list[[as.character(annot[i])]] <- current_predicted
+    annot <- unique(bagel@sample_annotations[[sample_annotation]])
+    result_list <- list()
+    for (i in seq_along(annot)) {
+      if (verbose) {
+        print(as.character(annot[i]))
+      }
+      current_bagel <- BAGEL::subset_bagel_by_annotation(bagel, annot_col =
+                                                           sample_annotation,
+                                                         annot_name = annot[i])
+      current_predicted <- auto_subset_sigs(bagel = current_bagel, table_name =
+                                              table_name, signature_res =
+                                              signature_res, min_exists =
+                                              min_exists, proportion_samples =
+                                              proportion_samples,
+                                            rare_exposure = rare_exposure)
+      result_list[[as.character(annot[i])]] <- current_predicted
+    }
   }
   return(result_list)
 }
@@ -615,10 +628,6 @@ auto_predict_grid <- function(bagel, table_name, signature_res,
 #' least one sample has more than this threshold proportion
 #' @return Results a result object containing automatically subset signatures
 #' and corresponding sample weights
-#' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-#' auto_subset_sigs(bay, "SNV96", BAGEL::cosmic_v2_sigs)
-#' @export
 auto_subset_sigs <- function(bagel, table_name, signature_res,
                              min_exists = 0.05, proportion_samples = 0.25,
                              rare_exposure = 0.4) {
