@@ -9,7 +9,7 @@ plot_exposures(
   proportional = TRUE,
   label_samples = TRUE,
   samples_plotted = colnames(result@samples),
-  sort_samples = "numerical",
+  sort_samples = NULL,
   num_samples = length(colnames(result@samples)),
   plotly = FALSE
 )

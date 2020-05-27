@@ -71,7 +71,7 @@ result=BAGEL::discover_signatures(input = bagel, table_name = "SNV96",
                               num_signatures = 4, method = "nmf")
 
 ##We can name signatures based on prior knowledge
-name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
+name_signatures(result, c("unknown", "smoking", "apobec", "uv"))
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ <- this line fails
 ##Plot results
 BAGEL::plot_signatures(result)

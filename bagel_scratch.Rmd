@@ -158,3 +158,129 @@ snv = subset_variant_by_type(drop_na_variants(dat, "Replication_Timing"), "SNV")
 
 ```
 
+#UMAP + TSNE Origimed + PanLung
+```{r}
+bagel = readRDS("/Users/atgc/Documents/Grants/ZerG/annotated_5plus_counts_bagel_updated.rds")
+mel = subset_bagel_by_annotation(bagel, "Tumor_Type", "Melanoma")
+#TODO Combine bagels function
+sclc = subset_bagel_by_annotation(bagel, "Tumor_Type", "Small_Cell_Lung_Cancer")
+nsclc = subset_bagel_by_annotation(bagel, "Tumor_Type", "Non_Small_Cell_Lung_Cancer")
+comb = new("bagel", variants = rbind(mel@variants, sclc@variants, nsclc@variants), sample_annotations = rbind(mel@sample_annotations, sclc@sample_annotations, nsclc@sample_annotations))
+g = select_genome("19")
+build_standard_table(comb, g, "SNV96")
+BAGEL::cosmic_v2_subtype_map("lung")
+BAGEL::cosmic_v2_subtype_map("melan")
+res = predict_exposure(comb, "SNV96", cosmic_v2_sigs, signatures_to_use = c(1,2,4,5,6,7,11,13,15,17))
+umap = .calculateUmap(t(res@samples), 2, minDist = 1.75, spread = 2, pca = TRUE);plot(umap)
+tsne = .calculateTsne(t(res@samples), doPca = TRUE); plot(tsne)
+plot_tsne = function(result, seed = 12345, perplexity = 20, initialDims = 50) {
+  withr::with_seed(seed, tsne <- .calculateTsne(t(result@samples), doPca = FALSE, perplexity, initialDims = initialDims))
+  tsne_dat = data.frame(x = tsne[,1], y = tsne[,2], type = result@bagel@sample_annotations$Tumor_Type)
+  print(ggplot(tsne_dat, aes(x=x, y=y, col=type)) + geom_point() + ggplot2::ggtitle("Tsne") + theme_bw())
+  return(tsne_dat)
+}
+
+plot_umap = function(result, seed = 12345, nNeighbors = 30, minDist = 0.75, spread = 1, pca = FALSE) {
+  withr::with_seed(seed, umap <- .calculateUmap(t(result@samples), nNeighbors, minDist = minDist, spread = spread, pca = pca))
+  umap_dat = data.frame(x = umap[,1], y = umap[,2], type = result@bagel@sample_annotations$Tumor_Type)
+  print(ggplot(umap_dat, aes(x=x, y=y, col=type)) + geom_point() + ggplot2::ggtitle("Umap") + theme_bw())
+  return(umap_dat)
+}
+
+maf_luad = auto_to_bagel_dt("/Users/atgc/Downloads/gdc_download_20200524_215820.269924/0458c57f-316c-4a7c-9294-ccd11c97c2f9/TCGA.LUAD.mutect.0458c57f-316c-4a7c-9294-ccd11c97c2f9.DR-10.0.somatic.maf", filter = FALSE, only_snp = TRUE)
+maf_lusc = auto_to_bagel_dt("/Users/atgc/Downloads/gdc_download_20200524_215820.269924/95258183-63ea-4c97-ae29-1bae9ed06334/TCGA.LUSC.mutect.95258183-63ea-4c97-ae29-1bae9ed06334.DR-10.0.somatic.maf", filter = FALSE, only_snp = TRUE)
+maf_mel = auto_to_bagel_dt(("/Users/atgc/Downloads/gdc_download_20200524_214639.669044/4b7a5729-b83e-4837-9b61-a6002dce1c0a/TCGA.SKCM.mutect.4b7a5729-b83e-4837-9b61-a6002dce1c0a.DR-10.0.somatic.maf"))
+bagel = new("bagel", variants = maf_luad)
+g=select_genome("38")
+build_standard_table(bagel, g, "SNV96")
+bagel_mel = new("bagel", variants = rbind(maf_luad, maf_lusc, maf_mel))
+g=select_genome("38")
+build_standard_table(bagel_mel, g, "SNV96")
+init_sample_annotations(bagel_mel)
+annot = data.frame(Samples = bagel_mel@sample_annotations, Tumor_Type = c(rep("LUAD", length(unique(maf_luad$Tumor_Sample_Barcode))), rep("LUSC", length(unique(maf_lusc$Tumor_Sample_Barcode))), rep("MEL", length(unique(maf_mel$Tumor_Sample_Barcode)))))
+add_sample_annotations(bagel_mel, annot, "Samples")
+panlung_mel = predict_exposure(bagel_mel, "SNV96", cosmic_v2_sigs, signatures_to_use = c(1,2,4,5,6,7,11,13,15,17))
+tsne = plot_tsne(panlung_mel)
+umap = plot_umap(panlung_mel)
+sig7 = panlung_mel@samples[6,]
+sig4 = panlung_mel@samples[3,]
+sig7_log = log(sig7)
+sig4_log = log(sig4)
+umap$sig7_log = sig7_log
+umap$sig4_log = sig4_log
+umap$sig4 = sig4
+ggplot(umap, aes(x=x, y=y, col=sig7, shape = type)) + geom_point() + ggplot2::ggtitle("Umap") + theme_bw()
+
+
+tsne$sig7_log = sig7_log
+tsne$sig7 = sig7
+tsne$sig4_log = sig4_log
+tsne$sig4 = sig4
+ggplot(tsne, aes(x=x, y=y, col=sig4_log, shape = type)) + geom_point() + ggplot2::ggtitle("Tsne") + theme_bw()
+
+
+props = panlung_mel@samples
+props = sweep(props, 2, colSums(props), FUN = "/")
+umap$prop2 = props[2,]
+umap$prop4 = props[3,]
+umap$prop5 = props[4,]
+umap$prop6 = props[5,]
+umap$prop7 = props[6,]
+umap$prop13 = props[8,]
+umap$prop15 = props[9,]
+
+tsne$prop2 = props[2,]
+tsne$prop4 = props[3,]
+tsne$prop5 = props[4,]
+tsne$prop6 = props[5,]
+tsne$prop7 = props[6,]
+tsne$prop13 = props[8,]
+tsne$prop15 = props[9,]
+
+len = nrow(umap)
+umap_df = data.frame(x = rep(umap$x, 7), y = rep(umap$y, 7), type = rep(umap$type, 7), sig = c(rep(2, len), rep(4, len), rep(5, len), rep(6, len), rep(7, len), rep(13, len), rep(15, len)), sig_prop = c(umap$prop2, umap$prop4, umap$prop5, umap$prop6, umap$prop7, umap$prop13, umap$prop15))
+ggplot(umap_df, aes(x=x, y=y, col=sig_prop, shape = type)) + geom_point() + facet_grid(~sig) + ggplot2::ggtitle("Umap") + theme_bw()
+
+tsne_df = data.frame(x = rep(tsne$x, 7), y = rep(tsne$y, 7), type = rep(tsne$type, 7), sig = c(rep(2, len), rep(4, len), rep(5, len), rep(6, len), rep(7, len), rep(13, len), rep(15, len)), sig_prop = c(tsne$prop2, tsne$prop4, tsne$prop5, tsne$prop6, tsne$prop7, tsne$prop13, tsne$prop15))
+ggplot(tsne_df, aes(x=x, y=y, col=sig_prop, shape = type)) + geom_point() + facet_grid(~sig) + ggplot2::ggtitle("Tsne") + theme_bw()
+```
+
+#Proportional input instead of counts for umap tsne
+```{r}
+prop_panlung_mel = panlung_mel
+samples = panlung_mel@samples
+prop_panlung_mel@samples = sweep(samples, 2, colSums(samples), FUN = "/")
+
+prop_tsne = plot_tsne(prop_panlung_mel)
+prop_umap = plot_umap(prop_panlung_mel)
+prop_umap = plot_umap(prop_panlung_mel, seed= 7);ggplot(prop_umap, aes(x=x, y=y, col=type)) + geom_point() + ggplot2::ggtitle("Umap") + theme_bw()
+```
+
+```{r}
+maf_luad = auto_to_bagel_dt("/Users/atgc/Downloads/gdc_download_20200524_215820.269924/0458c57f-316c-4a7c-9294-ccd11c97c2f9/TCGA.LUAD.mutect.0458c57f-316c-4a7c-9294-ccd11c97c2f9.DR-10.0.somatic.maf", filter = FALSE, only_snp = FALSE)
+maf_lusc = auto_to_bagel_dt("/Users/atgc/Downloads/gdc_download_20200524_215820.269924/95258183-63ea-4c97-ae29-1bae9ed06334/TCGA.LUSC.mutect.95258183-63ea-4c97-ae29-1bae9ed06334.DR-10.0.somatic.maf", filter = FALSE, only_snp = FALSE)
+maf_mel = auto_to_bagel_dt(("/Users/atgc/Downloads/gdc_download_20200524_214639.669044/4b7a5729-b83e-4837-9b61-a6002dce1c0a/TCGA.SKCM.mutect.4b7a5729-b83e-4837-9b61-a6002dce1c0a.DR-10.0.somatic.maf"), filter = FALSE, only_snp = FALSE)
+bagel_mel = new("bagel", variants = rbind(maf_luad, maf_lusc, maf_mel))
+g=select_genome("38")
+build_standard_table(bagel_mel, g, "DBS")
+```
+
+```{r}
+umap$prop1 = props[1,]
+umap$prop2 = props[2,]
+umap$prop4 = props[3,]
+umap$prop5 = props[4,]
+umap$prop6 = props[5,]
+umap$prop7 = props[6,]
+umap$prop11 = props[7,]
+umap$prop13 = props[8,]
+umap$prop15 = props[9,]
+umap$prop17 = props[10,]
+
+len = nrow(umap)
+umap_df = data.frame(x = rep(umap$x, 10), y = rep(umap$y, 10), type = rep(umap$type, 10), sig = c(rep(1, len), rep(2, len), rep(4, len), rep(5, len), rep(6, len), rep(7, len), rep(11, len), rep(13, len), rep(15, len), rep(17, len)), sig_prop = c(umap$prop1, umap$prop2, umap$prop4, umap$prop5, umap$prop6, umap$prop7, umap$prop11, umap$prop13, umap$prop15, umap$prop17))
+
+umap_df = data.frame(x = rep(umap$x, 1), y = rep(umap$y, 1), type = rep(umap$type, 1), sig = c(rep(7, len)), sig_prop = c(umap$prop7))
+ggplot(umap_df, aes(x=x, y=y, col=sig_prop, shape = type)) + geom_point() + facet_wrap(~sig) + ggplot2::ggtitle("Umap") + theme_bw()
+```
+

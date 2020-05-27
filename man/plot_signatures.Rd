@@ -4,10 +4,12 @@
 \alias{plot_signatures}
 \title{Plotting Signature Motif counts/spectra}
 \usage{
-plot_signatures(result, plotly = FALSE)
+plot_signatures(result, no_legend = FALSE, plotly = FALSE)
 }
 \arguments{
 \item{result}{S4 Result Object}
+
+\item{no_legend}{Remove legend from plot}
 
 \item{plotly}{add plotly layer for plot interaction}
 }
