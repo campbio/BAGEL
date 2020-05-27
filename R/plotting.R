@@ -64,13 +64,14 @@ plot_full <- function(sample) {
 #' Plotting Signature Motif counts/spectra
 #'
 #' @param result S4 Result Object
+#' @param no_legend Remove legend from plot
 #' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_signatures(result)
 #' @export
-plot_signatures <- function(result, plotly = FALSE) {
+plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE) {
   signatures <- result@signatures
   groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
                                                                     "context"))
@@ -95,6 +96,9 @@ plot_signatures <- function(result, plotly = FALSE) {
       strip.text.y = element_text(size = 7), panel.grid.minor.x =
         element_blank(), panel.grid.major.x = element_blank()) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
+  if (no_legend) {
+    p <- p + theme(legend.position = "none")
+  }
   if (plotly) {
     p <- plotly::ggplotly(p)
   }
@@ -177,7 +181,7 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
 #' @export
 plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
                            samples_plotted = colnames(result@samples),
-                           sort_samples = "numerical",
+                           sort_samples = NULL,
                            num_samples = length(colnames(result@samples)),
                            plotly = FALSE) {
   samples <- result@samples
@@ -188,6 +192,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
   }
   samples <- samples[, samples_plotted]
   y_label <- "counts"
+  counts <- colSums(samples)
   if (proportional) {
     y_label <- "%"
     samples <- sweep(samples, 2, colSums(samples), FUN = "/")
@@ -200,7 +205,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
     plot_dat$var <- factor(plot_dat$var, levels =
                              unique(gtools::mixedsort(plot_dat$var)))
   }else if (length(sort_samples == 1) && sort_samples == "counts") {
-    counts <- colSums(samples)
+    #counts <- colSums(samples)
     plot_dat$var <- factor(plot_dat$var, levels =
                              unique(plot_dat$var)
                            [order(counts, decreasing = TRUE)])
