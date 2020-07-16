@@ -173,8 +173,6 @@ create_snv192_table <- function(bay, g, strand_type) {
     mut_strand <- rep(c("T", "U"), each = 96)
   } else if (strand_type == "Replication_Strand") {
     mut_strand <- rep(c("leading", "lagging"), each = 96)
-  } else {
-    stop("strand_type must be either Transcript_Strand or Replication_Strand")
   }
   mut_id <- apply(cbind(mut_type, mut_trinuc, mut_strand), 1, paste,
                  collapse = "_")
@@ -187,7 +185,8 @@ create_snv192_table <- function(bay, g, strand_type) {
   attr(mut_table, "call") <- NULL
   attr(mut_table, "class") <- NULL
   tab <- create_count_table(
-    bay = bay, table = mut_table, name = "SNV192", description =
+    bay = bay, table = mut_table, name = paste0("SNV192_", ifelse(
+      strand_type == "Transcript_Strand", "Trans", "Rep")), description =
       paste("Single Nucleotide Variant table with one base upstream and",
             " downstream and transcript strand", sep = ""),
     return_instead = TRUE)
@@ -319,7 +318,7 @@ create_indel_table <- function(bay, g) {
 #' build_standard_table(bay, table_name = "DBS")
 #'
 #' @export
-build_standard_table <- function(bay, g, table_name, strand_type = NULL) {
+build_standard_table <- function(bay, g, table_name, strand_type = NA) {
   if (table_name %in% c("SNV96", "SNV", "96", "SBS")) {
     tab <- create_snv96_table(bay, g)
   } else if (table_name %in% c("SNV192", "192")) {

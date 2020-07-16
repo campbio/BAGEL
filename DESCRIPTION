@@ -39,7 +39,10 @@ Imports:
     IRanges,
     plotly,
     topicmodels,
-    S4Vectors
+    S4Vectors,
+    uwot,
+    withr,
+    ggrepel
 Suggests:
     testthat,
     knitr,
@@ -51,5 +54,5 @@ Suggests:
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,
     qpdf
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr

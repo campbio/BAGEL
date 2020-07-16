@@ -4,7 +4,13 @@
 \alias{plot_signatures}
 \title{Plotting Signature Motif counts/spectra}
 \usage{
-plot_signatures(result, no_legend = FALSE, plotly = FALSE)
+plot_signatures(
+  result,
+  no_legend = FALSE,
+  plotly = FALSE,
+  text_size = 20,
+  facet_size = 20
+)
 }
 \arguments{
 \item{result}{S4 Result Object}
@@ -12,6 +18,10 @@ plot_signatures(result, no_legend = FALSE, plotly = FALSE)
 \item{no_legend}{Remove legend from plot}
 
 \item{plotly}{add plotly layer for plot interaction}
+
+\item{text_size}{Size of axis text}
+
+\item{facet_size}{Size of facet text}
 }
 \value{
 Generates plot {no return}

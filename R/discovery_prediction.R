@@ -63,8 +63,9 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
       weights <- sweep(weights, 2, sample_counts[matched], FUN = "*")
     }
     lda_result <- methods::new("Result", signatures = lda_sigs,
-                               samples = weights, type = "LDA", bagel = input,
-                               log_lik = stats::median(lda_out@loglikelihood))
+                               exposures = weights, type = "LDA", bagel = input,
+                               log_lik = stats::median(lda_out@loglikelihood),
+                               perplexity = topicmodels::perplexity(lda_out))
     return(lda_result)
   } else if (method == "nmf") {
     #Needed to prevent error with entirely zero rows
@@ -83,16 +84,16 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
     colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures),
                                     sep = "")
     nmf_result <- methods::new("Result", signatures = decomp@fit@W,
-                               samples = decomp@fit@H, type = "NMF",
+                               exposures = decomp@fit@H, type = "NMF",
                                bagel = input, log_lik = decomp@residuals)
     nmf_result@signatures <- sweep(nmf_result@signatures, 2,
                                    colSums(nmf_result@signatures), FUN = "/")
-    nmf_result@samples <- sweep(nmf_result@samples, 2,
-                                   colSums(nmf_result@samples), FUN = "/")
+    nmf_result@exposures <- sweep(nmf_result@exposures, 2,
+                                   colSums(nmf_result@exposures), FUN = "/")
 
     # Multiply Weights by sample counts
     if (length(used_samples) != 0) {
-      nmf_result@samples <- sweep(nmf_result@samples, 2,
+      nmf_result@exposures <- sweep(nmf_result@exposures, 2,
                                   sample_counts[matched], FUN = "*")
     }
     return(nmf_result)
@@ -177,12 +178,12 @@ compare_results <- function(result, other_result,
   comparison <- sig_compare(signatures, other_result@signatures, threshold)
   result_subset <- methods::new("Result",
                       signatures = result@signatures[, comparison$xindex,
-                                                     drop = FALSE], samples =
+                                                     drop = FALSE], exposures =
                         matrix(), type = "NMF")
   other_subset <- methods::new("Result",
                       signatures = other_result@signatures[, comparison$yindex,
                                                             drop = FALSE],
-                      samples = matrix(), type = "NMF")
+                      exposures = matrix(), type = "NMF")
   result_plot <- BAGEL::plot_signatures(result_subset)
   result_plot <- result_plot + ggplot2::ggtitle(result_name)
   cosmic_plot <- BAGEL::plot_signatures(other_subset)
@@ -233,11 +234,11 @@ compare_cosmic_v3 <- function(result, variant_class, sample_type,
   result_subset <- methods::new(
     "Result", signatures = result@signatures[,
                                              comparison$xindex, drop = FALSE],
-    samples = matrix(), type = "NMF")
+    exposures = matrix(), type = "NMF")
   other_subset <- methods::new(
     "Result", signatures = cosmic_res@signatures[, comparison$yindex,
                                                  drop = FALSE],
-    samples = matrix(), type = "NMF")
+    exposures = matrix(), type = "NMF")
   result_plot <- BAGEL::plot_signatures(result_subset)
   result_plot <- result_plot + ggplot2::ggtitle(result_name)
   cosmic_plot <- BAGEL::plot_signatures(other_subset)
@@ -266,18 +267,22 @@ compare_cosmic_v2 <- function(result, threshold = 0.9, result_name =
   result_subset <- methods::new("Result",
                                 signatures =
                                   result@signatures[, comparison$xindex, drop =
-                                                      FALSE], samples =
+                                                      FALSE], exposures =
                                   matrix(), type = "NMF")
   other_subset <- methods::new("Result",
                                signatures =
                                  cosmic_v2_sigs@signatures[, comparison$yindex,
                                                            drop = FALSE],
-                               samples = matrix(), type = "NMF")
+                               exposures = matrix(), type = "NMF")
   result_plot <- BAGEL::plot_signatures(result_subset)
-  result_plot <- result_plot + ggplot2::ggtitle(result_name)
+  legend <- cowplot::get_legend(result_plot)
+  result_plot <- result_plot + ggplot2::ggtitle(result_name) +
+    theme(legend.position = "none")
   cosmic_plot <- BAGEL::plot_signatures(other_subset)
-  cosmic_plot <- cosmic_plot + ggplot2::ggtitle("COSMIC Signatures v2")
-  gridExtra::grid.arrange(result_plot, cosmic_plot, ncol = 2)
+  cosmic_plot <- cosmic_plot + ggplot2::ggtitle("COSMIC Signatures v2") +
+    theme(legend.position = "none")
+  gridExtra::grid.arrange(result_plot, cosmic_plot, legend, ncol = 3,
+                          widths = c(0.4, 0.4, 0.2))
   return(comparison)
 }
 
@@ -417,7 +422,7 @@ predict_exposure <- function(bagel, table_name, signature_res,
   res2 <- est_sig_prop(samples_counts = samples_counts, sig_props = sig_props,
                        max.iter = 100)
   lda_posterior_result <- methods::new("Result", signatures =
-                               signature[, signatures_to_use], samples =
+                               signature[, signatures_to_use], exposures =
                                t(res2$samp_sig_prob_mat), type =
                                "posterior_LDA", bagel = bagel)
 
@@ -431,7 +436,7 @@ predict_exposure <- function(bagel, table_name, signature_res,
   } else {
     sample_counts <- table(bagel@variants$Tumor_Sample_Barcode[used_samples])
     matched <- match(colnames(counts_table), names(sample_counts))
-    lda_posterior_result@samples <- sweep(lda_posterior_result@samples, 2,
+    lda_posterior_result@exposures <- sweep(lda_posterior_result@exposures, 2,
                                           sample_counts[matched], FUN = "*")
   }
   return(lda_posterior_result)
@@ -513,8 +518,8 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
       cur_bagel <- methods::new("bagel", variants = cur_annot_variants,
                        sample_annotations =
                          bagel@sample_annotations[cur_ind, ],
-                       count_tables = extract_count_table(
-                         bagel, table_name)[, cur_ind])
+                       count_tables = subset_count_tables(bagel,
+                                                          cur_annot_samples))
     } else {
       cur_bagel <- bagel
       cur_annot_samples <- unique(bagel@variants$Tumor_Sample_Barcode)
@@ -548,7 +553,7 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
 
 reconstruct_sample <- function(result, sample_number) {
   reconstruction <- matrix(apply(sweep(result@signatures, 2,
-                                       result@samples[, sample_number,
+                                       result@exposures[, sample_number,
                                                       drop = FALSE], FUN = "*"),
                                  1, sum), dimnames =
                              list(rownames(result@signatures), "Reconstructed"))
@@ -569,8 +574,12 @@ reconstruct_sample <- function(result, sample_number) {
 #' @param rare_exposure A sample will be considered active in the cohort if at
 #' least one sample has more than this threshold proportion
 #' @param verbose Print current annotation value being predicted on
+#' @param combine_res Automatically combines a list of annotation results
+#' into a single result object with zero exposure values for signatures not
+#' found in a given annotation's set of samples
 #' @return Results a list of results, one per unique annotation value, if no
-#' annotation value is given, returns a single result for all samples
+#' annotation value is given, returns a single result for all samples, or
+#' combines into a single result if combines_res = TRUE
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
 #' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "Tumor_Subtypes")
@@ -580,9 +589,10 @@ reconstruct_sample <- function(result, sample_number) {
 auto_predict_grid <- function(bagel, table_name, signature_res,
                               sample_annotation = NULL, min_exists = 0.05,
                               proportion_samples = 0.25, rare_exposure = 0.4,
-                              verbose = TRUE) {
+                              verbose = TRUE, combine_res = TRUE) {
   if (is.null(sample_annotation)) {
-    result_list = auto_subset_sigs(bagel = bagel, table_name =
+    combine_res = FALSE
+    result = auto_subset_sigs(bagel = bagel, table_name =
                        table_name, signature_res =
                        signature_res, min_exists =
                        min_exists, proportion_samples =
@@ -596,7 +606,7 @@ auto_predict_grid <- function(bagel, table_name, signature_res,
                  "available annotations: ", available_annotations))
     }
     annot <- unique(bagel@sample_annotations[[sample_annotation]])
-    result_list <- list()
+    result <- list()
     for (i in seq_along(annot)) {
       if (verbose) {
         print(as.character(annot[i]))
@@ -610,10 +620,13 @@ auto_predict_grid <- function(bagel, table_name, signature_res,
                                               min_exists, proportion_samples =
                                               proportion_samples,
                                             rare_exposure = rare_exposure)
-      result_list[[as.character(annot[i])]] <- current_predicted
+      result[[as.character(annot[i])]] <- current_predicted
     }
   }
-  return(result_list)
+  if (combine_res) {
+    result = combine_predict_grid(result, bagel, signature_res)
+  }
+  return(result)
 }
 
 #' Automatic filtering of inactive signatures
@@ -633,7 +646,7 @@ auto_subset_sigs <- function(bagel, table_name, signature_res,
                              rare_exposure = 0.4) {
   test_predicted <- predict_exposure(bagel = bagel, table_name = table_name,
                                     signature_res = signature_res)
-  exposures <- test_predicted@samples
+  exposures <- test_predicted@exposures
   num_samples <- ncol(exposures)
   exposures <- sweep(exposures, 2, colSums(exposures), "/")
   to_use <- as.numeric(which(apply(exposures, 1, function(x)
@@ -643,4 +656,43 @@ auto_subset_sigs <- function(bagel, table_name, signature_res,
                                      signature_res = signature_res,
                                      signatures_to_use = to_use)
   return(final_inferred)
+}
+
+#' Combine prediction grid list into a result object. Exposure values are zero
+#' for samples in an annotation where that signature was not predicted
+#'
+#' @param grid_list A list of result objects from the prediction grid to
+#' combine into a single result
+#' @param bagel Input samples to predit signature weights
+#' @param signature_res Signatures to automatically subset from for prediction
+#' @return A result object combining all samples and signatures from a
+#' prediction grid. Samples have zero exposure value for signatures not found
+#' in that annotation type.
+#' @examples
+#' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
+#' grid <- auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs,
+#' "Tumor_Subtypes", combine_res = FALSE)
+#' combined <- combine_predict_grid(grid, bay, BAGEL::cosmic_v2_sigs)
+#' plot_exposures_by_annotation(combined, "Tumor_Subtypes")
+#' @export
+combine_predict_grid <- function(grid_list, bagel, signature_res) {
+  sig_names <- NULL
+  for(i in 1:length(grid_list)) {
+    sig_names <- c(sig_names, rownames(grid_list[[i]]@exposures))
+  }
+  sig_names <- unique(sig_names)
+  sig_names <- sig_names[order(sig_names)]
+
+  comb <- NULL
+  for(i in 1:length(grid_list)) {
+    samp <- grid_list[[i]]@exposures
+    missing <- sig_names[!sig_names %in% rownames(samp)]
+    missing_mat <- matrix(0, length(missing), ncol(samp))
+    rownames(missing_mat) <- missing
+    samp <- rbind(samp, missing_mat)
+    samp <- samp[order(rownames(samp)), ]
+    comb <- cbind(comb, samp)
+  }
+  grid_res <- new("Result", bagel = bagel, exposures = comb,
+                  signatures = signature_res@signatures[, sig_names])
 }

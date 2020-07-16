@@ -183,7 +183,9 @@ vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = TRUE,
 
   if ("INFO" %in% used_fields) {
     info_field <- VariantAnnotation::info(vcf)
-    info_field <- info_field[pass, , drop = FALSE]
+    if (filter) {
+      info_field <- info_field[pass, , drop = FALSE]
+    }
     dt <- cbind(data.table::as.data.table(rows),
                 Tumor_Sample_Barcode = vcf_name,
                 data.table::as.data.table(info_field)) %>% dplyr::rename(
@@ -336,24 +338,20 @@ maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
 dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
                            extra_fields = NULL) {
   used_fields <- c(used_fields(), extra_fields)
-  if (is(dt, "data.frame") && !is(dt, "data.table")) {
-    warning(paste(file_type, ": ", dt_name,
-                  " is a data.frame but not a data.table, automatically fixing",
-                  sep = ""))
+  if (inherits(dt, "data.frame") && !is(dt, "data.table")) {
+    warning("Input: ", dt_name, " is a data.frame but not a data.table, ",
+            " automatically fixing")
     dt <- data.table::as.data.table(dt)
-    file_type <- "data.table"
   } else if (is(dt, "data.table")) {
-    file_type <- "data.table"
   } else {
     stop(paste(deparse(substitute(dt)), "/", dt_name,
                ": needs to be a data.frame or data.table it is a", class(dt),
                sep = ""))
   }
   if (!all(tolower(used_fields) %in% tolower(colnames(dt)))) {
-    stop(paste("Required column(s) ",
-                  used_fields[which(!tolower(used_fields) %in%
-                                      tolower(colnames(dt)))], " missing in ",
-                  file_type, ": ", dt_name, sep = ""))
+    stop("Required column(s) ", used_fields[which(!tolower(used_fields) %in%
+                                                    tolower(colnames(dt)))],
+      " missing in ", class(dt), ": ", dt_name)
   }
   for (i in seq_along(colnames(dt))) {
     dt_col <- colnames(dt)[i]
@@ -361,12 +359,10 @@ dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
         used_fields) {
       colnames(dt)[i] <- used_fields[which(grepl(dt_col, used_fields,
                                                  ignore.case = TRUE))]
-      warning(paste("Column ",
-                 dt_col, " had the wrong case and was automatically fixed ",
-                 file_type, ": ", dt_name, sep = ""))
+      warning("Column ", dt_col, " had the wrong case and was automatically ",
+              "fixed ", class(dt), ": ", dt_name)
     }
   }
-
 
   if (filter) {
     pass <- which(dt$FILTER == "PASS")
@@ -376,22 +372,20 @@ dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
     dt <- dt[pass, ]
   }
 
-  if (only_snp) {
-    if (!is.null(dt$Variant_Type)) {
-      snp_vars <- which(dt$Variant_Type == "SNP")
-      if (length(snp_vars) > 0) {
-        data.table::set(dt, snp_vars, "Variant_Type", "SNV")
-      }
-      dt <- dt[which(dt$Variant_Type == "SNV"), ]
-    } else {
-      dt <- add_variant_type(dt)
-    }
-    if (nrow(dt) == 0) {
-      warning(paste("No variants found in ", file_type, ":", dt_name,
-                    sep = ""))
+  if (!is.null(dt$Variant_Type)) {
+    snp_vars <- which(dt$Variant_Type %in% c("SNP", "SNV"))
+    if (length(snp_vars) > 0) {
+      data.table::set(dt, snp_vars, "Variant_Type", "SNV")
     }
   } else {
     dt <- add_variant_type(dt)
+  }
+
+  if (only_snp) {
+    dt <- dt[which(dt$Variant_Type == "SNV"), ]
+    if (nrow(dt) == 0) {
+      warning("No variants found in ", class(dt), ":", dt_name)
+    }
   }
   dt <- dt[, used_fields, with = FALSE]
 

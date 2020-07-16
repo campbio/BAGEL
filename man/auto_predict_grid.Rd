@@ -13,7 +13,8 @@ auto_predict_grid(
   min_exists = 0.05,
   proportion_samples = 0.25,
   rare_exposure = 0.4,
-  verbose = TRUE
+  verbose = TRUE,
+  combine_res = TRUE
 )
 }
 \arguments{
@@ -35,10 +36,15 @@ active in the cohort}
 least one sample has more than this threshold proportion}
 
 \item{verbose}{Print current annotation value being predicted on}
+
+\item{combine_res}{Automatically combines a list of annotation results
+into a single result object with zero exposure values for signatures not
+found in a given annotation's set of samples}
 }
 \value{
 Results a list of results, one per unique annotation value, if no
-annotation value is given, returns a single result for all samples
+annotation value is given, returns a single result for all samples, or
+combines into a single result if combines_res = TRUE
 }
 \description{
 Automatic filtering of signatures for exposure prediction gridded across

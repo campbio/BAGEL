@@ -12,6 +12,8 @@ plot_exposures_by_annotation(
   sort_samples = "numerical",
   by_group = TRUE,
   num_samples = FALSE,
+  no_legend = FALSE,
+  thresh_zero = FALSE,
   plotly = FALSE
 )
 }
@@ -30,6 +32,11 @@ specific signatures name (e.g. 'Signature1)}
 \item{by_group}{Plot subplots by annotation or by signature}
 
 \item{num_samples}{Number of sorted samples to plot}
+
+\item{no_legend}{Remove legend from the plot}
+
+\item{thresh_zero}{Max level to zero out for better plotting when sorting
+by multiple signatures}
 
 \item{plotly}{add plotly layer for plot interaction}
 }

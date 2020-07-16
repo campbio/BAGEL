@@ -4,14 +4,14 @@
 \alias{subset_bagel_by_annotation}
 \title{Creates a new bagel subsetted to only one value of a sample annotation}
 \usage{
-subset_bagel_by_annotation(bay, annot_col, annot_name)
+subset_bagel_by_annotation(bay, annot_col, annot_names)
 }
 \arguments{
 \item{bay}{Input bagel}
 
 \item{annot_col}{Annotation class to use for subsetting}
 
-\item{annot_name}{Annotational value to subset to}
+\item{annot_names}{Annotational value to subset to}
 }
 \description{
 Creates a new bagel subsetted to only one value of a sample annotation
