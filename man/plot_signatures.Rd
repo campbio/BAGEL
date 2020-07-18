@@ -17,8 +17,6 @@ plot_signatures(
 
 \item{no_legend}{Remove legend from plot}
 
-\item{no_legend}{Remove legend from plot}
-
 \item{plotly}{add plotly layer for plot interaction}
 
 \item{text_size}{Size of axis text}

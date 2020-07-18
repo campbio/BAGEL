@@ -5,7 +5,7 @@ Version: 0.99.0
 Authors@R: person("Aaron", "Chevalier", email = "atgc@bu.edu", role = "cre", comment = c(ORCHID = "0000-0002-3968-9250"))
 Description: What the package does (one paragraph).
 Depends: 
-    R (>= 3.6),
+    R (>= 4.0.2),
     NMF
 License: GPL-3
 Encoding: UTF-8
