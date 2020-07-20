@@ -1,6 +1,6 @@
 language: r
 r:
-  - oldrel
+  TRAVIS_R_VERSION=4.0.2
 cache: packages
 dist: trusty
 sudo: false
