@@ -14,12 +14,16 @@ the bagel object the result was generated from
 \describe{
 \item{\code{signatures}}{A matrix of signatures by mutational motifs}
 
-\item{\code{samples}}{A matrix of samples by signature weights}
+\item{\code{exposures}}{A matrix of samples by signature weights}
 
 \item{\code{type}}{Describes how the signatures/weights were generated}
 
 \item{\code{bagel}}{The bagel object the results were generated from}
 
 \item{\code{log_lik}}{Posterior likelihood of the result (LDA only)}
+
+\item{\code{perplexity}}{Metric of goodness of model fit}
+
+\item{\code{umap}}{List of umap data.frames for plotting and analysis}
 }}
 

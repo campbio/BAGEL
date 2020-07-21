@@ -20,8 +20,6 @@ setClass("Count_Tables", representation(table_list = "list",
                                         table_name = "list",
                                         description = "list"))
 
-
-
 setMethod("show", "Count_Tables",
           function(object)cat("Count_Tables Object containing: ",
                               "\n**Count Tables: \n",
@@ -255,7 +253,7 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
 #'
 #' @param bay Input bagel
 #' @param annot_col Annotation class to use for subsetting
-#' @param annot_name Annotational value to subset to
+#' @param annot_names Annotational value to subset to
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
 #' sample_annotations <- read.table(system.file("testdata",
@@ -265,16 +263,16 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
 #' "Sample_Names", columns_to_add = "Tumor_Subtypes")
 #' subset_bagel_by_annotation(bay, "Tumor_Subtypes", "Lung")
 #' @export
-subset_bagel_by_annotation <- function(bay, annot_col, annot_name) {
+subset_bagel_by_annotation <- function(bay, annot_col, annot_names) {
   if (!annot_col %in% colnames(bay@sample_annotations)) {
     stop(paste(annot_col, " not found in annotation columns, please review.",
                sep = ""))
   }
   annotation_index <- which(bay@sample_annotations[[which(colnames(
-    bay@sample_annotations) %in% annot_col)]] == annot_name)
+    bay@sample_annotations) %in% annot_col)]] %in% annot_names)
   if (length(annotation_index) == 0) {
-    stop(paste(annot_name, " not present in ", annot_col,
-               " column, please review.", sep = ""))
+    stop(paste(annot_names, " not present in ", annot_col,
+               " column, please review.", sep = "", collapse = TRUE))
   }
   bay@sample_annotations <- bay@sample_annotations[annotation_index, ]
   annotation_samples <- bay@sample_annotations$"Samples"
@@ -302,14 +300,17 @@ drop_na_variants <- function(variants, annot_col) {
 #' the bagel object the result was generated from
 #'
 #' @slot signatures A matrix of signatures by mutational motifs
-#' @slot samples A matrix of samples by signature weights
+#' @slot exposures A matrix of samples by signature weights
 #' @slot type Describes how the signatures/weights were generated
 #' @slot bagel The bagel object the results were generated from
 #' @slot log_lik Posterior likelihood of the result (LDA only)
+#' @slot perplexity Metric of goodness of model fit
+#' @slot umap List of umap data.frames for plotting and analysis
 #' @export
-setClass("Result", representation(signatures = "matrix", samples = "matrix",
+setClass("Result", representation(signatures = "matrix", exposures = "matrix",
                                   type = "character", bagel = "bagel",
-                                  log_lik = "numeric"))
+                                  log_lik = "numeric", perplexity = "numeric",
+                                  umap = "list"))
 
 #' Return sample from bagel object
 #'
@@ -327,7 +328,7 @@ name_signatures <- function(result, name_vector) {
                num_sigs, ")", sep = ""))
   }
   eval.parent(substitute(colnames(result@signatures) <- name_vector))
-  eval.parent(substitute(rownames(result@samples) <- name_vector))
+  eval.parent(substitute(rownames(result@exposures) <- name_vector))
 }
 
 # Result Grid object/methods -------------------------------

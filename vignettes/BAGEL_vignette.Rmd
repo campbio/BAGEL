@@ -89,8 +89,8 @@ cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res =
                                  cosmic_v2_sigs, signatures_to_use = 
                                  c(12, 4, 11, 15))
 #cosmic_post = predict_exposure(bagel = bagel)
-#to_use = as.numeric(substr(names(which(rowSums(cosmic_post@samples) > 10^-10)), 11, 12))
-#to_use = as.numeric(substr(names(which(apply(cosmic_post@samples, 1, max) > 10^-10)), 11, 12))
+#to_use = as.numeric(substr(names(which(rowSums(cosmic_post@exposures) > 10^-10)), 11, 12))
+#to_use = as.numeric(substr(names(which(apply(cosmic_post@exposures, 1, max) > 10^-10)), 11, 12))
 #cosmic_post = predict_exposure(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
@@ -120,4 +120,25 @@ plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", proportional = FALSE)
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE)
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE, proportional = FALSE)
+
+#Discover stranded SNV signatures
+#brca = maf_file_to_dt("/Users/atgc/Downloads/gdc_download_20200609_120830.134740/995c0111-d90#b-4140-bee7-3845436c3b42/TCGA.BRCA.mutect.995c0111-d90b-4140-bee7-3845436c3b42.DR-10.0.somati#c.maf")
+#bagel = new("bagel", variants = brca)
+#
+#BAGEL::build_standard_table(bagel, g, "SNV96")
+#BAGEL::annotate_variant_type(bagel)
+#BAGEL::annotate_transcript_strand(bagel, 38)
+#BAGEL::annotate_replication_strand(bagel, BAGEL::rep_range)
+#BAGEL::build_standard_table(bagel, g, "SNV192", "Transcript_Strand")
+#BAGEL::build_standard_table(bagel, g, "SNV192", "Replication_Strand")
+#
+#####TEST WITH PANLUNG/MELANOMA
+#standard <- BAGEL::discover_signatures(bagel, "SNV96", 4, "nmf")
+#compare_cosmic_v2(standard, threshold = 0.9, result_name = "BRCA")
+#
+#trans_192 <- BAGEL::discover_signatures(bagel, "SNV192_Trans", 4, "nmf")
+#plot_signatures(trans_192, plotly = TRUE)
+#
+#rep_192 <- BAGEL::discover_signatures(bagel, "SNV192_Rep", 4, "nmf")
+#plot_signatures(rep_192, plotly = TRUE)
 ```

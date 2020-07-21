@@ -8,9 +8,10 @@ plot_exposures(
   result,
   proportional = TRUE,
   label_samples = TRUE,
-  samples_plotted = colnames(result@samples),
+  samples_plotted = colnames(result@exposures),
   sort_samples = NULL,
-  num_samples = length(colnames(result@samples)),
+  num_samples = length(colnames(result@exposures)),
+  thresh_zero = FALSE,
   plotly = FALSE
 )
 }
@@ -27,6 +28,9 @@ plot_exposures(
 specific signatures name (e.g. 'Signature1)}
 
 \item{num_samples}{Number of sorted samples to plot}
+
+\item{thresh_zero}{Max level to zero out for better plotting when sorting
+by multiple signatures}
 
 \item{plotly}{add plotly layer for plot interaction}
 }

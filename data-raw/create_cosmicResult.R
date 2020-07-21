@@ -2,7 +2,7 @@ cosmic=read.table("./data-raw/cosmic_signatures.txt", header=TRUE, stringsAsFact
 cosmic_mat=cosmic[,4:ncol(cosmic)]
 rownames(cosmic_mat)=paste(cosmic$Substitution.Type, cosmic$Trinucleotide, sep="_")
 colnames(cosmic_mat)=paste("Signature", seq_len(30), sep="")
-cosmic_v2_sigs <- new("Result", signatures = as.matrix(cosmic_mat), samples = matrix(), type = "Cosmic")
+cosmic_v2_sigs <- new("Result", signatures = as.matrix(cosmic_mat), type = "Cosmic")
 usethis::use_data(cosmic_v2_sigs, internal = TRUE)
 
 v3_snv_tab_exome <- read.table("./data-raw/sigProfiler_exome_SBS_signatures.csv", header = TRUE, sep = ",", stringsAsFactors = FALSE)

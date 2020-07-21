@@ -72,7 +72,6 @@ plot_full <- function(sample) {
 #'
 #' @param result S4 Result Object
 #' @param no_legend Remove legend from plot
-#' @param no_legend Remove legend from plot
 #' @param plotly add plotly layer for plot interaction
 #' @param text_size Size of axis text
 #' @param facet_size Size of facet text
@@ -81,8 +80,12 @@ plot_full <- function(sample) {
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_signatures(result)
 #' @export
+<<<<<<< HEAD
 plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
                             text_size = 20, facet_size = 20) {
+=======
+plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE) {
+>>>>>>> master
   signatures <- result@signatures
   groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
                                                                     "context"))
@@ -108,12 +111,15 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
         element_blank(), panel.grid.major.x = element_blank(),
       text=element_text(family="Courier", size = text_size)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
+<<<<<<< HEAD
   if (nrow(signatures) %in% c(6, 96, 192)) {
     #Use standard COSMIC coloring
     p <- p + ggplot2::scale_fill_manual(values = c(
       "#5ABCEBFF", "#050708FF", "#D33C32FF", "#CBCACBFF", "#ABCD72FF",
       "#E7C9C6FF"))
   }
+=======
+>>>>>>> master
   if (no_legend) {
     p <- p + theme(legend.position = "none")
   }
@@ -207,10 +213,16 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
 #' plot_exposures(result)
 #' @export
 plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
+<<<<<<< HEAD
                            samples_plotted = colnames(result@exposures),
-                           sort_samples = NULL,
+                           sort_samples = "numerical",
                            num_samples = length(colnames(result@exposures)),
                            thresh_zero = FALSE,
+=======
+                           samples_plotted = colnames(result@samples),
+                           sort_samples = NULL,
+                           num_samples = length(colnames(result@samples)),
+>>>>>>> master
                            plotly = FALSE) {
   samples <- result@exposures
   if(thresh_zero) {

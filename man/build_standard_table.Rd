@@ -4,7 +4,7 @@
 \alias{build_standard_table}
 \title{Builds a standard table from user variants}
 \usage{
-build_standard_table(bay, g, table_name, strand_type = NULL)
+build_standard_table(bay, g, table_name, strand_type = NA)
 }
 \arguments{
 \item{bay}{Input samples}
