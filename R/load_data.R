@@ -53,9 +53,9 @@ select_genome <- function(hg) {
 #'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 #' melanoma <- BAGEL::auto_to_bagel_dt(input = melanoma_vcfs)
 #' @export
-auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
-                             extra_fields = NULL, auto_fix_errors = TRUE,
-                             verbose = TRUE) {
+auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE,
+                             only_snp = FALSE, extra_fields = NULL,
+                             auto_fix_errors = TRUE, verbose = TRUE) {
   if (length(input) > 1 && is(input, "vector")) {
     if (!is(input, "list")) {
       input <- as.list(input)
@@ -117,7 +117,7 @@ auto_to_bagel_dt <- function(input, name = NULL, filter = TRUE, only_snp = TRUE,
 #'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 #' melanoma <- BAGEL::vcf_files_to_dt(vcf_files = melanoma_vcfs)
 #' @export
-vcf_files_to_dt <- function(vcf_files, filter = TRUE, only_snp = TRUE,
+vcf_files_to_dt <- function(vcf_files, filter = TRUE, only_snp = FALSE,
                        extra_fields = NULL, verbose = FALSE) {
   vcf_list <- vector("list", length(vcf_files))
   pb <- utils::txtProgressBar(min = 0, max = length(vcf_list), initial = 0,
@@ -136,6 +136,38 @@ vcf_files_to_dt <- function(vcf_files, filter = TRUE, only_snp = TRUE,
   return(combined)
 }
 
+#' Loads a list of mafs and converts to a combined data.table
+#'
+#' @param maf_files A list of vcf file locations
+#' @param filter Filter to only passed variants
+#' @param only_snp Filter only non-snp variants
+#' @param extra_fields Which additional fields to extract
+#' @param verbose Show file list progress
+#' @return Returns a data.table of variants from mafs
+#' @examples
+#' mafs <- list.files(system.file("testdata", package = "BAGEL"),
+#'   pattern = glob2rx("*maf"), full.names = TRUE)
+#' public_mafs <- BAGEL::maf_files_to_dt(maf_files = mafs)
+#' @export
+maf_files_to_dt <- function(maf_files, filter = TRUE, only_snp = FALSE,
+                            extra_fields = NULL, verbose = FALSE) {
+  maf_list <- vector("list", length(maf_files))
+  pb <- utils::txtProgressBar(min = 0, max = length(maf_list), initial = 0,
+                              style = 3)
+  for (i in seq_len(length(maf_files))) {
+    utils::setTxtProgressBar(pb, i, )
+    if (verbose) {
+      print(paste("Sample number: ", i, "; Sample name: ", maf_files[i],
+                  sep = ""))
+    }
+    maf_list[[i]] <- BAGEL::maf_file_to_dt(maf_file = maf_files[i],
+                                           filter = filter, only_snp = only_snp,
+                                           extra_fields = extra_fields)
+  }
+  combined <- do.call("rbind", maf_list)
+  return(combined)
+}
+
 #' Converts a loaded vcf object to data.table
 #'
 #' @param vcf Location of vcf file
@@ -151,7 +183,7 @@ vcf_files_to_dt <- function(vcf_files, filter = TRUE, only_snp = TRUE,
 #' luad_vcf_name <- basename(luad_vcf_file)
 #' luad <- BAGEL::vcf_to_dt(vcf = luad_vcf, vcf_name = luad_vcf_name)
 #' @export
-vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = TRUE,
+vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = FALSE,
                       extra_fields = NULL) {
   used_fields <- c(used_fields(), extra_fields)
 
@@ -241,7 +273,7 @@ vcf_to_dt <- function(vcf, vcf_name = NULL, filter = TRUE, only_snp = TRUE,
 #'   package = "BAGEL")
 #' luad <- BAGEL::vcf_file_to_dt(vcf_file = luad_vcf)
 #' @export
-vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
+vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = FALSE,
                            extra_fields = NULL, auto_fix_errors = TRUE) {
 
   vcf <- try(VariantAnnotation::readVcf(vcf_file), silent = TRUE)
@@ -315,7 +347,7 @@ vcf_file_to_dt <- function(vcf_file, filter = TRUE, only_snp = TRUE,
 #' maf_dt = BAGEL::maf_to_dt(maf = maf, maf_name = "test", filter = FALSE)
 #' @export
 maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
-                              TRUE, extra_fields = NULL) {
+                              FALSE, extra_fields = NULL) {
   dt <- rbind(maf@data, maf@maf.silent)
   return(dt_to_bagel_dt(dt = dt, dt_name = maf_name, filter = filter,
                         only_snp = only_snp, extra_fields = extra_fields))
@@ -335,7 +367,7 @@ maf_to_dt <- function(maf, maf_name = NULL, filter = TRUE, only_snp =
 #' dt = BAGEL::maf_to_dt(maf)
 #' maf_dt = BAGEL::dt_to_bagel_dt(dt = dt, filter = FALSE)
 #' @export
-dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
+dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = FALSE,
                            extra_fields = NULL) {
   used_fields <- c(used_fields(), extra_fields)
   if (inherits(dt, "data.frame") && !is(dt, "data.table")) {
@@ -412,7 +444,7 @@ dt_to_bagel_dt <- function(dt, dt_name = NULL, filter = TRUE, only_snp = TRUE,
 #' maf_file=system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
 #' maf = BAGEL::maf_file_to_dt(maf_file = maf_file)
 #' @export
-maf_file_to_dt <- function(maf_file, filter = TRUE, only_snp = TRUE,
+maf_file_to_dt <- function(maf_file, filter = TRUE, only_snp = FALSE,
                            extra_fields = NULL) {
   maf <- maftools::read.maf(maf_file)
   maf_name <- basename(maf_file)

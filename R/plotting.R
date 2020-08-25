@@ -206,11 +206,11 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_exposures(result)
 #' @export
-plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
+plot_exposures <- function(result, proportional = TRUE, label_samples = FALSE,
                            samples_plotted = colnames(result@exposures),
-                           sort_samples = NULL,
+                           sort_samples = "numerical",
                            num_samples = length(colnames(result@exposures)),
-                           thresh_zero = FALSE,
+                           thresh_zero = FALSE, no_legend = FALSE,
                            plotly = FALSE) {
   samples <- result@exposures
   if(thresh_zero) {
@@ -282,6 +282,9 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = TRUE,
   if (!label_samples) {
     p <- p + theme(axis.text.x = element_blank(), axis.ticks.x =
                      element_blank())
+  }
+  if (no_legend) {
+    p <- p + theme(legend.position = "none")
   }
   if (plotly) {
     p <- plotly::ggplotly(p, tooltip = c("x", "y"))
@@ -402,7 +405,10 @@ plot_exposures_by_annotation <- function(result, annotation,
               element_text(angle = 90, hjust = 1, vjust = 0.5),
             panel.grid.major.x = element_blank()) + xlab("Annotation") +
       ylab(paste("Signatures (", y_label, ")", sep = "")) -> p
-    p <- p + ggplot2::facet_wrap(~ make, drop = TRUE, scales = "free")
+    #See if this makes plotly work
+    p <- p + geom_point(alpha = 0)
+
+    p <- p + ggplot2::facet_wrap(~ make, drop = FALSE, scales = "free")
   }
   p <- p + theme(text=element_text(family="Courier", size = 10),
                  strip.text.y = element_text(size = 5))
@@ -415,7 +421,7 @@ plot_exposures_by_annotation <- function(result, annotation,
     p <- p + theme(legend.position = "none")
   }
   if (plotly) {
-    p <- plotly::ggplotly(p, tooltip = c("x"))
+    p <- plotly::ggplotly(p)#, hoverinfo = "legendgroup+x", hovermode = "x")
   }
   return(p)
 }
@@ -468,7 +474,8 @@ create_umap <- function(result, annotation, n_neighbors = 30, min_dist = 0.75,
   y=umap_out[,2]
   annot = result@bagel@sample_annotations
   samp_ind = match(rownames(samples), annot$Samples)
-  df <- data.frame(x = x, y = y, type = annot[[annotation]][samp_ind])
+  df <- data.frame(x = x, y = y, type = annot[[annotation]][samp_ind],
+                   samp = rownames(samples))
 
   sig_df <- NULL
   n_sigs = ncol(samples)
@@ -505,16 +512,19 @@ create_umap <- function(result, annotation, n_neighbors = 30, min_dist = 0.75,
 #' plot_umap(result)
 #' @export
 plot_umap <- function(result, point_size = 0.7, no_legend = FALSE,
-                      label_clusters = TRUE, label_size = 3, text_box = TRUE,
-                      plotly = FALSE) {
+                      label_clusters = TRUE, label_size = 3, legend_size = 3,
+                      text_box = TRUE, plotly = FALSE) {
   umap_df <- result@umap$umap_df
-  p <- ggplot(umap_df, aes_string(x="x", y="y", col="type")) +
+  p <- ggplot(umap_df, aes_string(x = "x", y = "y", col = "type",
+                                  text = "samp")) +
     geom_point(size = point_size) + ggplot2::ggtitle("UMAP")
   if (no_legend) {
     p <- p + theme(legend.position = "none")
   }
   cluster <- as.character(umap_df$type)
-  if (label_clusters) {
+  if (plotly) {
+    p <- plotly::ggplotly(p, tooltip = c("text", "x", "y", "type"))
+  } else if (label_clusters) {
     centroidList <- lapply(unique(cluster), function(x) {
       df.sub <- umap_df[umap_df$type == x, ]
       median.1 <- stats::median(df.sub[, "x"])
@@ -529,19 +539,18 @@ plot_umap <- function(result, point_size = 0.7, no_legend = FALSE,
     )
     p <- p + ggplot2::geom_point(data = centroid, mapping =
                                    ggplot2::aes_string(x = "x", y = "y"),
-                                 size = 0, alpha = 0)
+                                 size = 0, alpha = 0) +
+      theme(legend.position="none")
     if (text_box) {
       p <- p + ggrepel::geom_label_repel(data = centroid, mapping =
                                            ggplot2::aes_string(label = "type"),
                                          size = label_size)
+
     } else {
       p <- p + ggrepel::geom_text_repel(data = centroid, mapping =
                                           ggplot2::aes_string(label = "type"),
                                         size = label_size)
     }
-  }
-  if (plotly) {
-    p <- plotly::ggplotly(p)
   }
   return(p)
 }
