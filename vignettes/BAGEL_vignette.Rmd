@@ -58,31 +58,29 @@ bagel = new("bagel", variants = dat)
 #Display what samples were added
 BAGEL::get_sample_names(bagel)
 
-#Create 96 Motif samples
-#g=BAGEL::select_genome("19")
-#BAGEL::create_tables(bagel, g)
-g=BAGEL::select_genome("38")
+# Create 96 Motif samples
+g = select_genome("38")
 #Generates the "SNV96" table
-BAGEL::build_standard_table(bagel, g, "SNV96")
+build_standard_table(bagel, g, "SNV96")
 
-#Generate signatures/weights
-#We can use the bagel object we generated tables for using the SNV96 table
-result=BAGEL::discover_signatures(input = bagel, table_name = "SNV96", 
+# Generate signatures/weights
+# We can use the bagel object we generated tables for using the SNV96 table
+result = discover_signatures(input = bagel, table_name = "SNV96", 
                               num_signatures = 4, method = "nmf")
 
 ##We can name signatures based on prior knowledge
 name_signatures(result, c("unknown", "smoking", "apobec", "uv"))
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ <- this line fails
+
 ##Plot results
-BAGEL::plot_signatures(result)
-BAGEL::plot_exposures(result, proportional = TRUE)
-BAGEL::plot_exposures(result, proportional = FALSE)
+plot_signatures(result)
+plot_exposures(result, proportional = TRUE)
+plot_exposures(result, proportional = FALSE)
 #
 ##Compare to COSMIC signatures by leaving the second result as default
-BAGEL::compare_cosmic_v2(result, threshold = 0.8)
+compare_cosmic_v2(result, threshold = 0.8)
 
 #List which signatures correspond to subtypes including "lung"
-BAGEL::cosmic_v2_subtype_map("lung")
+cosmic_v2_subtype_map("lung")
 
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
 cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
@@ -98,8 +96,8 @@ our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signature_res =
                                    result)
 
 #Plot results from posterior calculation
-BAGEL::plot_signatures(cosmic_post)
-BAGEL::plot_exposures(cosmic_post, proportional = TRUE)
+plot_signatures(cosmic_post)
+plot_exposures(cosmic_post, proportional = TRUE)
 
 BAGEL::plot_signatures(our_sigs_post)
 BAGEL::plot_exposures(our_sigs_post, proportional = TRUE)
