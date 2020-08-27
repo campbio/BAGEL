@@ -33,6 +33,7 @@ Imports:
     data.table,
     dplyr,
     rlang,
+    BSgenome,
     GenomeInfoDb,
     GenomicFeatures,
     GenomicRanges,
@@ -42,7 +43,8 @@ Imports:
     S4Vectors,
     uwot,
     withr,
-    ggrepel
+    ggrepel,
+    stringr
 Suggests:
     testthat,
     knitr,
@@ -50,6 +52,8 @@ Suggests:
     survival,
     BSgenome.Hsapiens.UCSC.hg19,
     BSgenome.Hsapiens.UCSC.hg38,
+    BSgenome.Mmusculus.UCSC.mm9,
+    BSgenome.Mmusculus.UCSC.mm10,
     TxDb.Hsapiens.UCSC.hg19.knownGene,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,

@@ -36,14 +36,18 @@ setMethod("show", "Count_Tables",
 #' The primary object for BAGEL that contains all variants, samples annotations
 #' and tables
 #'
-#' @slot variants Data.table of variants and variant-level information
+#' @slot variants \code{data.table} of variants 
+#' @slot genome \code{BSgenome} object containing the reference genome of the
+#' variants
 #' @slot count_tables Summary table with per-sample unnormalized motif counts
 #' @slot sample_annotations Sample-level annotations (e.g. age, sex, primary)
 #' @export
-setClass("bagel", representation(variants = "data.table", count_tables =
-                                   "Count_Tables",
+#' @import BSgenome
+setClass("bagel", slots = c(variants = "data.table",
+                                 genome = "BSgenome",
+                                 count_tables = "Count_Tables",
                                  sample_annotations = "data.table"),
-         prototype(variants = data.table::data.table(),
+         prototype = list(variants = data.table::data.table(),
                    count_tables = new("Count_Tables"),
                    sample_annotations = data.table::data.table()))
 

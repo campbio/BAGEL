@@ -19,6 +19,24 @@ extract_variants_from_matrix(
 \item{mat}{An object that inherits from classes "matrix" or "data.frame"
 Examples include a matrix, data.frame, or data.table.}
 
+\item{chromosome_col}{The name of the column that contains the chromosome
+reference for each variant. Default \code{"Chromosome"}.}
+
+\item{start_col}{The name of the column that contains the start
+position for each variant. Default \code{"Start_Position"}.}
+
+\item{end_col}{The name of the column that contains the end
+position for each variant. Default \code{"End_Position"}.}
+
+\item{ref_col}{The name of the column that contains the reference
+base(s) for each variant. Default \code{"Tumor_Seq_Allele1"}.}
+
+\item{alt_col}{The name of the column that contains the alternative
+base(s) for each variant. Default \code{"Tumor_Seq_Allele2"}.}
+
+\item{sample_col}{The name of the column that contains the sample
+id for each variant. Default \code{"Tumor_Sample_Barcode"}.}
+
 \item{extra_fields}{Optionally extract additional columns from the 
 object. Default \code{NULL}.}
 }

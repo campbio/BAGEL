@@ -8,6 +8,9 @@ extract_variants_from_maf_file(maf_file, extra_fields = NULL)
 }
 \arguments{
 \item{maf_file}{Location of maf file}
+
+\item{extra_fields}{Optionally extract additional columns from the 
+object. Default \code{NULL}.}
 }
 \value{
 Returns a data.table of variants from a maf

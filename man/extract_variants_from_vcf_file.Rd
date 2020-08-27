@@ -46,6 +46,12 @@ sample name. Default \code{c(".vcf",".vcf.gz",".gz")}}
 \item{filter}{Exclude variants that do not have a \code{PASS} in the
 \code{FILTER} column of the VCF. Default \code{TRUE}.}
 
+\item{multiallele}{Multialleles are when multiple alternative variants
+are listed in the same row in the vcf. One of \code{"expand"} or
+\code{"exclude"}. If \code{"expand"} is selected, then each
+alternate allele will be given their own rows. If \code{"exclude"} is
+selected, then these rows will be removed. Default \code{"expand"}.}
+
 \item{extra_fields}{Optionally extract additional fields from the \code{INFO}
 section of the VCF. Default \code{NULL}.}
 

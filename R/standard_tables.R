@@ -23,9 +23,9 @@ create_snv96_table <- function(bay, g) {
   type <- mut_type
 
   #Mutation Context
-  lflank <- VariantAnnotation::getSeq(g, chr, range_start - 1, range_start - 1,
+  lflank <- BSgenome::getSeq(g, chr, range_start - 1, range_start - 1,
                    as.character = TRUE)
-  rflank <- VariantAnnotation::getSeq(g, chr, range_end + 1, range_end + 1,
+  rflank <- BSgenome::getSeq(g, chr, range_end + 1, range_end + 1,
                    as.character = TRUE)
 
   final_mut_type <- rep(NA, length(ref))

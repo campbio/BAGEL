@@ -12,7 +12,10 @@ and tables
 \section{Slots}{
 
 \describe{
-\item{\code{variants}}{Data.table of variants and variant-level information}
+\item{\code{variants}}{\code{data.table} of variants}
+
+\item{\code{genome}}{\code{BSgenome} object containing the reference genome of the
+variants}
 
 \item{\code{count_tables}}{Summary table with per-sample unnormalized motif counts}
 

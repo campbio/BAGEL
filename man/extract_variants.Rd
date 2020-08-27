@@ -15,6 +15,7 @@ extract_variants(
   multiallele = c("expand", "exclude"),
   fix_vcf_errors = TRUE,
   extra_fields = NULL,
+  chromosome_col = "Chromosome",
   start_col = "Start_Position",
   end_col = "End_Position",
   ref_col = "Tumor_Seq_Allele1",
@@ -39,6 +40,11 @@ what the same will be renamed to.
 See \code{\link{extract_variants_from_vcf}} for more details.
 Only used if the input is a vcf object or file. Default \code{NULL}.}
 
+\item{sample_field}{Some algoriths will save the name of the
+sample in the ##SAMPLE portion of header in the VCF.
+See \code{\link{extract_variants_from_vcf}} for more details.
+Default \code{NULL}.}
+
 \item{filename_as_id}{If set to \code{TRUE}, the file name will be used
 as the sample name.
 See \code{\link{extract_variants_from_vcf_file}} for more details.
@@ -52,9 +58,12 @@ Only used if the input is a vcf file.
 Default \code{c(".vcf",".vcf.gz",".gz")}}
 
 \item{filter}{Exclude variants that do not have a \code{PASS} in the
-\code{FILTER} column of VCF inputs.
+\code{FILTER} column of VCF inputs.}
+
+\item{multiallele}{Multialleles are when multiple alternative variants
+are listed in the same row in the vcf.
 See \code{\link{extract_variants_from_vcf}} for more details.
-Only used if the input is a vcf object or file. Default \code{TRUE}.}
+Only used if the input is a vcf object or file. Default \code{"expand"}.}
 
 \item{fix_vcf_errors}{Attempt to automatically fix VCF file
 formatting errors.
@@ -63,6 +72,30 @@ Only used if the input is a vcf file. Default \code{TRUE}.}
 
 \item{extra_fields}{Optionally extract additional fields from all input 
 objects. Default \code{NULL}.}
+
+\item{chromosome_col}{The name of the column that contains the chromosome
+reference for each variant. Only used if the input is a matrix or data.frame.
+Default \code{"Chromosome"}.}
+
+\item{start_col}{The name of the column that contains the start
+position for each variant. Only used if the input is a matrix or data.frame.
+Default \code{"Start_Position"}.}
+
+\item{end_col}{The name of the column that contains the end
+position for each variant. Only used if the input is a matrix or data.frame.
+Default \code{"End_Position"}.}
+
+\item{ref_col}{The name of the column that contains the reference
+base(s) for each variant. Only used if the input is a matrix or data.frame.
+Default \code{"Tumor_Seq_Allele1"}.}
+
+\item{alt_col}{The name of the column that contains the alternative
+base(s) for each variant. Only used if the input is a matrix or data.frame.
+Default \code{"Tumor_Seq_Allele2"}.}
+
+\item{sample_col}{The name of the column that contains the sample
+id for each variant. Only used if the input is a matrix or data.frame.
+Default \code{"Tumor_Sample_Barcode"}.}
 
 \item{verbose}{Show progress of variant extraction. Default \code{TRUE}.}
 }

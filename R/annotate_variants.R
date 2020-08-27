@@ -13,11 +13,12 @@ NULL
 #' @param build_table Automatically build a table using the annotation and add
 #' it to the bagel
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96_tiny.rds",
-#' package = "BAGEL"))
-#' g <- select_genome("38")
-#' add_flank_to_variants(bay, g, 1, 2)
-#' add_flank_to_variants(bay, g, -2, -1)
+#' # need to remake samples
+#' #bay <- readRDS(system.file("testdata", "bagel_snv96_tiny.rds",
+#' #package = "BAGEL"))
+#' #g <- select_genome("38")
+#' #add_flank_to_variants(bay, g, 1, 2)
+#' #add_flank_to_variants(bay, g, -2, -1)
 #' @export
 add_flank_to_variants <- function(bay, g, flank_start, flank_end,
                                   build_table = TRUE) {

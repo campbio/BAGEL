@@ -2,20 +2,20 @@
 % Please edit documentation in R/load_data.R
 \name{select_genome}
 \alias{select_genome}
-\title{Helper function to load HG19 or HG38}
+\title{Helper function to load common human or mouse genomes}
 \usage{
-select_genome(hg)
+select_genome(x)
 }
 \arguments{
-\item{hg}{Which human genome build number to return}
+\item{x}{Select the hg19 or hg38 human genome or the mm9 or mm10
+mouse genome in UCSC format}
 }
 \value{
 Returns BSgenome of given version
 }
 \description{
-Helper function to load HG19 or HG38
+Helper function to load common human or mouse genomes
 }
 \examples{
-g <- select_genome(hg = 38)
-
+g <- select_genome(x = "hg38")
 }
