@@ -6,7 +6,9 @@ Authors@R: person("Aaron", "Chevalier", email = "atgc@bu.edu", role = "cre", com
 Description: What the package does (one paragraph).
 Depends: 
     R (>= 4.0.0),
-    NMF
+    NMF,
+    data.table,
+    BSgenome
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
@@ -30,10 +32,8 @@ Imports:
     gridExtra,
     maftools,
     MCMCprecision,
-    data.table,
     dplyr,
     rlang,
-    BSgenome,
     GenomeInfoDb,
     GenomicFeatures,
     GenomicRanges,

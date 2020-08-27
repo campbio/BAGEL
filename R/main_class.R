@@ -1,7 +1,3 @@
-#Necessary for S4 to recognize "data.table" as a class
-setOldClass(c("data.frame"))
-setOldClass(c("data.table", "data.frame"))
-
 # Count Tables object/methods -------------------------------
 
 #' Object containing the count table matrices, their names and descriptions
@@ -42,7 +38,7 @@ setMethod("show", "Count_Tables",
 #' @slot count_tables Summary table with per-sample unnormalized motif counts
 #' @slot sample_annotations Sample-level annotations (e.g. age, sex, primary)
 #' @export
-#' @import BSgenome
+#' @import data.table BSgenome
 setClass("bagel", slots = c(variants = "data.table",
                                  genome = "BSgenome",
                                  count_tables = "Count_Tables",
