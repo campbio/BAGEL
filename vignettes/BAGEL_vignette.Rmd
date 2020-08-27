@@ -18,49 +18,48 @@ knitr::opts_chunk$set(
 library("BAGEL")
 ```
 
+# Introduction
+
+# Installation
+
+# Setting up a bagel object
+Add some text here describing what the user needs to do.
+
+## Extracting varaints
 ```{r}
-#Find Signatures examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
-#' res <- discover_signatures(bay, "SNV96", num_signatures = 4)
 
-#Load MAF File
+# Extract variants from a MAF File
 lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL") 
-lusc <- BAGEL::maf_file_to_dt(maf_file = lusc_maf)
+lusc.variants <- extract_variants_from_maf_file(maf_file = lusc_maf)
 
-#Load individual VCF Files
-luad1_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", 
+# Extract variants from an individual VCF file
+luad_vcf <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", 
                          package = "BAGEL")
-luad1 <- BAGEL::vcf_file_to_dt(vcf_file = luad1_vcf)
-luad2_vcf <- system.file("testdata", "public_LUAD_TCGA-MP-A4TJ.vcf", 
-                         package = "BAGEL")
-luad2 <- BAGEL::vcf_file_to_dt(vcf_file = luad2_vcf)
+luad.variants <- extract_variants_from_vcf_file(vcf_file = luad_vcf)
 
-#Load Multiple VCF Files At Once using list files with regular expressions
-melanoma_vcf <- list.files(system.file("testdata", package = "BAGEL"), 
+
+# Extract variants from multiple files and/or objects
+melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"), 
                            pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
-melanoma <- BAGEL::vcf_files_to_dt(vcf_files = melanoma_vcf)
+variants <- extract_variants(c(lusc_maf, luad_vcf, melanoma_vcfs), verbose = TRUE)
 
-#Combine all data.frames
-dat <- rbind(lusc, melanoma, luad1, luad2)
+```
 
-#Choose genome build
-#Automatically detect genome build
-#g=BAGEL::select_genome("38")
+## Choosing genome
+Briefly describe BSgenome package and objects
+```{r}
+g = select_genome("hg38")
+```
 
-#Create Object and add samples
-bagel = new("bagel")
-variants = dat
-BAGEL::set_variants(bagel, variants)
+## Create bagel object
+```{r}
+bagel = create_bagel(x = variants, genome = g)
+```
 
-#Or alternatively create an object with sample names included
-bagel = new("bagel", variants = dat)
+# Create mutation count tables
+Description of what motifs are and why they need to be counted.
 
-#Display what samples were added
-BAGEL::get_sample_names(bagel)
-
-# Create 96 Motif samples
-g = select_genome("38")
-#Generates the "SNV96" table
+```{r}
 build_standard_table(bagel, g, "SNV96")
 
 # Generate signatures/weights
@@ -139,4 +138,10 @@ plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALS
 #
 #rep_192 <- BAGEL::discover_signatures(bagel, "SNV192_Rep", 4, "nmf")
 #plot_signatures(rep_192, plotly = TRUE)
+```
+
+# Utility functions
+```{r}
+#Display what samples were added
+samples = get_sample_names(bagel)
 ```
