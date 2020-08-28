@@ -11,8 +11,6 @@ create_snv192_table(bay, strand_type)
 \item{bay}{Input samples}
 
 \item{strand_type}{Transcript_Strand or Replication_Strand}
-
-\item{g}{Genome object used for finding variant context}
 }
 \description{
 Uses a genome object to find context and generate standard SNV192 table

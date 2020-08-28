@@ -1,7 +1,6 @@
 #' Uses a genome object to find context and generate standard SNV96 tables
 #'
 #' @param bay Input samples
-#' @param g Genome object used for finding variant context
 create_snv96_table <- function(bay) {
   dat <- bay@variants
   g <- bay@genome
@@ -92,7 +91,6 @@ create_snv96_table <- function(bay) {
 #' using transcript strand
 #'
 #' @param bay Input samples
-#' @param g Genome object used for finding variant context
 #' @param strand_type Transcript_Strand or Replication_Strand
 create_snv192_table <- function(bay, strand_type) {
   if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
@@ -276,28 +274,27 @@ create_indel_table <- function(bay) {
 #' Builds a standard table from user variants
 #'
 #' @param bay Input samples
-#' @param g Genome object used for finding variant context
 #' @param table_name Name of standard table to build SNV96, SNV192, DBS
 #' @param strand_type Only for SNV192 Transcript_Strand or Replication_Strand
 #' Indel
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' build_standard_table(bay, g, "SNV96")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("38")
+#' #build_standard_table(bay, "SNV96")
 #'
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' annotate_transcript_strand(bay, "19")
-#' build_standard_table(bay, g, "SNV192", "Transcript_Strand")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("38")
+#' #annotate_transcript_strand(bay, "19")
+#' #build_standard_table(bay, g, "SNV192", "Transcript_Strand")
 #'
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' annotate_replication_strand(bay, BAGEL::rep_range)
-#' build_standard_table(bay, g, "SNV192", "Replication_Strand")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("38")
+#' #annotate_replication_strand(bay, BAGEL::rep_range)
+#' #build_standard_table(bay, g, "SNV192", "Replication_Strand")
 #'
-#' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
-#' package = "BAGEL"))
-#' build_standard_table(bay, table_name = "DBS")
+#' #bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
+#' #package = "BAGEL"))
+#' #build_standard_table(bay, table_name = "DBS")
 #'
 #' @export
 build_standard_table <- function(bay, table_name, strand_type = NA) {
@@ -309,7 +306,7 @@ build_standard_table <- function(bay, table_name, strand_type = NA) {
   } else if (table_name %in% c("DBS", "doublet")) {
     tab <- create_dbs_table(bay)
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {
-    tab <- create_indel_table(bay, g)
+    tab <- create_indel_table(bay)
   } else {
     stop(paste0("There is no standard table named: ", table_name,
                " please select from SNV96, SNV192, DBS, Indel."))

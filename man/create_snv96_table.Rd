@@ -8,8 +8,6 @@ create_snv96_table(bay)
 }
 \arguments{
 \item{bay}{Input samples}
-
-\item{g}{Genome object used for finding variant context}
 }
 \description{
 Uses a genome object to find context and generate standard SNV96 tables
