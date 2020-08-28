@@ -827,9 +827,9 @@ create_bagel <- function(x, genome,
   ix = grepl("[^ACGT]", ref)
   no.match.sum <- sum(ref[!ix] != genome_ref[!ix])
   if(no.match.sum > 0) {
-    stop("Reference bases for ", no.match.sum, " variants did not match ", 
-         "the reference base in the 'genome'. Please ensure you are using ",
-         "the correct BSgenome reference object.")
+    warning("Reference bases for ", no.match.sum, " out of ", 
+         length(ref), " variantsdid not match the reference base in the ",
+         "'genome'. Make sure the genome reference is correct.")
   }
 }
 .check_headers <- function(dt, chromosome = NULL,

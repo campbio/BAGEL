@@ -2,24 +2,16 @@
 #'
 #' @param bay Input samples
 #' @param g Genome object used for finding variant context
-create_snv96_table <- function(bay, g) {
+create_snv96_table <- function(bay) {
   dat <- bay@variants
-
+  g <- bay@genome
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
 
-  #Fix Chromosomes
-  chr <- dat$Chromosome
-  tryCatch(
-    GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
-    error = function(e) {
-      warning("found no sequence renaming map compatible with seqname",
-              " style 'UCSC' for the input reference ", (g@pkgname))
-    }
-  )
+  chr <- as.character(dat$Chromosome)
   range_start <- dat$Start_Position
   range_end <- dat$End_Position
-  ref <- dat$Tumor_Seq_Allele1
-  alt <- dat$Tumor_Seq_Allele2
+  ref <- as.character(dat$Tumor_Seq_Allele1)
+  alt <- as.character(dat$Tumor_Seq_Allele2)
   type <- mut_type
 
   #Mutation Context
@@ -102,25 +94,15 @@ create_snv96_table <- function(bay, g) {
 #' @param bay Input samples
 #' @param g Genome object used for finding variant context
 #' @param strand_type Transcript_Strand or Replication_Strand
-create_snv192_table <- function(bay, g, strand_type) {
+create_snv192_table <- function(bay, strand_type) {
   if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
     stop("Please select either Transcript_Strand or Replication_Strand")
   }
-
+  g <- bay@genome
   dat <- bay@variants
   dat <- drop_na_variants(dat, strand_type)
 
-  #Fix Chromosomes
   chr <- dat$Chromosome
-  tryCatch(
-    GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
-    error = function(e) {
-      warning("found no sequence renaming map compatible with seqname",
-              " style 'UCSC' for the input reference ", (g@pkgname))
-    }
-  )
-
-  #Mutation Context
   range_start <- dat$Start_Position
   range_end <- dat$End_Position
   lflank <- VariantAnnotation::getSeq(g, chr, range_start - 1, range_start - 1,
@@ -280,7 +262,7 @@ rc <- function(dna) {
   return(rev_com)
 }
 
-create_indel_table <- function(bay, g) {
+create_indel_table <- function(bay) {
   temp <- methods::new("bagel", variants = subset_variant_by_type(bay@variants,
                                                                   "indel"),
                        count_tables = bay@count_tables)
@@ -318,11 +300,12 @@ create_indel_table <- function(bay, g) {
 #' build_standard_table(bay, table_name = "DBS")
 #'
 #' @export
-build_standard_table <- function(bay, g, table_name, strand_type = NA) {
+build_standard_table <- function(bay, table_name, strand_type = NA) {
+  
   if (table_name %in% c("SNV96", "SNV", "96", "SBS")) {
-    tab <- create_snv96_table(bay, g)
+    tab <- create_snv96_table(bay)
   } else if (table_name %in% c("SNV192", "192")) {
-    tab <- create_snv192_table(bay, g, strand_type)
+    tab <- create_snv192_table(bay, strand_type)
   } else if (table_name %in% c("DBS", "doublet")) {
     tab <- create_dbs_table(bay)
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {

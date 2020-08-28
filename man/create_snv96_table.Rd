@@ -4,7 +4,7 @@
 \alias{create_snv96_table}
 \title{Uses a genome object to find context and generate standard SNV96 tables}
 \usage{
-create_snv96_table(bay, g)
+create_snv96_table(bay)
 }
 \arguments{
 \item{bay}{Input samples}

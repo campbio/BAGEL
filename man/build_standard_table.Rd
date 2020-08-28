@@ -4,17 +4,17 @@
 \alias{build_standard_table}
 \title{Builds a standard table from user variants}
 \usage{
-build_standard_table(bay, g, table_name, strand_type = NA)
+build_standard_table(bay, table_name, strand_type = NA)
 }
 \arguments{
 \item{bay}{Input samples}
-
-\item{g}{Genome object used for finding variant context}
 
 \item{table_name}{Name of standard table to build SNV96, SNV192, DBS}
 
 \item{strand_type}{Only for SNV192 Transcript_Strand or Replication_Strand
 Indel}
+
+\item{g}{Genome object used for finding variant context}
 }
 \description{
 Builds a standard table from user variants

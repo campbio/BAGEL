@@ -60,21 +60,37 @@ bagel = create_bagel(x = variants, genome = g)
 Description of what motifs are and why they need to be counted.
 
 ```{r}
-build_standard_table(bagel, g, "SNV96")
+build_standard_table(bagel, "SNV96")
 
 # Generate signatures/weights
 # We can use the bagel object we generated tables for using the SNV96 table
 result = discover_signatures(input = bagel, table_name = "SNV96", 
-                              num_signatures = 4, method = "nmf")
+                              num_signatures = 4, method = "lda", nstart = 10)
 
-##We can name signatures based on prior knowledge
-name_signatures(result, c("unknown", "smoking", "apobec", "uv"))
 
+```
+
+# Plotting
+## Signatures
+```{r}
 ##Plot results
 plot_signatures(result)
+
+# We can name signatures based on prior knowledge
+name_signatures(result, c("unknown", "smoking", "apobec", "uv"))
+
+```
+
+## Exposures
+```{r}
 plot_exposures(result, proportional = TRUE)
 plot_exposures(result, proportional = FALSE)
-#
+plot_sample_counts(bagel, "SNV96", get_sample_names(bagel)[1])
+```
+
+## Comparison to external signatures (e.g. COSMIC)
+
+```{r}
 ##Compare to COSMIC signatures by leaving the second result as default
 compare_cosmic_v2(result, threshold = 0.8)
 
@@ -91,6 +107,11 @@ cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res =
 #cosmic_post = predict_exposure(bagel = bagel, signatures_to_use = to_use)
 
 #Calculate posterior based on all calculated signatures
+
+```
+
+# Predicting exposures using existing signatures
+```{r}
 our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
                                    result)
 
@@ -98,25 +119,25 @@ our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signature_res =
 plot_signatures(cosmic_post)
 plot_exposures(cosmic_post, proportional = TRUE)
 
-BAGEL::plot_signatures(our_sigs_post)
-BAGEL::plot_exposures(our_sigs_post, proportional = TRUE)
+plot_signatures(our_sigs_post)
+plot_exposures(our_sigs_post, proportional = TRUE)
 
 #Compare posterior results to each other
-BAGEL::compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
+compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
 
-BAGEL::plot_sample_counts(bagel, "SNV96", get_sample_names(bagel)[1])
+
 ############################################## Error up here ^^^^^
-sample_annotations <- read.table(system.file("testdata", "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
-init_sample_annotations(bagel)
-add_sample_annotations(bagel, sample_annotations, sample_column = "Sample_Names", columns_to_add = "Tumor_Subtypes")
+#sample_annotations <- read.table(system.file("testdata", "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
+#init_sample_annotations(bagel)
+#add_sample_annotations(bagel, sample_annotations, sample_column = "Sample_Names", columns_to_add = "Tumor_Subtypes")
 #
 ##Add tumor type annotations to our samples
 #res <- discover_signatures(bagel, table_name = "SNV96", num_signatures = 3)
-res <- readRDS(system.file("testdata", "test_res.rds", package = "BAGEL"))
-plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
-plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", proportional = FALSE)
-plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE)
-plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE, proportional = FALSE)
+#res <- readRDS(system.file("testdata", "test_res.rds", package = "BAGEL"))
+#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
+#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", proportional = FALSE)
+#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE)
+#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE, proportional = FALSE)
 
 #Discover stranded SNV signatures
 #brca = maf_file_to_dt("/Users/atgc/Downloads/gdc_download_20200609_120830.134740/995c0111-d90#b-4140-bee7-3845436c3b42/TCGA.BRCA.mutect.995c0111-d90b-4140-bee7-3845436c3b42.DR-10.0.somati#c.maf")
@@ -140,7 +161,7 @@ plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALS
 #plot_signatures(rep_192, plotly = TRUE)
 ```
 
-# Utility functions
+# Other functions
 ```{r}
 #Display what samples were added
 samples = get_sample_names(bagel)
