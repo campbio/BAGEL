@@ -200,6 +200,7 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
 #' @param num_samples Number of sorted samples to plot
 #' @param thresh_zero Max level to zero out for better plotting when sorting
 #' by multiple signatures
+#' @param no_legend Don't plot legend
 #' @param plotly add plotly layer for plot interaction
 #' @return Generates plot {no return}
 #' @examples
@@ -502,6 +503,7 @@ create_umap <- function(result, annotation, n_neighbors = 30, min_dist = 0.75,
 #' @param label_clusters Add annotation labels to clusters (may not work well
 #' for split or small clusters)
 #' @param label_size Size of cluster labels
+#' @param legend_size Set legend size
 #' @param text_box Place a box around cluster labels for improved readability
 #' @param plotly Create plotly version of plot
 #' @return UMAP data.frame
@@ -515,16 +517,18 @@ plot_umap <- function(result, point_size = 0.7, no_legend = FALSE,
                       label_clusters = TRUE, label_size = 3, legend_size = 3,
                       text_box = TRUE, plotly = FALSE) {
   umap_df <- result@umap$umap_df
-  p <- ggplot(umap_df, aes_string(x = "x", y = "y", col = "type",
-                                  text = "samp")) +
-    geom_point(size = point_size) + ggplot2::ggtitle("UMAP")
-  if (no_legend) {
-    p <- p + theme(legend.position = "none")
-  }
   cluster <- as.character(umap_df$type)
   if (plotly) {
+    p <- ggplot(umap_df, aes_string(x = "x", y = "y", col = "type",
+                                    text = "samp")) +
+      geom_point(size = point_size) + ggplot2::ggtitle("UMAP")
     p <- plotly::ggplotly(p, tooltip = c("text", "x", "y", "type"))
   } else if (label_clusters) {
+    p <- ggplot(umap_df, aes_string(x = "x", y = "y", col = "type")) +
+      geom_point(size = point_size) + ggplot2::ggtitle("UMAP")
+    if (no_legend) {
+      p <- p + theme(legend.position = "none")
+    }
     centroidList <- lapply(unique(cluster), function(x) {
       df.sub <- umap_df[umap_df$type == x, ]
       median.1 <- stats::median(df.sub[, "x"])

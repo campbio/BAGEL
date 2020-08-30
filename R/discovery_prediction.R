@@ -19,7 +19,7 @@ NULL
 #' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
 discover_signatures <- function(input, table_name, num_signatures, method="lda",
-                            seed = NULL, nstart = 1, par_cores = FALSE) {
+                            seed = 1, nstart = 1, par_cores = FALSE) {
   if (!methods::is(input, "bagel")) {
     if (!methods::is(input, "matrix")) {
       stop("Input to discover_signatures must be a bagel object or a matrix")
@@ -331,8 +331,12 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @param table_name Name of table used for posterior prediction.
 #' Must match the table type used to generate the prediction signatures
 #' @param signature_res Signatures to use for prediction
+#' @param algorithm Algorithm to use for prediction. Choose from
+#' "lda_posterior", decompTumor2Sig, and deconstructSigs
 #' @param signatures_to_use Which signatures in set to use (default all)
+#' @param seed Seed to use for reproducible results, set to null to disable
 #' @param verbose Whether to show intermediate results
+#' @param g BSgenome object to use for prediction (deconstructSigs only)
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
@@ -341,34 +345,52 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs, algorithm = "lda",
 #' g = g)
 #' @export
-predict_exposure <- function(bagel, table_name, signature_res,
+predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                              signatures_to_use = seq_len(ncol(
-                               signature_res@signatures)), algorithm,
-                             verbose = FALSE, g) {
+                               signature_res@signatures)), seed = 1,
+                             verbose = FALSE, g = NULL) {
   signature <- signature_res@signatures[, signatures_to_use]
   counts_table <- extract_count_table(bagel, table_name)
   present_samples <- which(colSums(counts_table) > 0)
   counts_table <- counts_table[, present_samples]
 
   if (algorithm %in% c("lda_posterior", "lda", "lda_post")) {
-    lda_res <- lda_posterior(counts_table = counts_table, signature = signature,
-                          max.iter = 100, verbose = verbose)
+    ifelse(is.null(seed),
+           lda_res <- lda_posterior(counts_table = counts_table,
+                                    signature = signature, max.iter = 100,
+                                    verbose = verbose),
+           lda_res <- withr::with_seed(1, lda_posterior(
+                        counts_table = counts_table, signature = signature,
+                        max.iter = 100, verbose = verbose)))
     exposures <- t(lda_res$samp_sig_prob_mat)
     type_name <- "posterior_LDA"
   }else if (algorithm %in% c("decomp", "decompTumor2Sig")) {
-    decomp_res <- predict_decompTumor2Sig(counts_table, signature)
+    ifelse(is.null(seed),
+           decomp_res <- predict_decompTumor2Sig(counts_table, signature),
+           decomp_res <- withr::with_seed(seed, predict_decompTumor2Sig(
+                           counts_table, signature)))
     exposures <- t(do.call(rbind, decomp_res))
     colnames(exposures) <- colnames(counts_table)
     rownames(exposures) <- colnames(signature)
     type_name <- "decompTumor2Sig"
   }else if (algorithm %in% c("ds", "deconstruct", "deconstructSigs")) {
-    sigs.input <- mut.to.sigs.input(mut.ref = bagel@variants,
+    ifelse(is.null(seed),
+           sigs.input <- deconstructSigs:: mut.to.sigs.input(mut.ref =
+                                                               bagel@variants,
                                       sample.id = "Tumor_Sample_Barcode",
                                       chr = "Chromosome",
                                       pos = "Start_Position",
                                       ref = "Tumor_Seq_Allele1",
                                       alt = "Tumor_Seq_Allele2",
-                                      bsg = g)
+                                      bsg = g),
+           sigs.input <- withr::with_seed(
+             deconstructSigs::mut.to.sigs.input(mut.ref = bagel@variants,
+                                             sample.id = "Tumor_Sample_Barcode",
+                                             chr = "Chromosome",
+                                             pos = "Start_Position",
+                                             ref = "Tumor_Seq_Allele1",
+                                             alt = "Tumor_Seq_Allele2",
+                                             bsg = g)))
     sig_all <- t(signature)
     middle <- unlist(lapply(strsplit(colnames(sig_all), "_"), "[", 1))
     context <- lapply(strsplit(colnames(sig_all), "_"), "[", 2)
@@ -475,7 +497,7 @@ predict_decompTumor2Sig <- function(sample_mat, signature_mat){
                                        function(x){x / sum(x)})
   signatures <- split(input_signatures_normalized,
                       col(input_signatures_normalized))
-  signatures_ref <- readAlexandrovSignatures()
+  signatures_ref <- decompTumor2Sig::readAlexandrovSignatures()
   ns <- as.matrix(row.names(signature_mat))
   ns <- apply(ns, 1, function(x){stringr::str_c(substr(x,5,5), '[',
                                                 substr(x, 1, 3), ']',
@@ -487,7 +509,7 @@ predict_decompTumor2Sig <- function(sample_mat, signature_mat){
                           col(input_samples_normalized))
   genomes <- lapply(input_samples1, setNames, ns)
 
-  sample_weight_mat <- decomposeTumorGenomes(genomes, signatures, verbose=FALSE)
+  sample_weight_mat <- decompTumor2Sig::decomposeTumorGenomes(genomes, signatures, verbose=FALSE)
   return(sample_weight_mat)
 }
 
@@ -518,13 +540,18 @@ whichSignatures = function(tumor.ref = NA,
   if(exists("tumor.ref", mode = "list")){
     tumor     <- tumor.ref
     if(contexts.needed == TRUE){
-      tumor   <- getTriContextFraction(mut.counts.ref = tumor, trimer.counts.method = tri.counts.method)
+      tumor   <- deconstructSigs::getTriContextFraction(mut.counts.ref = tumor,
+                                                        trimer.counts.method =
+                                                          tri.counts.method)
     }
   } else {
     if(file.exists(tumor.ref)){
-      tumor   <- utils::read.table(tumor.ref, sep = "\t", header = TRUE, as.is = TRUE, check.names = FALSE)
+      tumor   <- utils::read.table(tumor.ref, sep = "\t", header = TRUE,
+                                   as.is = TRUE, check.names = FALSE)
       if(contexts.needed == TRUE){
-        tumor <- getTriContextFraction(tumor, trimer.counts.method = tri.counts.method)
+        tumor <- deconstructSigs::getTriContextFraction(tumor,
+                                                        trimer.counts.method =
+                                                          tri.counts.method)
       }
     } else {
       print("tumor.ref is neither a file nor a loaded data frame")
@@ -550,7 +577,7 @@ whichSignatures = function(tumor.ref = NA,
 
   # Check column names are formatted correctly
   if(length(colnames(tumor)[colnames(tumor) %in% colnames(signatures)]) < length(colnames(signatures))){
-    colnames(tumor) <- changeColumnNames(colnames(tumor))
+    colnames(tumor) <- deconstructSigs::changeColumnNames(colnames(tumor))
     if(length(colnames(tumor)[colnames(tumor) %in% colnames(signatures)]) < length(colnames(signatures))){
       stop("Check column names on input file")
     }
@@ -571,7 +598,7 @@ whichSignatures = function(tumor.ref = NA,
   #Set the weights matrix to 0
   weights         <- matrix(0, nrow = nrow(tumor), ncol = nrow(signatures), dimnames = list(rownames(tumor), rownames(signatures)))
 
-  seed            <- findSeed(tumor, signatures)
+  seed            <- deconstructSigs::findSeed(tumor, signatures)
   weights[seed]   <- 1
   w               <- weights*10
 
@@ -582,12 +609,14 @@ whichSignatures = function(tumor.ref = NA,
   while(error_diff > error_threshold){
     num        <- num + 1
     #print(num)
-    error_pre  <- getError(tumor, signatures, w)
+    error_pre  <- deconstructSigs::getError(tumor, signatures, w)
     if(error_pre == 0){
       break
     }
-    w          <- updateW_GR(tumor, signatures, w, signatures.limit = signatures.limit)
-    error_post <- getError(tumor, signatures, w)
+    w          <- deconstructSigs::updateW_GR(tumor, signatures, w,
+                                              signatures.limit =
+                                                signatures.limit)
+    error_post <- deconstructSigs::getError(tumor, signatures, w)
     error_diff <- (error_pre-error_post)/error_pre
   }
 
@@ -601,7 +630,8 @@ whichSignatures = function(tumor.ref = NA,
   product <- weights %*% signatures
   diff    <- tumor - product
 
-  x       <- matrix(data = 0, nrow = 1, ncol = nrow(original.sigs), dimnames = list(rownames(weights), rownames(original.sigs)))
+  x       <- matrix(data = 0, nrow = 1, ncol = nrow(original.sigs),
+                    dimnames = list(rownames(weights), rownames(original.sigs)))
   x       <- data.frame(x)
   x[colnames(weights)] <- weights
   weights <- x
@@ -621,7 +651,7 @@ whichSignatures = function(tumor.ref = NA,
 #' @param k_end Upper range of number of signatures for discovery
 #' @param n_start Number of times to discover signatures and compare based on
 #' posterior loglikihood
-#' @param seed Give a seed to generate reproducible signatures
+#' @param seed Seed to use for reproducible results, set to null to disable
 #' @param par_cores Number of parallel cores to use (NMF only)
 #' @param verbose Whether to output loop iterations
 #' @return Results a result object containing signatures and sample weights
@@ -724,6 +754,8 @@ reconstruct_sample <- function(result, sample_number) {
 #' @param bagel Input samples to predit signature weights
 #' @param table_name Name of table used for posterior prediction (e.g. SNV96)
 #' @param signature_res Signatures to automatically subset from for prediction
+#' @param algorithm Algorithm to use for prediction. Choose from
+#' "lda_posterior", decompTumor2Sig, and deconstructSigs
 #' @param sample_annotation Annotation to grid across, if none given,
 #' prediction subsetting on all samples together
 #' @param min_exists Threshold to consider a signature active in a sample
@@ -735,19 +767,21 @@ reconstruct_sample <- function(result, sample_number) {
 #' @param combine_res Automatically combines a list of annotation results
 #' into a single result object with zero exposure values for signatures not
 #' found in a given annotation's set of samples
+#' @param seed Seed to use for reproducible results, set to null to disable
 #' @return Results a list of results, one per unique annotation value, if no
 #' annotation value is given, returns a single result for all samples, or
 #' combines into a single result if combines_res = TRUE
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "Tumor_Subtypes")
+#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda",
+#' "Tumor_Subtypes")
 #'
-#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs)
+#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda")
 #' @export
 auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
                               sample_annotation = NULL, min_exists = 0.05,
                               proportion_samples = 0.25, rare_exposure = 0.4,
-                              verbose = TRUE, combine_res = TRUE) {
+                              verbose = TRUE, combine_res = TRUE, seed = 1) {
   if (is.null(sample_annotation)) {
     combine_res = FALSE
     result = auto_subset_sigs(bagel = bagel, table_name =
@@ -755,7 +789,7 @@ auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
                        signature_res, algorithm = algorithm,
                        min_exists = min_exists, proportion_samples =
                        proportion_samples, rare_exposure =
-                       rare_exposure)
+                       rare_exposure, seed = seed)
   } else {
     available_annotations <- setdiff(colnames(bagel@sample_annotations),
                                      "Samples")
@@ -778,7 +812,7 @@ auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
                                               min_exists, proportion_samples =
                                               proportion_samples,
                                             rare_exposure = rare_exposure,
-                                            algorithm = algorithm)
+                                            algorithm = algorithm, seed = seed)
       result[[as.character(annot[i])]] <- current_predicted
     }
   }
@@ -793,16 +827,19 @@ auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
 #' @param bagel Input samples to predit signature weights
 #' @param table_name Name of table used for posterior prediction (e.g. SNV96)
 #' @param signature_res Signatures to automatically subset from for prediction
+#' @param algorithm Algorithm to use for prediction. Choose from
+#' "lda_posterior", decompTumor2Sig, and deconstructSigs
 #' @param min_exists Threshold to consider a signature active in a sample
 #' @param proportion_samples Threshold of samples to consider a signature
 #' active in the cohort
 #' @param rare_exposure A sample will be considered active in the cohort if at
 #' least one sample has more than this threshold proportion
+#' @param seed Seed to use for reproducible results, set to null to disable
 #' @return Results a result object containing automatically subset signatures
 #' and corresponding sample weights
 auto_subset_sigs <- function(bagel, table_name, signature_res, algorithm,
                              min_exists = 0.05, proportion_samples = 0.25,
-                             rare_exposure = 0.4) {
+                             rare_exposure = 0.4, seed = 1) {
   test_predicted <- predict_exposure(bagel = bagel, table_name = table_name,
                                     signature_res = signature_res,
                                     algorithm = algorithm)
@@ -815,7 +852,7 @@ auto_subset_sigs <- function(bagel, table_name, signature_res, algorithm,
   final_inferred <- predict_exposure(bagel = bagel, table_name = table_name,
                                      signature_res = signature_res,
                                      signatures_to_use = to_use,
-                                     algorithm = algorithm)
+                                     algorithm = algorithm, seed = seed)
   return(final_inferred)
 }
 
@@ -831,7 +868,7 @@ auto_subset_sigs <- function(bagel, table_name, signature_res, algorithm,
 #' in that annotation type.
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-#' grid <- auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs,
+#' grid <- auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda",
 #' "Tumor_Subtypes", combine_res = FALSE)
 #' combined <- combine_predict_grid(grid, bay, BAGEL::cosmic_v2_sigs)
 #' plot_exposures_by_annotation(combined, "Tumor_Subtypes")

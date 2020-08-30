@@ -7,7 +7,7 @@
 vcf_files_to_dt(
   vcf_files,
   filter = TRUE,
-  only_snp = TRUE,
+  only_snp = FALSE,
   extra_fields = NULL,
   verbose = FALSE
 )

@@ -42,7 +42,8 @@ Imports:
     S4Vectors,
     uwot,
     withr,
-    ggrepel
+    ggrepel,
+    stringr
 Suggests:
     testthat,
     knitr,
@@ -53,6 +54,8 @@ Suggests:
     TxDb.Hsapiens.UCSC.hg19.knownGene,
     TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,
-    qpdf
+    qpdf,
+    deconstructSigs,
+    decompTumor2Sig
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr

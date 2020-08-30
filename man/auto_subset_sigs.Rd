@@ -8,9 +8,11 @@ auto_subset_sigs(
   bagel,
   table_name,
   signature_res,
+  algorithm,
   min_exists = 0.05,
   proportion_samples = 0.25,
-  rare_exposure = 0.4
+  rare_exposure = 0.4,
+  seed = 1
 )
 }
 \arguments{
@@ -20,6 +22,9 @@ auto_subset_sigs(
 
 \item{signature_res}{Signatures to automatically subset from for prediction}
 
+\item{algorithm}{Algorithm to use for prediction. Choose from
+"lda_posterior", decompTumor2Sig, and deconstructSigs}
+
 \item{min_exists}{Threshold to consider a signature active in a sample}
 
 \item{proportion_samples}{Threshold of samples to consider a signature
@@ -27,6 +32,8 @@ active in the cohort}
 
 \item{rare_exposure}{A sample will be considered active in the cohort if at
 least one sample has more than this threshold proportion}
+
+\item{seed}{Seed to use for reproducible results, set to null to disable}
 }
 \value{
 Results a result object containing automatically subset signatures
