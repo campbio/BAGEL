@@ -1,7 +1,7 @@
 language: r
 env:
     global:
-        - TRAVIS_R_VERSION=4.0.0
+        - TRAVIS_R_VERSION=4.0.2
 r:
 cache: packages
 dist: trusty
