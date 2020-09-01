@@ -1,9 +1,8 @@
 language: r
-#env:
-#    global:
-#        - TRAVIS_R_VERSION=4.0.0
+env:
+    global:
+        - TRAVIS_R_VERSION=4.0.0
 r:
-- release
 cache: packages
 dist: trusty
 sudo: false
