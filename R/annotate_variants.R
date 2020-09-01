@@ -121,9 +121,9 @@ add_variant_type <- function(tab) {
                nchar(tab$Tumor_Seq_Allele2) == 1)] <- "SNV"
   type[which(nchar(tab$Tumor_Seq_Allele1) == 2 &
                nchar(tab$Tumor_Seq_Allele2) == 2)] <- "DBS"
-  type[which(tab$Tumor_Seq_Allele1 == "-" |
-               tab$Tumor_Seq_Allele2 == "-")] <- "indel"
-  type[which(is.na(type))] <- "indel"
+  type[which(tab$Tumor_Seq_Allele1 == "-")] <- "INS"
+  type[which(tab$Tumor_Seq_Allele2 == "-")] <- "DEL"
+  type[which(is.na(type))] <- "unknown"
   tab$Variant_Type <- type
   return(tab)
 }

@@ -264,7 +264,7 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
 #' subset_bagel_by_annotation(bay, "Tumor_Subtypes", "Lung")
 #' @export
 subset_bagel_by_annotation <- function(bay, annot_col, annot_names) {
-  if (!annot_col %in% colnames(bay@sample_annotations)) {
+  if (!all(annot_col %in% colnames(bay@sample_annotations))) {
     stop(paste(annot_col, " not found in annotation columns, please review.",
                sep = ""))
   }

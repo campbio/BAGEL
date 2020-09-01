@@ -8,7 +8,7 @@ dt_to_bagel_dt(
   dt,
   dt_name = NULL,
   filter = TRUE,
-  only_snp = TRUE,
+  only_snp = FALSE,
   extra_fields = NULL
 )
 }

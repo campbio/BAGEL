@@ -4,7 +4,7 @@
 \alias{maf_file_to_dt}
 \title{Loads a maf file and extracts the data.table of variants}
 \usage{
-maf_file_to_dt(maf_file, filter = TRUE, only_snp = TRUE, extra_fields = NULL)
+maf_file_to_dt(maf_file, filter = TRUE, only_snp = FALSE, extra_fields = NULL)
 }
 \arguments{
 \item{maf_file}{Location of maf file}

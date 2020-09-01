@@ -8,7 +8,7 @@ vcf_to_dt(
   vcf,
   vcf_name = NULL,
   filter = TRUE,
-  only_snp = TRUE,
+  only_snp = FALSE,
   extra_fields = NULL
 )
 }

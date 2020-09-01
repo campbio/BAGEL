@@ -10,6 +10,7 @@ plot_umap(
   no_legend = FALSE,
   label_clusters = TRUE,
   label_size = 3,
+  legend_size = 3,
   text_box = TRUE,
   plotly = FALSE
 )
@@ -25,6 +26,8 @@ plot_umap(
 for split or small clusters)}
 
 \item{label_size}{Size of cluster labels}
+
+\item{legend_size}{Set legend size}
 
 \item{text_box}{Place a box around cluster labels for improved readability}
 
