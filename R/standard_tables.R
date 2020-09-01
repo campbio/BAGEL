@@ -80,6 +80,12 @@ create_snv96_table <- function(bay) {
   mut_summary_mat <- do.call(cbind, lapply(maf_mut_summaries, function(x)
     table(x[, "mutation"])))
   colnames(mut_summary_mat) <- sample_names
+  zero_samps <- which(colSums(mut_summary_mat) == 0)
+  if (length(zero_samps) > 0) {
+    warning(paste0("Dropping the following zero count samples: ",
+                   paste(colnames(mut_summary_mat[zero_samps]), sep = ", ")))
+    mut_summary_mat <- mut_summary_mat[, -zero_samps]
+  }
   tab <- create_count_table(bay = bay, table = mut_summary_mat, name = "SNV96",
                      description = paste("Single Nucleotide Variant table with",
                      " one base upstream and downstream",
@@ -164,6 +170,12 @@ create_snv192_table <- function(bay, strand_type) {
   #Convert to table by dropping xtabs class and call
   attr(mut_table, "call") <- NULL
   attr(mut_table, "class") <- NULL
+  zero_samps <- which(colSums(mut_table) == 0)
+  if (length(zero_samps) > 0) {
+    warning(paste0("Dropping the following zero count samples: ",
+                   paste(colnames(mut_table[zero_samps]), sep = ", ")))
+    mut_table <- mut_table[, -zero_samps]
+  }
   tab <- create_count_table(
     bay = bay, table = mut_table, name = paste0("SNV192_", ifelse(
       strand_type == "Transcript_Strand", "Trans", "Rep")), description =
@@ -233,6 +245,12 @@ create_dbs_table <- function(bay) {
   }
   table <- do.call(cbind, variant_tables)
   colnames(table) <- sample_names
+  zero_samps <- which(colSums(table) == 0)
+  if (length(zero_samps) > 0) {
+    warning(paste0("Dropping the following zero count samples: ",
+                   paste(colnames(table[zero_samps]), sep = ", ")))
+    table <- table[, -zero_samps]
+  }
   tab <- create_count_table(bay = bay, table = table, name = "DBS",
                             description = paste("Standard count table for ",
                                                 "double-base substitutions",

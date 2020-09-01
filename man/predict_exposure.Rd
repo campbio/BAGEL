@@ -8,8 +8,11 @@ predict_exposure(
   bagel,
   table_name,
   signature_res,
+  algorithm,
   signatures_to_use = seq_len(ncol(signature_res@signatures)),
-  verbose = FALSE
+  seed = 1,
+  verbose = FALSE,
+  g = NULL
 )
 }
 \arguments{
@@ -20,9 +23,16 @@ Must match the table type used to generate the prediction signatures}
 
 \item{signature_res}{Signatures to use for prediction}
 
+\item{algorithm}{Algorithm to use for prediction. Choose from
+"lda_posterior", decompTumor2Sig, and deconstructSigs}
+
 \item{signatures_to_use}{Which signatures in set to use (default all)}
 
+\item{seed}{Seed to use for reproducible results, set to null to disable}
+
 \item{verbose}{Whether to show intermediate results}
+
+\item{g}{BSgenome object to use for prediction (deconstructSigs only)}
 }
 \value{
 Results a result object containing signatures and sample weights
@@ -34,5 +44,6 @@ LDA prediction of samples based on existing signatures
 #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #g <- select_genome("19")
 #build_standard_table(bay, g, "SNV96")
-#predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs)
+predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs, algorithm = "lda",
+g = g)
 }

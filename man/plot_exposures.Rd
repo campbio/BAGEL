@@ -7,11 +7,12 @@
 plot_exposures(
   result,
   proportional = TRUE,
-  label_samples = TRUE,
+  label_samples = FALSE,
   samples_plotted = colnames(result@exposures),
-  sort_samples = NULL,
+  sort_samples = "numerical",
   num_samples = length(colnames(result@exposures)),
   thresh_zero = FALSE,
+  no_legend = FALSE,
   plotly = FALSE
 )
 }
@@ -31,6 +32,8 @@ specific signatures name (e.g. 'Signature1)}
 
 \item{thresh_zero}{Max level to zero out for better plotting when sorting
 by multiple signatures}
+
+\item{no_legend}{Don't plot legend}
 
 \item{plotly}{add plotly layer for plot interaction}
 }

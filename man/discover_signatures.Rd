@@ -9,7 +9,7 @@ discover_signatures(
   table_name,
   num_signatures,
   method = "lda",
-  seed = NULL,
+  seed = 1,
   nstart = 1,
   par_cores = FALSE
 )

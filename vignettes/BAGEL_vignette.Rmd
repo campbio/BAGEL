@@ -100,7 +100,7 @@ cosmic_v2_subtype_map("lung")
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
 cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
                                  cosmic_v2_sigs, signatures_to_use = 
-                                 c(12, 4, 11, 15))
+                                 c(12, 4, 11, 15), algorithm = "lda")
 #cosmic_post = predict_exposure(bagel = bagel)
 #to_use = as.numeric(substr(names(which(rowSums(cosmic_post@exposures) > 10^-10)), 11, 12))
 #to_use = as.numeric(substr(names(which(apply(cosmic_post@exposures, 1, max) > 10^-10)), 11, 12))
@@ -113,7 +113,7 @@ cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res =
 # Predicting exposures using existing signatures
 ```{r}
 our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
-                                   result)
+                                   result, algorithm = "lda")
 
 #Plot results from posterior calculation
 plot_signatures(cosmic_post)
