@@ -41,9 +41,9 @@ Results a result object containing signatures and sample weights
 LDA prediction of samples based on existing signatures
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-g <- select_genome("19")
-build_standard_table(bay, g, "SNV96")
+#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#g <- select_genome("19")
+#build_standard_table(bay, g, "SNV96")
 predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs, algorithm = "lda",
 g = g)
 }

@@ -12,11 +12,11 @@ NULL
 #' @param par_cores Number of parallel cores to use (NMF only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("19")
-#' build_standard_table(bay, g, "SNV96")
-#' discover_signatures(input = bay, table_name = "SNV96",
-#' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("19")
+#' #build_standard_table(bay, g, "SNV96")
+#' #discover_signatures(input = bay, table_name = "SNV96",
+#' #num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
 discover_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = 1, nstart = 1, par_cores = FALSE) {
@@ -339,9 +339,9 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @param g BSgenome object to use for prediction (deconstructSigs only)
 #' @return Results a result object containing signatures and sample weights
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("19")
-#' build_standard_table(bay, g, "SNV96")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("19")
+#' #build_standard_table(bay, g, "SNV96")
 #' predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs, algorithm = "lda",
 #' g = g)
 #' @export

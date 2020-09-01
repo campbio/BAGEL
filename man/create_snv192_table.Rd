@@ -5,12 +5,10 @@
 \title{Uses a genome object to find context and generate standard SNV192 table
 using transcript strand}
 \usage{
-create_snv192_table(bay, g, strand_type)
+create_snv192_table(bay, strand_type)
 }
 \arguments{
 \item{bay}{Input samples}
-
-\item{g}{Genome object used for finding variant context}
 
 \item{strand_type}{Transcript_Strand or Replication_Strand}
 }

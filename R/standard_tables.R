@@ -1,31 +1,22 @@
 #' Uses a genome object to find context and generate standard SNV96 tables
 #'
 #' @param bay Input samples
-#' @param g Genome object used for finding variant context
-create_snv96_table <- function(bay, g) {
+create_snv96_table <- function(bay) {
   dat <- bay@variants
-
+  g <- bay@genome
   mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
 
-  #Fix Chromosomes
-  chr <- dat$Chromosome
-  tryCatch(
-    GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
-    error = function(e) {
-      warning("found no sequence renaming map compatible with seqname",
-              " style 'UCSC' for the input reference ", (g@pkgname))
-    }
-  )
+  chr <- as.character(dat$Chromosome)
   range_start <- dat$Start_Position
   range_end <- dat$End_Position
-  ref <- dat$Tumor_Seq_Allele1
-  alt <- dat$Tumor_Seq_Allele2
+  ref <- as.character(dat$Tumor_Seq_Allele1)
+  alt <- as.character(dat$Tumor_Seq_Allele2)
   type <- mut_type
 
   #Mutation Context
-  lflank <- VariantAnnotation::getSeq(g, chr, range_start - 1, range_start - 1,
+  lflank <- BSgenome::getSeq(g, chr, range_start - 1, range_start - 1,
                    as.character = TRUE)
-  rflank <- VariantAnnotation::getSeq(g, chr, range_end + 1, range_end + 1,
+  rflank <- BSgenome::getSeq(g, chr, range_end + 1, range_end + 1,
                    as.character = TRUE)
 
   final_mut_type <- rep(NA, length(ref))
@@ -106,27 +97,16 @@ create_snv96_table <- function(bay, g) {
 #' using transcript strand
 #'
 #' @param bay Input samples
-#' @param g Genome object used for finding variant context
 #' @param strand_type Transcript_Strand or Replication_Strand
-create_snv192_table <- function(bay, g, strand_type) {
+create_snv192_table <- function(bay, strand_type) {
   if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
     stop("Please select either Transcript_Strand or Replication_Strand")
   }
-
+  g <- bay@genome
   dat <- bay@variants
   dat <- drop_na_variants(dat, strand_type)
 
-  #Fix Chromosomes
   chr <- dat$Chromosome
-  tryCatch(
-    GenomeInfoDb::seqlevelsStyle(chr) <- "UCSC",
-    error = function(e) {
-      warning("found no sequence renaming map compatible with seqname",
-              " style 'UCSC' for the input reference ", (g@pkgname))
-    }
-  )
-
-  #Mutation Context
   range_start <- dat$Start_Position
   range_end <- dat$End_Position
   lflank <- VariantAnnotation::getSeq(g, chr, range_start - 1, range_start - 1,
@@ -298,7 +278,7 @@ rc <- function(dna) {
   return(rev_com)
 }
 
-create_indel_table <- function(bay, g) {
+create_indel_table <- function(bay) {
   temp <- methods::new("bagel", variants = subset_variant_by_type(bay@variants,
                                                                   "indel"),
                        count_tables = bay@count_tables)
@@ -312,39 +292,39 @@ create_indel_table <- function(bay, g) {
 #' Builds a standard table from user variants
 #'
 #' @param bay Input samples
-#' @param g Genome object used for finding variant context
 #' @param table_name Name of standard table to build SNV96, SNV192, DBS
 #' @param strand_type Only for SNV192 Transcript_Strand or Replication_Strand
 #' Indel
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' build_standard_table(bay, g, "SNV96")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("38")
+#' #build_standard_table(bay, "SNV96")
 #'
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' annotate_transcript_strand(bay, "19")
-#' build_standard_table(bay, g, "SNV192", "Transcript_Strand")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("38")
+#' #annotate_transcript_strand(bay, "19")
+#' #build_standard_table(bay, g, "SNV192", "Transcript_Strand")
 #'
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' g <- select_genome("38")
-#' annotate_replication_strand(bay, BAGEL::rep_range)
-#' build_standard_table(bay, g, "SNV192", "Replication_Strand")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #g <- select_genome("38")
+#' #annotate_replication_strand(bay, BAGEL::rep_range)
+#' #build_standard_table(bay, g, "SNV192", "Replication_Strand")
 #'
-#' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
-#' package = "BAGEL"))
-#' build_standard_table(bay, table_name = "DBS")
+#' #bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
+#' #package = "BAGEL"))
+#' #build_standard_table(bay, table_name = "DBS")
 #'
 #' @export
-build_standard_table <- function(bay, g, table_name, strand_type = NA) {
+build_standard_table <- function(bay, table_name, strand_type = NA) {
+  
   if (table_name %in% c("SNV96", "SNV", "96", "SBS")) {
-    tab <- create_snv96_table(bay, g)
+    tab <- create_snv96_table(bay)
   } else if (table_name %in% c("SNV192", "192")) {
-    tab <- create_snv192_table(bay, g, strand_type)
+    tab <- create_snv192_table(bay, strand_type)
   } else if (table_name %in% c("DBS", "doublet")) {
     tab <- create_dbs_table(bay)
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {
-    tab <- create_indel_table(bay, g)
+    tab <- create_indel_table(bay)
   } else {
     stop(paste0("There is no standard table named: ", table_name,
                " please select from SNV96, SNV192, DBS, Indel."))
