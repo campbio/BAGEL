@@ -4,13 +4,13 @@
 create_snv96_table <- function(bay) {
   dat <- bay@variants
   g <- bay@genome
-  mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
+  mut_type <- paste(dat$ref, ">", dat$alt, sep = "")
 
-  chr <- as.character(dat$Chromosome)
-  range_start <- dat$Start_Position
-  range_end <- dat$End_Position
-  ref <- as.character(dat$Tumor_Seq_Allele1)
-  alt <- as.character(dat$Tumor_Seq_Allele2)
+  chr <- as.character(dat$chr)
+  range_start <- dat$start
+  range_end <- dat$end
+  ref <- as.character(dat$ref)
+  alt <- as.character(dat$alt)
   type <- mut_type
 
   #Mutation Context
@@ -65,11 +65,11 @@ create_snv96_table <- function(bay) {
   mut_trinuc <- apply(cbind(b1, b2, b3), 1, paste, collapse = "")
   mut_type <- rep(rep(forward_change, each = 4), 4)
 
-  sample_names <- unique(dat$Tumor_Sample_Barcode)
+  sample_names <- unique(dat$sample)
   num_samples <- length(sample_names)
   maf_mut_summaries <- vector("list", length = num_samples)
   for (i in seq_len(num_samples)) {
-    sample_index <- which(dat$Tumor_Sample_Barcode == sample_names[i])
+    sample_index <- which(dat$sample == sample_names[i])
     mut_id <- apply(cbind(mut_type, mut_trinuc), 1, paste, collapse = "_")
     mutation <- factor(maf_mut_id[sample_index], levels = mut_id)
     mut_summary <- data.frame(mutation, Type = final_mut_type[sample_index],
@@ -106,20 +106,20 @@ create_snv192_table <- function(bay, strand_type) {
   dat <- bay@variants
   dat <- drop_na_variants(dat, strand_type)
 
-  chr <- dat$Chromosome
-  range_start <- dat$Start_Position
-  range_end <- dat$End_Position
+  chr <- dat$chr
+  range_start <- dat$start
+  range_end <- dat$end
   lflank <- VariantAnnotation::getSeq(g, chr, range_start - 1, range_start - 1,
                                       as.character = TRUE)
   rflank <- VariantAnnotation::getSeq(g, chr, range_end + 1, range_end + 1,
                                       as.character = TRUE)
-  ref_context <- paste(lflank, dat$Tumor_Seq_Allele1, rflank, sep = "")
+  ref_context <- paste(lflank, dat$ref, rflank, sep = "")
 
   final_mut_type <- rep(NA, nrow(dat))
   final_mut_context <- rep(NA, nrow(dat))
 
   ## Get mutation type
-  initial_maf_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2,
+  initial_maf_type <- paste(dat$ref, ">", dat$alt,
                            sep = "")
 
   ## Get mutation context info for those on "+" strand
@@ -137,9 +137,9 @@ create_snv192_table <- function(bay, strand_type) {
   rev_context <- Biostrings::reverseComplement(Biostrings::DNAStringSet(
     ref_context[ind]))
   rev_refbase <- Biostrings::reverseComplement(Biostrings::DNAStringSet(
-    dat$Tumor_Seq_Allele1[ind]))
+    dat$ref[ind]))
   rev_altbase <- Biostrings::reverseComplement(Biostrings::DNAStringSet(
-    dat$Tumor_Seq_Allele2[ind]))
+    dat$alt[ind]))
 
   final_mut_type[ind] <- paste(as.character(rev_refbase), ">",
                               as.character(rev_altbase), sep = "")
@@ -147,7 +147,7 @@ create_snv192_table <- function(bay, strand_type) {
 
   maf_mut_id <- paste(final_mut_type, final_mut_context, dat[[strand_type]],
                      sep = "_")
-  tumor_id <- as.factor(dat$Tumor_Sample_Barcode)
+  tumor_id <- as.factor(dat$sample)
 
   ## Define all mutation types for 196 substitution scheme
   b1 <- rep(rep(c("A", "C", "G", "T"), each = 24), 2)
@@ -191,8 +191,8 @@ create_snv192_table <- function(bay, strand_type) {
 create_dbs_table <- function(bay) {
   dbs <- subset_variant_by_type(bay@variants, "DBS")
 
-  ref <- dbs$Tumor_Seq_Allele1
-  alt <- dbs$Tumor_Seq_Allele2
+  ref <- dbs$ref
+  alt <- dbs$alt
 
   #Reverse Complement broad categories to the other strand
   rc_ref <- which(ref %in% c("GT", "GG", "AG", "GA", "CA", "AA"))
@@ -235,11 +235,11 @@ create_dbs_table <- function(bay) {
             paste0("TT>NN", "_", c("AA", "AC", "AG", "CA", "CC", "CG", "GA",
                                    "GC", "GG")))
 
-  sample_names <- unique(dbs$Tumor_Sample_Barcode)
+  sample_names <- unique(dbs$sample)
   num_samples <- length(sample_names)
   variant_tables <- vector("list", length = num_samples)
   for (i in seq_len(num_samples)) {
-    sample_index <- which(dbs$Tumor_Sample_Barcode == sample_names[i])
+    sample_index <- which(dbs$sample == sample_names[i])
     variant_tables[[i]] <- table(factor(full[sample_index],
                                         levels = full_motif))
   }
@@ -296,27 +296,24 @@ create_indel_table <- function(bay) {
 #' @param strand_type Only for SNV192 Transcript_Strand or Replication_Strand
 #' Indel
 #' @examples
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #g <- select_genome("38")
-#' #build_standard_table(bay, "SNV96")
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' build_standard_table(bay, "SNV96")
 #'
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #g <- select_genome("38")
-#' #annotate_transcript_strand(bay, "19")
-#' #build_standard_table(bay, g, "SNV192", "Transcript_Strand")
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_transcript_strand(bay, "19")
+#' build_standard_table(bay, "SNV192", "Transcript_Strand")
 #'
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #g <- select_genome("38")
-#' #annotate_replication_strand(bay, BAGEL::rep_range)
-#' #build_standard_table(bay, g, "SNV192", "Replication_Strand")
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_replication_strand(bay, BAGEL::rep_range)
+#' build_standard_table(bay, "SNV192", "Replication_Strand")
 #'
-#' #bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
-#' #package = "BAGEL"))
-#' #build_standard_table(bay, table_name = "DBS")
+#' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
+#' package = "BAGEL"))
+#' build_standard_table(bay, table_name = "DBS")
 #'
 #' @export
 build_standard_table <- function(bay, table_name, strand_type = NA) {
-  
+
   if (table_name %in% c("SNV96", "SNV", "96", "SBS")) {
     tab <- create_snv96_table(bay)
   } else if (table_name %in% c("SNV192", "192")) {

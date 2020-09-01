@@ -16,5 +16,5 @@ Drops a column from the variant table that the user no longer needs
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-drop_annotation(bay, "Chromosome")
+drop_annotation(bay, "Variant_Type")
 }

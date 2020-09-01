@@ -12,11 +12,10 @@ NULL
 #' @param par_cores Number of parallel cores to use (NMF only)
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #g <- select_genome("19")
-#' #build_standard_table(bay, g, "SNV96")
-#' #discover_signatures(input = bay, table_name = "SNV96",
-#' #num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' build_standard_table(bay, "SNV96")
+#' discover_signatures(input = bay, table_name = "SNV96",
+#' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
 discover_signatures <- function(input, table_name, num_signatures, method="lda",
                             seed = 1, nstart = 1, par_cores = FALSE) {
@@ -32,14 +31,14 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
   counts_table <- extract_count_table(input, table_name)
 
   #Determine if samples are present and can be used to scale weights
-  used_samples <- which(input@variants$Tumor_Sample_Barcode %in%
+  used_samples <- which(input@variants$sample %in%
                           colnames(counts_table))
   if (length(used_samples) == 0) {
     warning(strwrap(prefix = " ", initial = "", "No samples overlap with
                       counts table, exposures will not be scaled by sample
                       counts."))
   } else {
-    sample_counts <- table(input@variants$Tumor_Sample_Barcode[used_samples])
+    sample_counts <- table(input@variants$sample[used_samples])
     matched <- match(colnames(counts_table), names(sample_counts))
   }
   if (method == "lda") {
@@ -70,7 +69,6 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
   } else if (method == "nmf") {
     #Needed to prevent error with entirely zero rows
     epsilon <- 0.00000001
-
     if (par_cores) {
       decomp <- NMF::nmf(counts_table + epsilon, num_signatures, seed = seed,
                          nrun = nstart, .options = paste("p", par_cores,
@@ -336,19 +334,16 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @param signatures_to_use Which signatures in set to use (default all)
 #' @param seed Seed to use for reproducible results, set to null to disable
 #' @param verbose Whether to show intermediate results
-#' @param g BSgenome object to use for prediction (deconstructSigs only)
 #' @return Results a result object containing signatures and sample weights
 #' @examples
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #g <- select_genome("19")
-#' #build_standard_table(bay, g, "SNV96")
-#' predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs, algorithm = "lda",
-#' g = g)
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' build_standard_table(bay, "SNV96")
+#' predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs, algorithm = "lda")
 #' @export
 predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                              signatures_to_use = seq_len(ncol(
                                signature_res@signatures)), seed = 1,
-                             verbose = FALSE, g = NULL) {
+                             verbose = FALSE) {
   signature <- signature_res@signatures[, signatures_to_use]
   counts_table <- extract_count_table(bagel, table_name)
   present_samples <- which(colSums(counts_table) > 0)
@@ -382,7 +377,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                       pos = "Start_Position",
                                       ref = "Tumor_Seq_Allele1",
                                       alt = "Tumor_Seq_Allele2",
-                                      bsg = g),
+                                      bsg = bagel@genome),
            sigs.input <- withr::with_seed(
              deconstructSigs::mut.to.sigs.input(mut.ref = bagel@variants,
                                              sample.id = "Tumor_Sample_Barcode",
@@ -390,7 +385,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                              pos = "Start_Position",
                                              ref = "Tumor_Seq_Allele1",
                                              alt = "Tumor_Seq_Allele2",
-                                             bsg = g)))
+                                             bsg = bagel@genome)))
     sig_all <- t(signature)
     middle <- unlist(lapply(strsplit(colnames(sig_all), "_"), "[", 1))
     context <- lapply(strsplit(colnames(sig_all), "_"), "[", 2)
@@ -419,14 +414,14 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                        type = type_name, bagel = bagel)
 
   # Multiply Weights by sample counts
-  used_samples <- which(bagel@variants$Tumor_Sample_Barcode %in%
+  used_samples <- which(bagel@variants$sample %in%
                           colnames(counts_table))
   if (length(used_samples) == 0) {
     warning(strwrap(prefix = " ", initial = "", "No samples overlap with
                       counts table, exposures will not be scaled by sample
                       counts."))
   } else {
-    sample_counts <- table(bagel@variants$Tumor_Sample_Barcode[used_samples])
+    sample_counts <- table(bagel@variants$sample[used_samples])
     matched <- match(colnames(counts_table), names(sample_counts))
     result@exposures <- sweep(result@exposures, 2, sample_counts[matched],
                               FUN = "*")
@@ -514,7 +509,7 @@ predict_decompTumor2Sig <- function(sample_mat, signature_mat){
 }
 
 #placeholder
-multi_modal_discovery <- function(bay, num_signatures, motif96_name,
+.multi_modal_discovery <- function(bay, num_signatures, motif96_name,
                                   rflank_name, lflank_name, max.iter=125,
                                   seed=123) {
   motif96 <- extract_count_table(bay, motif96_name)
@@ -701,7 +696,7 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
       cur_ind <- which(annot == annot_names[i])
       cur_annot_samples <- annot_samples[cur_ind]
       cur_annot_variants <- bagel@variants[which(
-        bagel@variants$Tumor_Sample_Barcode %in% cur_annot_samples), ]
+        bagel@variants$sample %in% cur_annot_samples), ]
 
       cur_bagel <- methods::new("bagel", variants = cur_annot_variants,
                        sample_annotations =
@@ -710,7 +705,7 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                                           cur_annot_samples))
     } else {
       cur_bagel <- bagel
-      cur_annot_samples <- unique(bagel@variants$Tumor_Sample_Barcode)
+      cur_annot_samples <- unique(bagel@variants$sample)
     }
     #Used for reconstruction error
     cur_counts <- extract_count_table(cur_bagel, table_name)

@@ -18,22 +18,19 @@ Indel}
 Builds a standard table from user variants
 }
 \examples{
-#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#g <- select_genome("38")
-#build_standard_table(bay, "SNV96")
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+build_standard_table(bay, "SNV96")
 
-#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#g <- select_genome("38")
-#annotate_transcript_strand(bay, "19")
-#build_standard_table(bay, g, "SNV192", "Transcript_Strand")
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+annotate_transcript_strand(bay, "19")
+build_standard_table(bay, "SNV192", "Transcript_Strand")
 
-#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#g <- select_genome("38")
-#annotate_replication_strand(bay, BAGEL::rep_range)
-#build_standard_table(bay, g, "SNV192", "Replication_Strand")
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+annotate_replication_strand(bay, BAGEL::rep_range)
+build_standard_table(bay, "SNV192", "Replication_Strand")
 
-#bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
-#package = "BAGEL"))
-#build_standard_table(bay, table_name = "DBS")
+bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
+package = "BAGEL"))
+build_standard_table(bay, table_name = "DBS")
 
 }

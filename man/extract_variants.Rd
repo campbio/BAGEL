@@ -2,7 +2,7 @@
 % Please edit documentation in R/load_data.R
 \name{extract_variants}
 \alias{extract_variants}
-\title{Extract variants from mutliple object}
+\title{Extract variants from mutliple objects}
 \usage{
 extract_variants(
   inputs,
@@ -27,7 +27,7 @@ extract_variants(
 \arguments{
 \item{inputs}{A vector or list of objects or file names. Objects can be
 \linkS4class{CollapsedVCF}, \linkS4class{ExpandedVCF}, \linkS4class{MAF},
-an object that inherits from \code{matrix} or \code{data.frame}, or 
+an object that inherits from \code{matrix} or \code{data.frame}, or
 character strings that denote the path to a vcf or maf file.}
 
 \item{id}{A character vector the same length as \code{inputs} denoting
@@ -52,7 +52,7 @@ Only used if the input is a vcf file. Default \code{TRUE}.}
 
 \item{strip_extension}{Only used if \code{filename_as_id} is set to
 \code{TRUE}. If set to \code{TRUE}, the file extention will be stripped
-from the filename before setting the sample name. 
+from the filename before setting the sample name.
 See \code{\link{extract_variants_from_vcf_file}} for more details.
 Only used if the input is a vcf file.
 Default \code{c(".vcf",".vcf.gz",".gz")}}
@@ -70,7 +70,7 @@ formatting errors.
 See \code{\link{extract_variants_from_vcf_file}} for more details.
 Only used if the input is a vcf file. Default \code{TRUE}.}
 
-\item{extra_fields}{Optionally extract additional fields from all input 
+\item{extra_fields}{Optionally extract additional fields from all input
 objects. Default \code{NULL}.}
 
 \item{chromosome_col}{The name of the column that contains the chromosome
@@ -120,14 +120,14 @@ lusc_maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGE
 melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 
-# Read all files in at once      
+# Read all files in at once
 inputs <- c(luad_vcf_file, melanoma_vcfs, lusc_maf_file)
 variants <- extract_variants(inputs = inputs)
-table(variants$Tumor_Sample_Barcode)
+table(variants$sample)
 
 # Run again but renaming samples in first four vcfs
 new_name <- c(paste0("Sample", 1:4), NA)
 variants <- extract_variants(inputs = inputs, rename = new_name)
-table(variants$Tumor_Sample_Barcode)
+table(variants$sample)
 
 }
