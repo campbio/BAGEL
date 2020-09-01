@@ -32,7 +32,7 @@ setMethod("show", "Count_Tables",
 #' The primary object for BAGEL that contains all variants, samples annotations
 #' and tables
 #'
-#' @slot variants \code{data.table} of variants 
+#' @slot variants \code{data.table} of variants
 #' @slot genome \code{BSgenome} object containing the reference genome of the
 #' variants
 #' @slot count_tables Summary table with per-sample unnormalized motif counts
@@ -103,7 +103,7 @@ set_variants <- function(bay, variant_dt) {
 #' subset_variants_by_samples(bay, "public_LUAD_TCGA-97-7938.vcf")
 #' @export
 subset_variants_by_samples <- function(bay, sample_name) {
-  return(bay@variants[which(bay@variants$Tumor_Sample_Barcode == sample_name),
+  return(bay@variants[which(bay@variants$sample == sample_name),
                       ])
 }
 
@@ -133,9 +133,7 @@ set_sample_annotations <- function(bay, annotations) {
 #' init_sample_annotations(bay)
 #' @export
 init_sample_annotations <- function(bay) {
-  #samples <- unique(tools::file_path_sans_ext(
-  #  bay@variants$Tumor_Sample_Barcode))
-  samples <- unique(bay@variants$Tumor_Sample_Barcode)
+  samples <- unique(bay@variants$sample)
   sample_dt <- data.table::data.table(Samples = samples)
   eval.parent(substitute(bay@sample_annotations <- sample_dt))
 }
@@ -207,7 +205,7 @@ get_sample_annotations <- function(bay) {
 #' get_sample_names(bay)
 #' @export
 get_sample_names <- function(bay) {
-  return(unique(bay@variants$Tumor_Sample_Barcode))
+  return(unique(bay@variants$sample))
 }
 
 #' Return variants for bagel object
@@ -238,7 +236,7 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
   bay@count_tables <- subset_count_tables(bay, min_samples)
 
   #Subset variants
-  bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
+  bay@variants <- bay@variants[which(bay@variants$sample %in%
                                       min_samples), ]
 
   #Subset sample annotations
@@ -277,7 +275,7 @@ subset_bagel_by_annotation <- function(bay, annot_col, annot_names) {
   bay@sample_annotations <- bay@sample_annotations[annotation_index, ]
   annotation_samples <- bay@sample_annotations$"Samples"
   bay@count_tables <- subset_count_tables(bay, annotation_samples)
-  bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
+  bay@variants <- bay@variants[which(bay@variants$sample %in%
                                       annotation_samples), ]
   return(bay)
 }

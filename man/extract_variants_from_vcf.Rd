@@ -24,10 +24,10 @@ first sample will be selected. Default \code{NULL}.}
 If \code{NULL}, then the sample will be named according to \code{ID}.}
 
 \item{sample_field}{Some algoriths will save the name of the
-sample in the ##SAMPLE portion of header in the VCF (e.g. 
+sample in the ##SAMPLE portion of header in the VCF (e.g.
 ##SAMPLE=<ID=TUMOR,SampleName=TCGA-01-0001>). If the ID is specified via the
 \code{id} parameter ("TUMOR" in this example), then \code{sample_field} can
-be used to specify the name of the tag ("SampleName" in this example). 
+be used to specify the name of the tag ("SampleName" in this example).
 Default \code{NULL}.}
 
 \item{filter}{Exclude variants that do not have a \code{PASS} in the
@@ -53,8 +53,8 @@ choices. Also need to describe the automatic error fixing
 \examples{
 vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
   package = "BAGEL")
-  
-library(VariantAnnotation)   
+
+library(VariantAnnotation)
 vcf <- readVcf(vcf_file)
 variants <- extract_variants_from_vcf(vcf = vcf)
 }

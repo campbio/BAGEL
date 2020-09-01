@@ -31,15 +31,15 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end,
                          abs(flank_end), sep = "")
 
   dat <- bay@variants
-  mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2, sep = "")
-  chr <- dat$Chromosome
+  mut_type <- paste(dat$ref, ">", dat$alt, sep = "")
+  chr <- dat$chr
 
   if (sign(flank_start) == 1) {
-    center <- dat$End_Position
+    center <- dat$end
   } else {
-    center <- dat$Start_Position
+    center <- dat$start
   }
-  ref <- dat$Tumor_Seq_Allele1
+  ref <- dat$ref
   type <- mut_type
 
   #Mutation Context
@@ -88,8 +88,8 @@ annotate_variant_length <- function(bay) {
   var_length[which(dat$Variant_Type == "SNV")] <- 1
   var_length[which(dat$Variant_Type == "DBS")] <- 2
   indels <- which(dat$Variant_Type == "indel")
-  var_length[indels] <- nchar(dat$Tumor_Seq_Allele2[indels]) -
-    nchar(dat$Tumor_Seq_Allele1[indels])
+  var_length[indels] <- nchar(dat$alt[indels]) -
+    nchar(dat$ref[indels])
   dat[["Variant_Length"]] <- var_length
   eval.parent(substitute(bay@variants <- dat))
 }
@@ -100,7 +100,7 @@ annotate_variant_length <- function(bay) {
 #' @param column_name Name of column to drop
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' drop_annotation(bay, "Chromosome")
+#' drop_annotation(bay, "Variant_Type")
 #' @export
 drop_annotation <- function(bay, column_name) {
   dat <- bay@variants
@@ -118,12 +118,12 @@ drop_annotation <- function(bay, column_name) {
 #' @keywords internal
 add_variant_type <- function(tab) {
   type <- rep(NA, nrow(tab))
-  type[which(nchar(tab$Tumor_Seq_Allele1) == 1 &
-               nchar(tab$Tumor_Seq_Allele2) == 1)] <- "SNV"
-  type[which(nchar(tab$Tumor_Seq_Allele1) == 2 &
-               nchar(tab$Tumor_Seq_Allele2) == 2)] <- "DBS"
-  type[which(tab$Tumor_Seq_Allele1 == "-")] <- "INS"
-  type[which(tab$Tumor_Seq_Allele2 == "-")] <- "DEL"
+  type[which(nchar(tab$ref) == 1 &
+               nchar(tab$alt) == 1)] <- "SNV"
+  type[which(nchar(tab$ref) == 2 &
+               nchar(tab$alt) == 2)] <- "DBS"
+  type[which(tab$ref == "-")] <- "INS"
+  type[which(tab$alt == "-")] <- "DEL"
   type[which(is.na(type))] <- "unknown"
   tab$Variant_Type <- type
   return(tab)
@@ -189,18 +189,18 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   snvs <- subset_variant_by_type(dat, "SNV")
 
   #Create VRanges object to determine strand of variants within genes
-  vrange <- VariantAnnotation::VRanges(seqnames = snvs$Chromosome, ranges =
-                                         IRanges(snvs$Start_Position,
-                                                 snvs$End_Position), ref =
-                                         snvs$Tumor_Seq_Allele1, alt =
-                                         snvs$Tumor_Seq_Allele2)
+  vrange <- VariantAnnotation::VRanges(seqnames = snvs$chr, ranges =
+                                         IRanges(snvs$start,
+                                                 snvs$end), ref =
+                                         snvs$ref, alt =
+                                         snvs$alt)
   overlaps <- findOverlaps(vrange, genes)
   transcribed_variants <- rep("NA", nrow(dat))
   transcribed_variants[snv_index[queryHits(overlaps)]] <- as.character(decode(
     strand(genes[subjectHits(overlaps)])))
 
   #Match transcription and +, -, to account for reverse complement
-  mut_type <- paste(dat$Tumor_Seq_Allele1, ">", dat$Tumor_Seq_Allele2,
+  mut_type <- paste(dat$ref, ">", dat$alt,
                             sep = "")
   final_strand <- rep(NA, nrow(dat))
   forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
@@ -238,11 +238,11 @@ annotate_replication_strand <- function(bay, rep_range, build_table = TRUE) {
   snvs <- subset_variant_by_type(dat, "SNV")
 
   #Create GRanges object to determine strand of variants within genes
-  dat_range <- GenomicRanges::GRanges(seqnames = snvs$Chromosome, ranges =
-                                         IRanges(snvs$Start_Position,
-                                                 snvs$End_Position), ref =
-                                         snvs$Tumor_Seq_Allele1, alt =
-                                         snvs$Tumor_Seq_Allele2)
+  dat_range <- GenomicRanges::GRanges(seqnames = snvs$chr, ranges =
+                                         IRanges(snvs$start,
+                                                 snvs$end), ref =
+                                         snvs$ref, alt =
+                                         snvs$alt)
   overlaps <- GenomicRanges::findOverlaps(dat_range, rep_range)
   repl_variants <- rep("NA", length(dat_range))
   repl_variants[snv_index[S4Vectors::queryHits(overlaps)]] <-

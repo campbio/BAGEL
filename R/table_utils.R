@@ -122,12 +122,12 @@ build_custom_table <- function(bay, variant_annotation, name,
   #Check that variant column exists
   if (variant_annotation %in% colnames(variants)) {
     column_data <- variants[[variant_annotation]]
-    sample_names <- unique(variants$Tumor_Sample_Barcode)
+    sample_names <- unique(variants$sample)
     num_samples <- length(sample_names)
     default_factor <- levels(factor(column_data))
     variant_tables <- vector("list", length = num_samples)
     for (i in seq_len(num_samples)) {
-      sample_index <- which(variants$Tumor_Sample_Barcode == sample_names[i])
+      sample_index <- which(variants$sample == sample_names[i])
       if (!all(is.na(data_factor))) {
         variant_tables[[i]] <- table(factor(column_data[sample_index],
                                             levels = data_factor))
