@@ -9,12 +9,12 @@ create_bagel(
   genome,
   check_ref_chromosomes = TRUE,
   check_ref_bases = TRUE,
-  chromosome_col = "Chromosome",
-  start_col = "Start_Position",
-  end_col = "End_Position",
-  ref_col = "Tumor_Seq_Allele1",
-  alt_col = "Tumor_Seq_Allele2",
-  sample_col = "Tumor_Sample_Barcode",
+  chromosome_col = "chr",
+  start_col = "start",
+  end_col = "end",
+  ref_col = "ref",
+  alt_col = "alt",
+  sample_col = "sample",
   extra_fields = NULL,
   verbose = TRUE
 )
@@ -56,7 +56,7 @@ base(s) for each variant. Default \code{"Tumor_Seq_Allele2"}.}
 \item{sample_col}{The name of the column that contains the sample
 id for each variant. Default \code{"Tumor_Sample_Barcode"}.}
 
-\item{extra_fields}{Which additional fields to extract and include in 
+\item{extra_fields}{Which additional fields to extract and include in
 the bagel object. Default \code{NULL}.}
 
 \item{verbose}{Whether to print status messages during error checking.

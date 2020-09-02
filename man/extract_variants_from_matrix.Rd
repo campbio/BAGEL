@@ -37,7 +37,7 @@ base(s) for each variant. Default \code{"Tumor_Seq_Allele2"}.}
 \item{sample_col}{The name of the column that contains the sample
 id for each variant. Default \code{"Tumor_Sample_Barcode"}.}
 
-\item{extra_fields}{Optionally extract additional columns from the 
+\item{extra_fields}{Optionally extract additional columns from the
 object. Default \code{NULL}.}
 }
 \value{

@@ -9,7 +9,7 @@ extract_variants_from_maf(maf, extra_fields = NULL)
 \arguments{
 \item{maf}{MAF object loaded by read.maf() from the 'maftools' package}
 
-\item{extra_fields}{Optionally extract additional columns from the 
+\item{extra_fields}{Optionally extract additional columns from the
 maf object. Default \code{NULL}.}
 }
 \value{

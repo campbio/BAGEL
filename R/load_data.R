@@ -19,7 +19,7 @@ select_genome <- function(x) {
   } else if (tolower(x) %in% c("mm10", "grcm38")) {
     g <- BSgenome.Mmusculus.UCSC.mm10::BSgenome.Mmusculus.UCSC.mm10
   } else if (tolower(x) %in% c("mm9", "mgscv37")) {
-    g <- BSgenome.Mmusculus.UCSC.mm9::BSgenome.Mmusculus.UCSC.mm9    
+    g <- BSgenome.Mmusculus.UCSC.mm9::BSgenome.Mmusculus.UCSC.mm9
   } else {
     stop("That genome build is not currently selectable with this function. ",
          "Run BSgenome::available.genomes() to get a full list of availble ",
@@ -29,8 +29,8 @@ select_genome <- function(x) {
   return(g)
 }
 
-#' Extract variants from mutliple object
-#' 
+#' Extract variants from mutliple objects
+#'
 #' Chooses the correct function to extract variants from input based on
 #' the class of the object or the file extension. Different types of objects
 #' can be mixed within the list. For example, the list can include VCF files
@@ -43,7 +43,7 @@ select_genome <- function(x) {
 #'
 #' @param inputs A vector or list of objects or file names. Objects can be
 #' \linkS4class{CollapsedVCF}, \linkS4class{ExpandedVCF}, \linkS4class{MAF},
-#' an object that inherits from \code{matrix} or \code{data.frame}, or 
+#' an object that inherits from \code{matrix} or \code{data.frame}, or
 #' character strings that denote the path to a vcf or maf file.
 #' @param id A character vector the same length as \code{inputs} denoting
 #' the sample to extract from a vcf.
@@ -69,7 +69,7 @@ select_genome <- function(x) {
 #' Only used if the input is a vcf file. Default \code{TRUE}.
 #' @param strip_extension Only used if \code{filename_as_id} is set to
 #' \code{TRUE}. If set to \code{TRUE}, the file extention will be stripped
-#' from the filename before setting the sample name. 
+#' from the filename before setting the sample name.
 #' See \code{\link{extract_variants_from_vcf_file}} for more details.
 #' Only used if the input is a vcf file.
 #' Default \code{c(".vcf",".vcf.gz",".gz")}
@@ -95,7 +95,7 @@ select_genome <- function(x) {
 #' @param sample_col The name of the column that contains the sample
 #' id for each variant. Only used if the input is a matrix or data.frame.
 #' Default \code{"Tumor_Sample_Barcode"}.
-#' @param extra_fields Optionally extract additional fields from all input 
+#' @param extra_fields Optionally extract additional fields from all input
 #' objects. Default \code{NULL}.
 #' @param verbose Show progress of variant extraction. Default \code{TRUE}.
 #' @return Returns a data.table of variants from a vcf
@@ -106,16 +106,16 @@ select_genome <- function(x) {
 #' melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
 #'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 #'
-#' # Read all files in at once      
+#' # Read all files in at once
 #' inputs <- c(luad_vcf_file, melanoma_vcfs, lusc_maf_file)
 #' variants <- extract_variants(inputs = inputs)
-#' table(variants$Tumor_Sample_Barcode)
-#' 
+#' table(variants$sample)
+#'
 #' # Run again but renaming samples in first four vcfs
 #' new_name <- c(paste0("Sample", 1:4), NA)
 #' variants <- extract_variants(inputs = inputs, rename = new_name)
-#' table(variants$Tumor_Sample_Barcode)
-#' 
+#' table(variants$sample)
+#'
 #' @export
 extract_variants <- function(inputs, id = NULL, rename = NULL,
                              sample_field = NULL,
@@ -132,13 +132,13 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
                              alt_col = "Tumor_Seq_Allele2",
                              sample_col = "Tumor_Sample_Barcode",
                              verbose = TRUE) {
-  
-  
+
+
   if (!is(inputs, "list")) {
     inputs <- as.list(inputs)
   }
   input_list <- vector("list", length(inputs))
-  
+
   # Check arguments
   multiallele <- match.arg(multiallele)
   if(!is.null(rename)) {
@@ -157,17 +157,17 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
   } else {
     id <- rep(NULL, length(input_list))
   }
-  
-  
+
+
   pb <- utils::txtProgressBar(min = 0, max = length(input_list), initial = 0,
                                 style = 3)
   for (i in seq_along(inputs)) {
     input <- inputs[[i]]
-    
+
     if (inherits(input, c("CollapsedVCF", "ExpandedVCF"))) {
       dt <- extract_variants_from_vcf(vcf = input,
-                                    id = id[i],  
-                                    rename = rename[i], 
+                                    id = id[i],
+                                    rename = rename[i],
                                     sample_field = sample_field,
                                     filter = filter,
                                     multiallele = multiallele,
@@ -186,8 +186,8 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
     } else if (is(input, "character")) {
       if (tools::file_ext(input) %in% c("vcf", "vcf.gz")) {
         dt <- extract_variants_from_vcf_file(vcf_file = input,
-                                             id = id[i],  
-                                             rename = rename[i], 
+                                             id = id[i],
+                                             rename = rename[i],
                                              sample_field = sample_field,
                                              filename_as_id = filename_as_id,
                                              strip_extension = strip_extension,
@@ -207,20 +207,20 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
          "Item ", input, " is of class '", class(input), "'")
     }
     input_list[[i]] <- dt
-    
+
     utils::setTxtProgressBar(pb, i)
     if (isTRUE(verbose)) {
       message("Extracted ", i, " out of ", length(inputs), " inputs: ",
               input)
     }
-  }  
+  }
 
   dt <- do.call("rbind", input_list)
   return(dt)
 }
 
 #' Extracts variants from a VariantAnnotation VCF object
-#' 
+#'
 #' Aaron - Need to describe differnce between ID, and name in the header, and rename in
 #' terms of naming the sample. Need to describe differences in multiallelic
 #' choices. Also need to describe the automatic error fixing
@@ -231,10 +231,10 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
 #' @param rename Rename the sample to this value when extracting variants.
 #' If \code{NULL}, then the sample will be named according to \code{ID}.
 #' @param sample_field Some algoriths will save the name of the
-#' sample in the ##SAMPLE portion of header in the VCF (e.g. 
+#' sample in the ##SAMPLE portion of header in the VCF (e.g.
 #' ##SAMPLE=<ID=TUMOR,SampleName=TCGA-01-0001>). If the ID is specified via the
 #' \code{id} parameter ("TUMOR" in this example), then \code{sample_field} can
-#' be used to specify the name of the tag ("SampleName" in this example). 
+#' be used to specify the name of the tag ("SampleName" in this example).
 #' Default \code{NULL}.
 #' @param filter Exclude variants that do not have a \code{PASS} in the
 #' \code{FILTER} column of the VCF. Default \code{TRUE}.
@@ -249,8 +249,8 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
 #' @examples
 #' vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
 #'   package = "BAGEL")
-#'   
-#' library(VariantAnnotation)   
+#'
+#' library(VariantAnnotation)
 #' vcf <- readVcf(vcf_file)
 #' variants <- extract_variants_from_vcf(vcf = vcf)
 #' @export
@@ -259,7 +259,7 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
                       multiallele = c("expand", "exclude"),
                       extra_fields = NULL) {
   multiallele <- match.arg(multiallele)
-  
+
   # Process MultiAllelic Sites
   num_alleles <- lengths(VariantAnnotation::fixed(vcf)[, "ALT"])
   if(multiallele == "expand") {
@@ -269,9 +269,9 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
     if (length(multi_allelic) > 0) {
       vcf <- vcf[-multi_allelic, ]
     }
-  }  
+  }
 
-  # Configure ID 
+  # Configure ID
   vcf_samples <- colnames(vcf)
   if(is.null(id)) {
     id <- vcf_samples[1]
@@ -282,7 +282,7 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
            paste(vcf_samples, collapse=", "))
     }
   }
-  
+
   # Configure sample name
   vcf_name <- id
   if(!is.null(rename)) {
@@ -301,7 +301,7 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
     vcf_name <- as.character(df[id,sample_field])
   }
 
-  # Perform filtering based on FILTER column 
+  # Perform filtering based on FILTER column
   if (isTRUE(filter)) {
     # Remove filtered rows
     pass <- which(SummarizedExperiment::rowRanges(vcf)$FILTER == "PASS")
@@ -319,7 +319,7 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
     if(id != vcf_name) {
       warning("All variants matched the reference allele ",
               "for: ", vcf_name, " (", id, ")")
-      
+
     } else {
       warning("All variants matched the reference allele ",
               "for id: ", id)
@@ -327,17 +327,17 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
     return(NULL)
   }
   vcf <- vcf[pass,]
-  
-  # What does this do? 
+
+  # What does this do?
   rows <- SummarizedExperiment::rowRanges(vcf)
   dt <- cbind(data.table::as.data.table(rows)[,c("seqnames", "REF", "ALT",
                                                  "start", "end")],
               "sample" = vcf_name)
-              
+
   data.table::setnames(dt, c("seqnames", "start", "end",
                              "REF", "ALT", "sample"),
                        .required_bagel_headers())
-  
+
   # Add extra columns if requested
   if (!is.null(extra_fields)) {
     info_field <- VariantAnnotation::info(vcf)
@@ -348,12 +348,12 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
     }
     temp <- intersect(extra_fields, colnames(info_field))
     dt <- cbind(dt, info_field[,temp])
-  } 
+  }
   return(dt)
 }
 
 #' Extracts variants from a vcf file
-#' 
+#'
 #' Add Description
 #'
 #' @param vcf_file Path to the vcf file
@@ -362,10 +362,10 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
 #' @param rename Rename the sample to this value when extracting variants.
 #' If \code{NULL}, then the sample will be named according to \code{ID}.
 #' @param sample_field Some algoriths will save the name of the
-#' sample in the ##SAMPLE portion of header in the VCF (e.g. 
+#' sample in the ##SAMPLE portion of header in the VCF (e.g.
 #' ##SAMPLE=<ID=TUMOR,SampleName=TCGA-01-0001>). If the ID is specified via the
 #' \code{id} parameter ("TUMOR" in this example), then \code{sample_field} can
-#' be used to specify the name of the tag ("SampleName" in this example). 
+#' be used to specify the name of the tag ("SampleName" in this example).
 #' Default \code{NULL}.
 #' @param filename_as_id If set to \code{TRUE}, the file name will be used
 #' as the sample name.
@@ -404,7 +404,7 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
                                            fix_vcf_errors = TRUE) {
 
   vcf <- try(VariantAnnotation::readVcf(vcf_file), silent = TRUE)
-  
+
   # Extract the filebase name and use it as the sample name
   if(isTRUE(filename_as_id)) {
     rename <- basename(vcf_file)
@@ -415,9 +415,9 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
         rename <- gsub(paste(paste0(strip_extension, "$"), collapse="|"),
                        "", rename)
       }
-    }  
+    }
   }
-  
+
   # Automatically try to fix some types of errors in VCF files
   if (class(vcf) == "try-error" && fix_vcf_errors) {
     alt_input <- utils::read.table(vcf_file, stringsAsFactors = FALSE,
@@ -445,7 +445,7 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
     alt_input[, "End_Position"] <- alt_input[, "POS"]
     alt_input <- alt_input[, colnames(alt_input)[c(1:2, ncol(alt_input),
                                                    4:(ncol(alt_input) - 1))]]
-    
+
     # Needs to be changed so that it creates a VCF object which can be
     # passed to extract_variants_from_vcf
     #dt <- cbind(data.table::as.data.table(alt_input[, c("#CHROM", "POS",
@@ -471,18 +471,18 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
     dt <- extract_variants_from_vcf(vcf = vcf, id = id, rename = rename,
                                     sample_field = sample_field,
                                     multiallele = multiallele,
-                                    filter = filter, 
+                                    filter = filter,
                                     extra_fields = extra_fields)
   }
   return(dt)
 }
 
 #' Extract variants from a maf object
-#' 
+#'
 #' Add description
 #'
 #' @param maf MAF object loaded by read.maf() from the 'maftools' package
-#' @param extra_fields Optionally extract additional columns from the 
+#' @param extra_fields Optionally extract additional columns from the
 #' maf object. Default \code{NULL}.
 #' @return Returns a data.table of variants from a maf which can be used to
 #' create a \code{bagel} object.
@@ -527,7 +527,7 @@ extract_variants_from_maf <- function(maf, extra_fields = NULL) {
 #' base(s) for each variant. Default \code{"Tumor_Seq_Allele2"}.
 #' @param sample_col The name of the column that contains the sample
 #' id for each variant. Default \code{"Tumor_Sample_Barcode"}.
-#' @param extra_fields Optionally extract additional columns from the 
+#' @param extra_fields Optionally extract additional columns from the
 #' object. Default \code{NULL}.
 #' @return Returns a data.table of variants from a maf which can be used to
 #' create a \code{bagel} object.
@@ -554,7 +554,7 @@ extract_variants_from_matrix <- function(mat, chromosome_col = "Chromosome",
                        ref = ref_col,
                        alt = alt_col,
                        sample = sample_col)
-  
+
   # Add extra columns if requested
   if (!is.null(extra_fields)) {
     temp <- setdiff(extra_fields, colnames(dt))
@@ -563,8 +563,8 @@ extract_variants_from_matrix <- function(mat, chromosome_col = "Chromosome",
               " the MAF object: ", paste(temp, collapse = ", "))
     }
     extra_fields <- intersect(extra_fields, colnames(dt))
-  } 
-  
+  }
+
   all_fields <- c(.required_bagel_headers(), extra_fields)
   dt <- dt[, all_fields, with = FALSE]
   return(dt)
@@ -572,11 +572,11 @@ extract_variants_from_matrix <- function(mat, chromosome_col = "Chromosome",
 
 
 #' Extracts variants from a maf file
-#' 
+#'
 #' Add Description - Aaron
 #'
 #' @param maf_file Location of maf file
-#' @param extra_fields Optionally extract additional columns from the 
+#' @param extra_fields Optionally extract additional columns from the
 #' object. Default \code{NULL}.
 #' @return Returns a data.table of variants from a maf
 #' @examples
@@ -589,7 +589,7 @@ extract_variants_from_maf_file <- function(maf_file, extra_fields = NULL) {
 }
 
 #' Creates a bagel object from a variant table
-#' 
+#'
 #' Add description
 #'
 #' @param x Any object that can be coerced to a data.table including a matrix
@@ -618,10 +618,10 @@ extract_variants_from_maf_file <- function(maf_file, extra_fields = NULL) {
 #' base(s) for each variant. Default \code{"Tumor_Seq_Allele2"}.
 #' @param sample_col The name of the column that contains the sample
 #' id for each variant. Default \code{"Tumor_Sample_Barcode"}.
-#' @param extra_fields Which additional fields to extract and include in 
+#' @param extra_fields Which additional fields to extract and include in
 #' the bagel object. Default \code{NULL}.
 #' @param verbose Whether to print status messages during error checking.
-#' Default \code{TRUE}. 
+#' Default \code{TRUE}.
 #' @return Returns a bagel object
 #' @examples
 #' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
@@ -632,18 +632,18 @@ extract_variants_from_maf_file <- function(maf_file, extra_fields = NULL) {
 create_bagel <- function(x, genome,
                          check_ref_chromosomes = TRUE,
                          check_ref_bases = TRUE,
-                         chromosome_col = "Chromosome",
-                         start_col = "Start_Position",
-                         end_col = "End_Position",
-                         ref_col = "Tumor_Seq_Allele1",
-                         alt_col = "Tumor_Seq_Allele2",
-                         sample_col = "Tumor_Sample_Barcode",
+                         chromosome_col = "chr",
+                         start_col = "start",
+                         end_col = "end",
+                         ref_col = "ref",
+                         alt_col = "alt",
+                         sample_col = "sample",
                          extra_fields = NULL,
                          verbose = TRUE) {
-  
+
   used_fields <- c(.required_bagel_headers(), extra_fields)
   if(canCoerce(x, "data.table")) {
-    dt <- data.table::as.data.table(x)  
+    dt <- data.table::as.data.table(x)
   } else {
     stop("'x' needs to be an object which can be coerced to a data.table. ",
          "Valid classes include but are not limited to 'matrix', 'data.frame'",
@@ -653,7 +653,7 @@ create_bagel <- function(x, genome,
     stop("'genome' needs to be a 'BSgenome' object containing the genome ",
          "reference that was used when calling the variants.")
   }
-  
+
   # Check for necessary columns and change column names to stardard object
   dt <- .check_headers(dt,
                  chromosome = chromosome_col,
@@ -663,20 +663,20 @@ create_bagel <- function(x, genome,
                  alt = alt_col,
                  sample = sample_col,
                  update_fields = TRUE)
-  
+
   # Subset to necessary columns and add variant type
   all_fields <- c(.required_bagel_headers(), extra_fields)
   dt <- dt[, all_fields, with = FALSE]
   dt <- add_variant_type(dt)
-  
+
   # Some non-variants are included (e.g. T>T). These will be removed
-  non_variant <- which(dt$Tumor_Seq_Allele1 == dt$Tumor_Seq_Allele2)
+  non_variant <- which(dt$ref == dt$alt)
   if (length(non_variant) > 0) {
     warning(length(non_variant), " variants has the same reference and ",
             "alternate allele. These variants were excluded.")
     dt <- dt[-non_variant, ]
   }
-  
+
   if(isTRUE(check_ref_chromosomes)){
     # Check for genome style and attempt to convert variants to reference
     # genome if they don't match
@@ -694,7 +694,7 @@ create_bagel <- function(x, genome,
     }
     .check_variant_ref_in_genome(dt = dt, genome = genome)
   }
-  
+
   # Create and return a BAGEL object
   bagel = new("bagel", variants = dt, genome = genome)
   return(bagel)
@@ -702,7 +702,7 @@ create_bagel <- function(x, genome,
 
 
 .check_variant_genome <- function(dt, genome) {
-  
+
   chr.header <- .required_bagel_headers()["chromosome"]
   if(!chr.header %in% colnames(dt)) {
     stop("The column '", chr.header, "' was not found in the data.table.")
@@ -711,8 +711,8 @@ create_bagel <- function(x, genome,
   chr.u <- unique(chr)
   genome.u <- unique(GenomeInfoDb::seqnames(genome))
   diff <- setdiff(chr.u, genome.u)
-  
-  
+
+
   if(length(diff) > 0) {
     # Try to use GenomeInfoDb to determine style of variants and genome
     g.error <- try(genome.style <-
@@ -721,7 +721,7 @@ create_bagel <- function(x, genome,
     v.error <- try(variant.style <-
                      GenomeInfoDb::seqlevelsStyle(as.character(chr.u))[1],
                    silent = TRUE)
-    
+
     inter <- intersect(chr.u, genome.u)
     if(length(inter) == 0) {
       # Error 1: No matching of genome and variants
@@ -774,14 +774,14 @@ create_bagel <- function(x, genome,
         } else {
           # Set new chromosomes
           dt[,eval(quote(chr.header))] <- new.chr
-          
+
           # Determine if mapping was complete or partial
           new.chr.u <- unique(new.chr)
           new.diff <- setdiff(new.chr.u, genome.u)
           if(length(new.diff) > 0) {
             # If conversion was partial, need to subset to overlapping variants
             dt <- subset(dt, new.chr %in% genome.u)
-            
+
             new.inter <- intersect(new.chr.u, genome.u)
             inter.sum <- sum(new.chr %in% genome.u)
             diff.sum <- sum(!new.chr %in% genome.u)
@@ -805,7 +805,7 @@ create_bagel <- function(x, genome,
           }
         }
       }
-        
+
     }
   }
   return(dt)
@@ -817,19 +817,19 @@ create_bagel <- function(x, genome,
   start <- as.numeric(as.data.frame(dt)[,headers["start"]])
   end <- as.numeric(as.data.frame(dt)[,headers["end"]])
   ref <- as.character(as.data.frame(dt)[,headers["ref"]])
-  
+
   genome_ref <- BSgenome::getSeq(x = genome,
                    names = chr, start = start, end = end,
                    as.character = TRUE)
-  
+
   # Only check references that have bases. For example maf files will have "-"
   # for all insertions which cannot be checked.
   ix = grepl("[^ACGT]", ref)
   no.match.sum <- sum(ref[!ix] != genome_ref[!ix])
   if(no.match.sum > 0) {
-    stop("Reference bases for ", no.match.sum, " variants did not match ", 
-         "the reference base in the 'genome'. Please ensure you are using ",
-         "the correct BSgenome reference object.")
+    warning("Reference bases for ", no.match.sum, " out of ",
+         length(ref), " variantsdid not match the reference base in the ",
+         "'genome'. Make sure the genome reference is correct.")
   }
 }
 .check_headers <- function(dt, chromosome = NULL,
@@ -844,7 +844,7 @@ create_bagel <- function(x, genome,
   if(!is.null(ref)) rfields["ref"] <- ref
   if(!is.null(alt))  rfields["alt"] <- alt
   if(!is.null(sample))  rfields["sample"] <- sample
-  
+
   # Check for missing columns
   col.ix <- match(tolower(rfields), tolower(colnames(dt)))
   if(sum(is.na(col.ix) > 0)) {
@@ -852,7 +852,7 @@ create_bagel <- function(x, genome,
     stop("Some required columns are missing in the maf: ",
          paste(missing.cols, collapse=", "))
   }
-  
+
   # Adjust column case if needed
   prev.col <- colnames(dt)[col.ix]
   colnames(dt)[col.ix] <- rfields
@@ -861,22 +861,21 @@ create_bagel <- function(x, genome,
     warning("Some columns in maf had the wrong case and were automatically ",
             "adjusted: ", paste(prev.col[mismatch.ix], collapse=", "))
   }
-  
+
   # Change columns of data.table to match the required bagel format
   if(isTRUE(update_fields)) {
-    data.table::setnames(dt, rfields, .required_bagel_headers())   
+    data.table::setnames(dt, rfields, .required_bagel_headers())
   }
   return(dt)
 }
 
 .required_bagel_headers <- function() {
-  return(c(chromosome="Chromosome", start="Start_Position", end="End_Position",
-           ref="Tumor_Seq_Allele1",alt="Tumor_Seq_Allele2",
-           sample="Tumor_Sample_Barcode"))
+  return(c(chromosome="chr", start="start", end="end", ref="ref", alt="alt",
+           sample="sample"))
 }
 
 .required_maf_headers <- function() {
   return(c(chromosome="Chromosome", start="Start_Position", end="End_Position",
-           ref="Tumor_Seq_Allele1",alt="Tumor_Seq_Allele2",
+           ref="Tumor_Seq_Allele1", alt="Tumor_Seq_Allele2",
            sample="Tumor_Sample_Barcode"))
 }

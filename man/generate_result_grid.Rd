@@ -33,7 +33,7 @@ generate_result_grid(
 \item{n_start}{Number of times to discover signatures and compare based on
 posterior loglikihood}
 
-\item{seed}{Give a seed to generate reproducible signatures}
+\item{seed}{Seed to use for reproducible results, set to null to disable}
 
 \item{par_cores}{Number of parallel cores to use (NMF only)}
 
