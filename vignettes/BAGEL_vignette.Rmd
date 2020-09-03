@@ -1,31 +1,58 @@
 ---
-title: "BAGEL_vignette"
-output: rmarkdown::html_vignette
+title: "BAGEL Mutational Signature Analysis Toolkit"
+author:
+- name: Aaron Chevalier
+  affiliation: Boston University College of Engineering
+- name: Joshua Campbell
+  affiliiation: Fill this in
+date: "`r Sys.Date()`"
+output: 
+  BiocStyle::pdf_document:
+    toc: true
 vignette: >
-  %\VignetteIndexEntry{BAGEL_vignette}
+  %\VignetteIndexEntry{BAGEL Mutational Signature Analysis Toolkit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
-
-```{r setup}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dev = "png")
 library("BAGEL")
 ```
 
 # Introduction
+BAGEL Mutational Signature TookKit discovers novel signatures and predicts 
+sample exposure to known signatures across multiple motif classes including 
+single base substitutions (SBS), double base substitutions (DBS), insertions 
+(INS) and deletions (DEL) and SBS with replication strand and SBS with 
+transcription strand. BAGEL also plots signatures and sample exposures along 
+with advanced downstream analysis including UMAP.
 
 # Installation
+Currently BAGEL can be installed from Github; in the future it will be 
+available on Bioconductor. To install from Github directly please use the code 
+below:
+library(devtools)
+install_github("campbio/BAGEL")
 
 # Setting up a bagel object
-Add some text here describing what the user needs to do.
+In order to discover or predict, we must first set up our BAGEL object by 1) 
+extracting variants, 2) selecting a genome 3) creating our BAGEL object 4) 
+building a counts table for our BAGEL (SBS, DBS, INS, DEL, etc.)
+
+# Reproducibility note
+
+Many functions in *BAGEL* make use of stochastic algorithms or procedures which 
+require the use of random number generator (RNG) for simulation or sampling. 
+To maintain reproducibility, all these functions use a **default seed of 1** to 
+make sure same results are generated each time one of these functions is 
+called. Explicitly setting the `seed` arguments is needed for greater control 
+and randomness. These functions include *discover_signatures*, 
+*predict_exposure*, and *create_umap*.
 
 ## Extracting variants
+Variants can be extracted from VCFs and MAFs, and R objects such as data.frames 
+and VCF and MAF representation via VariantAnnotation and maftools. 
 ```{r}
 # Extract variants from a MAF File
 lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL") 
@@ -43,7 +70,11 @@ variants <- extract_variants(c(lusc_maf, luad_vcf, melanoma_vcfs), verbose = TRU
 ```
 
 ## Choosing genome
-Briefly describe BSgenome package and objects
+BAGEL uses BSgenome objects to access genomic information such as reference 
+bases for count tables. The BSgenome represents and stores full genome sequeces 
+for different organisms. To make selection easy we provide an accessor method 
+for human genome build versions 38, and 19 (hg38, hg19), but many other less 
+common builds and organisms are available via BSgenome as well.
 ```{r}
 g = select_genome("hg38")
 ```
@@ -54,13 +85,19 @@ bagel = create_bagel(x = variants, genome = g)
 ```
 
 # Create mutation count tables
-Description of what motifs are and why they need to be counted.
-
+Motifs are the building blocks of mutational signatures. Motifs themselves are 
+a mutation combined with other genomic information. For instance, **SBS96** 
+motifs are constructed from an SBS mutation and one upsteam and one downstream 
+base sandwiched together. We build tables by counting these motifs for each 
+sample. 
 ```{r}
 build_standard_table(bagel, "SNV96")
+```
 
-# Generate signatures/weights
-# We can use the bagel object we generated tables for using the SNV96 table
+# Discover Signatures/Exposures
+Discovery and prediction result are loaded into a self-contained result object 
+that includes signatures and sample exposures.
+```{r}
 result = discover_signatures(input = bagel, table_name = "SNV96", 
                               num_signatures = 4, method = "lda", nstart = 10)
 ```
@@ -111,45 +148,41 @@ plot_exposures(our_sigs_post, proportional = TRUE)
 
 #Compare posterior results to each other
 compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
+```
 
+# Use of sample annotations for advanced sample comparisons
+## Adding annotations
+```{r}
+sample_annotations <- read.table(system.file("testdata", 
+                                             "sample_annotations.txt", 
+                                             package = "BAGEL"), sep = "\t", 
+                                 header=TRUE)
+init_sample_annotations(bagel)
+add_sample_annotations(bay = bagel, annotations = sample_annotations, 
+                       sample_column = "Sample_Names", 
+                       columns_to_add = "Tumor_Subtypes")
+```
 
-############################################## Error up here ^^^^^
-#sample_annotations <- read.table(system.file("testdata", "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
-#init_sample_annotations(bagel)
-#add_sample_annotations(bagel, sample_annotations, sample_column = "Sample_Names", columns_to_add = "Tumor_Subtypes")
-#
-##Add tumor type annotations to our samples
-#res <- discover_signatures(bagel, table_name = "SNV96", num_signatures = 3)
-#res <- readRDS(system.file("testdata", "test_res.rds", package = "BAGEL"))
-#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
-#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", proportional = FALSE)
-#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE)
-#plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", by_group = FALSE, proportional = FALSE)
+## Standard discovery using BAGEL with sample annotations
+```{r}
+#Add tumor type annotations to our samples
+res <- discover_signatures(bagel, table_name = "SNV96", num_signatures = 3, 
+                           seed = 1)
 
-#Discover stranded SNV signatures
-#brca = maf_file_to_dt("/Users/atgc/Downloads/gdc_download_20200609_120830.134740/995c0111-d90#b-4140-bee7-3845436c3b42/TCGA.BRCA.mutect.995c0111-d90b-4140-bee7-3845436c3b42.DR-10.0.somati#c.maf")
-#bagel = new("bagel", variants = brca)
-#
-#BAGEL::build_standard_table(bagel, g, "SNV96")
-#BAGEL::annotate_variant_type(bagel)
-#BAGEL::annotate_transcript_strand(bagel, 38)
-#BAGEL::annotate_replication_strand(bagel, BAGEL::rep_range)
-#BAGEL::build_standard_table(bagel, g, "SNV192", "Transcript_Strand")
-#BAGEL::build_standard_table(bagel, g, "SNV192", "Replication_Strand")
-#
-#####TEST WITH PANLUNG/MELANOMA
-#standard <- BAGEL::discover_signatures(bagel, "SNV96", 4, "nmf")
-#compare_cosmic_v2(standard, threshold = 0.9, result_name = "BRCA")
-#
-#trans_192 <- BAGEL::discover_signatures(bagel, "SNV192_Trans", 4, "nmf")
-#plot_signatures(trans_192, plotly = TRUE)
-#
-#rep_192 <- BAGEL::discover_signatures(bagel, "SNV192_Rep", 4, "nmf")
-#plot_signatures(rep_192, plotly = TRUE)
+plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")
+plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", 
+                             proportional = FALSE)
+plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes", 
+                             by_group = FALSE)
 ```
 
 # Other functions
 ```{r}
 #Display what samples were added
 samples = get_sample_names(bagel)
+```
+
+# Session Information
+```{r}
+sessionInfo()
 ```
