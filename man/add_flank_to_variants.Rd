@@ -4,12 +4,10 @@
 \alias{add_flank_to_variants}
 \title{Uses a genome object to find context and add it to the variant table}
 \usage{
-add_flank_to_variants(bay, g, flank_start, flank_end, build_table = TRUE)
+add_flank_to_variants(bay, flank_start, flank_end, build_table = TRUE)
 }
 \arguments{
 \item{bay}{Input samples}
-
-\item{g}{Genome object used for finding variant context}
 
 \item{flank_start}{Start of flank area to add, can be positive or negative}
 
@@ -22,10 +20,8 @@ it to the bagel}
 Uses a genome object to find context and add it to the variant table
 }
 \examples{
-# need to remake samples
-#bay <- readRDS(system.file("testdata", "bagel_snv96_tiny.rds",
-#package = "BAGEL"))
-#g <- select_genome("38")
-#add_flank_to_variants(bay, g, 1, 2)
-#add_flank_to_variants(bay, g, -2, -1)
+bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
+package = "BAGEL"))
+add_flank_to_variants(bay, 1, 2)
+add_flank_to_variants(bay, -2, -1)
 }

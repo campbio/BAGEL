@@ -26,7 +26,7 @@ for samples in an annotation where that signature was not predicted
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-grid <- auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda",
+grid <- auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda",
 "Tumor_Subtypes", combine_res = FALSE)
 combined <- combine_predict_grid(grid, bay, BAGEL::cosmic_v2_sigs)
 plot_exposures_by_annotation(combined, "Tumor_Subtypes")

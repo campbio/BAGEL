@@ -7,22 +7,21 @@ NULL
 #' Uses a genome object to find context and add it to the variant table
 #'
 #' @param bay Input samples
-#' @param g Genome object used for finding variant context
 #' @param flank_start Start of flank area to add, can be positive or negative
 #' @param flank_end End of flank area to add, can be positive or negative
 #' @param build_table Automatically build a table using the annotation and add
 #' it to the bagel
 #' @examples
-#' # need to remake samples
-#' #bay <- readRDS(system.file("testdata", "bagel_snv96_tiny.rds",
-#' #package = "BAGEL"))
-#' #g <- select_genome("38")
-#' #add_flank_to_variants(bay, g, 1, 2)
-#' #add_flank_to_variants(bay, g, -2, -1)
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
+#' package = "BAGEL"))
+#' add_flank_to_variants(bay, 1, 2)
+#' add_flank_to_variants(bay, -2, -1)
 #' @export
-add_flank_to_variants <- function(bay, g, flank_start, flank_end,
+add_flank_to_variants <- function(bay, flank_start, flank_end,
                                   build_table = TRUE) {
   stopifnot(sign(flank_start) == sign(flank_end), flank_start < flank_end)
+
+  g <- bay@genome
 
   direction <- ifelse(sign(flank_start) == 1, "r", "l")
 
@@ -81,11 +80,12 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end,
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_variant_length(bay)
+#' bay
 #' @export
 annotate_variant_length <- function(bay) {
   dat <- bay@variants
   var_length <- rep(NA, nrow(dat))
-  var_length[which(dat$Variant_Type == "SNV")] <- 1
+  var_length[which(dat$Variant_Type == "SBS")] <- 1
   var_length[which(dat$Variant_Type == "DBS")] <- 2
   indels <- which(dat$Variant_Type == "indel")
   var_length[indels] <- nchar(dat$alt[indels]) -
@@ -101,6 +101,7 @@ annotate_variant_length <- function(bay) {
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' drop_annotation(bay, "Variant_Type")
+#' bay
 #' @export
 drop_annotation <- function(bay, column_name) {
   dat <- bay@variants
@@ -119,7 +120,7 @@ drop_annotation <- function(bay, column_name) {
 add_variant_type <- function(tab) {
   type <- rep(NA, nrow(tab))
   type[which(nchar(tab$ref) == 1 &
-               nchar(tab$alt) == 1)] <- "SNV"
+               nchar(tab$alt) == 1)] <- "SBS"
   type[which(nchar(tab$ref) == 2 &
                nchar(tab$alt) == 2)] <- "DBS"
   type[which(tab$ref == "-")] <- "INS"
@@ -129,7 +130,7 @@ add_variant_type <- function(tab) {
   return(tab)
 }
 
-#' Annotate variants with variant type ("SNV", "INS", "DEl", "DBS")
+#' Annotate variants with variant type ("SBS", "INS", "DEl", "DBS")
 #'
 #' @param bay Input bagel
 #' @examples
@@ -144,11 +145,11 @@ annotate_variant_type <- function(bay) {
 #' Subsets a variant table based on Variant Type
 #'
 #' @param tab Input variant table
-#' @param type Variant type to return e.g. "SNV", "INS", "DEL", "DBS"
+#' @param type Variant type to return e.g. "SBS", "INS", "DEL", "DBS"
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_variant_type(bay)
-#' subset_variant_by_type(get_variants(bay), "SNV")
+#' subset_variant_by_type(get_variants(bay), "SBS")
 #' @export
 subset_variant_by_type <- function(tab, type) {
   if (!"Variant_Type" %in% colnames(tab)) {
@@ -161,7 +162,7 @@ subset_variant_by_type <- function(tab, type) {
   return(tab[which(tab$Variant_Type == type), ])
 }
 
-#' Add transcript strand annotation to SNV variants (defined in genes only)
+#' Add transcript strand annotation to SBS variants (defined in genes only)
 #'
 #' @param bay Input bagel
 #' @param genome_build Which genome build to use: hg19, hg38, or a custom TxDb
@@ -185,18 +186,18 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   }
 
   dat <- bay@variants
-  snv_index <- which(dat$Variant_Type == "SNV")
-  snvs <- subset_variant_by_type(dat, "SNV")
+  sbs_index <- which(dat$Variant_Type == "SBS")
+  sbs <- subset_variant_by_type(dat, "SBS")
 
   #Create VRanges object to determine strand of variants within genes
-  vrange <- VariantAnnotation::VRanges(seqnames = snvs$chr, ranges =
-                                         IRanges(snvs$start,
-                                                 snvs$end), ref =
-                                         snvs$ref, alt =
-                                         snvs$alt)
+  vrange <- VariantAnnotation::VRanges(seqnames = sbs$chr, ranges =
+                                         IRanges(sbs$start,
+                                                 sbs$end), ref =
+                                         sbs$ref, alt =
+                                         sbs$alt)
   overlaps <- findOverlaps(vrange, genes)
   transcribed_variants <- rep("NA", nrow(dat))
-  transcribed_variants[snv_index[queryHits(overlaps)]] <- as.character(decode(
+  transcribed_variants[sbs_index[queryHits(overlaps)]] <- as.character(decode(
     strand(genes[subjectHits(overlaps)])))
 
   #Match transcription and +, -, to account for reverse complement
@@ -223,7 +224,7 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   }
 }
 
-#' Add replication strand annotation to SNV variants based on bedgraph file
+#' Add replication strand annotation to SBS variants based on bedgraph file
 #'
 #' @param bay Input bagel
 #' @param rep_range A GRanges object with replication timing as metadata
@@ -234,18 +235,18 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
 #' @export
 annotate_replication_strand <- function(bay, rep_range, build_table = TRUE) {
   dat <- bay@variants
-  snv_index <- which(dat$Variant_Type == "SNV")
-  snvs <- subset_variant_by_type(dat, "SNV")
+  sbs_index <- which(dat$Variant_Type == "SBS")
+  sbs <- subset_variant_by_type(dat, "SBS")
 
   #Create GRanges object to determine strand of variants within genes
-  dat_range <- GenomicRanges::GRanges(seqnames = snvs$chr, ranges =
-                                         IRanges(snvs$start,
-                                                 snvs$end), ref =
-                                         snvs$ref, alt =
-                                         snvs$alt)
+  dat_range <- GenomicRanges::GRanges(seqnames = sbs$chr, ranges =
+                                         IRanges(sbs$start,
+                                                 sbs$end), ref =
+                                         sbs$ref, alt =
+                                         sbs$alt)
   overlaps <- GenomicRanges::findOverlaps(dat_range, rep_range)
   repl_variants <- rep("NA", length(dat_range))
-  repl_variants[snv_index[S4Vectors::queryHits(overlaps)]] <-
+  repl_variants[sbs_index[S4Vectors::queryHits(overlaps)]] <-
     GenomicRanges::elementMetadata(BAGEL::rep_range)@listData[[1]][
       S4Vectors::subjectHits(overlaps)]
   dat[["Replication_Strand"]] <- repl_variants

@@ -10,8 +10,8 @@ NULL
 #' @param sample_name Sample name to plot counts
 #' @return Generates sample plot {no return}
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
-#' plot_sample_counts(bay, "SNV96", get_sample_names(bay)[1])
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
+#' plot_sample_counts(bay, "SBS96", get_sample_names(bay)[1])
 #' @export
 plot_sample_counts <- function(bay, table_name, sample_name) {
   if (length(sample_name) != 1) {

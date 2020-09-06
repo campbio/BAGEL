@@ -2,7 +2,7 @@
 % Please edit documentation in R/discovery_prediction.R
 \name{compare_cosmic_v2}
 \alias{compare_cosmic_v2}
-\title{Compare a result object to COSMIC V2 SNV Signatures (combination whole-exome
+\title{Compare a result object to COSMIC V2 SBS Signatures (combination whole-exome
 and whole-genome)}
 \usage{
 compare_cosmic_v2(
@@ -22,7 +22,7 @@ compare_cosmic_v2(
 Returns the comparisons
 }
 \description{
-Compare a result object to COSMIC V2 SNV Signatures (combination whole-exome
+Compare a result object to COSMIC V2 SBS Signatures (combination whole-exome
 and whole-genome)
 }
 \examples{

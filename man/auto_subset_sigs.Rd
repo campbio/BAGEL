@@ -18,7 +18,7 @@ auto_subset_sigs(
 \arguments{
 \item{bagel}{Input samples to predit signature weights}
 
-\item{table_name}{Name of table used for posterior prediction (e.g. SNV96)}
+\item{table_name}{Name of table used for posterior prediction (e.g. SBS96)}
 
 \item{signature_res}{Signatures to automatically subset from for prediction}
 

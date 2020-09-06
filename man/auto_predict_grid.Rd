@@ -22,7 +22,7 @@ auto_predict_grid(
 \arguments{
 \item{bagel}{Input samples to predit signature weights}
 
-\item{table_name}{Name of table used for posterior prediction (e.g. SNV96)}
+\item{table_name}{Name of table used for posterior prediction (e.g. SBS96)}
 
 \item{signature_res}{Signatures to automatically subset from for prediction}
 
@@ -59,8 +59,7 @@ specific annotation
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda",
+auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda",
 "Tumor_Subtypes")
-
-auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda")
+auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda")
 }

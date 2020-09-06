@@ -46,6 +46,6 @@ Results a result object containing signatures and sample weights
 Generate result_grid from bagel based on annotation and range of k
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
-grid <- generate_result_grid(bay, "SNV96", "nmf", k_start = 2, k_end = 5)
+bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
+grid <- generate_result_grid(bay, "SBS96", "nmf", k_start = 2, k_end = 5)
 }

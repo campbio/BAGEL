@@ -94,7 +94,7 @@ select_genome <- function(x) {
 #' Default \code{"Tumor_Seq_Allele2"}.
 #' @param sample_col The name of the column that contains the sample
 #' id for each variant. Only used if the input is a matrix or data.frame.
-#' Default \code{"Tumor_Sample_Barcode"}.
+#' Default \code{"sample"}.
 #' @param extra_fields Optionally extract additional fields from all input
 #' objects. Default \code{NULL}.
 #' @param verbose Show progress of variant extraction. Default \code{TRUE}.
@@ -125,12 +125,12 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
                              multiallele = c("expand", "exclude"),
                              fix_vcf_errors = TRUE,
                              extra_fields = NULL,
-                             chromosome_col = "Chromosome",
-                             start_col = "Start_Position",
-                             end_col = "End_Position",
-                             ref_col = "Tumor_Seq_Allele1",
-                             alt_col = "Tumor_Seq_Allele2",
-                             sample_col = "Tumor_Sample_Barcode",
+                             chromosome_col = "chr",
+                             start_col = "start",
+                             end_col = "end",
+                             ref_col = "ref",
+                             alt_col = "alt",
+                             sample_col = "sample",
                              verbose = TRUE) {
 
 
@@ -143,7 +143,7 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
   multiallele <- match.arg(multiallele)
   if(!is.null(rename)) {
     if(length(rename) != length(input_list)) {
-      stop("The lenght of 'rename' must be the same as the length of 'input'.",
+      stop("The length of 'rename' must be the same as the length of 'input'.",
            " Only vcf object or file.vcf inputs will be renamed.")
     }
   } else {
@@ -537,12 +537,12 @@ extract_variants_from_maf <- function(maf, extra_fields = NULL) {
 #' maf <- read.maf(maf_file)
 #' variants <- extract_variants_from_maf(maf = maf)
 #' @export
-extract_variants_from_matrix <- function(mat, chromosome_col = "Chromosome",
-                                         start_col = "Start_Position",
-                                         end_col = "End_Position",
-                                         ref_col = "Tumor_Seq_Allele1",
-                                         alt_col = "Tumor_Seq_Allele2",
-                                         sample_col = "Tumor_Sample_Barcode",
+extract_variants_from_matrix <- function(mat, chromosome_col = "chr",
+                                         start_col = "start",
+                                         end_col = "end",
+                                         ref_col = "ref",
+                                         alt_col = "alt",
+                                         sample_col = "sample",
                                          extra_fields = NULL) {
   if(!inherits(mat, c("matrix", "data.frame"))) {
     stop("'mat' needs to inherit classes 'matrix' or 'data.frame'")

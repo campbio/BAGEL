@@ -16,7 +16,7 @@ Sets sample_annotations slot {no return}
 Initialize sample annotation data.table with sample names from variants
 }
 \examples{
-annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-bay <- new("bagel")
+bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
 init_sample_annotations(bay)
+bay
 }
