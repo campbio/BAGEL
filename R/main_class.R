@@ -79,20 +79,6 @@ setMethod("show", "bagel",
 
 # Variant-Level object/methods -------------------------------
 
-#' Set variants table for bagel object
-#'
-#' @param bay Bagel object we input sample into
-#' @param variant_dt Variant DataFrame
-#' @return Sets variant slot {no return}
-#' @examples
-#' variants <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-#' bay <- new("bagel")
-#' set_variants(bay, variants)
-#' @export
-set_variants <- function(bay, variant_dt) {
-  eval.parent(substitute(bay@variants <- variant_dt))
-}
-
 #' Return sample from bagel object
 #'
 #' @param bay Bagel object containing samples
@@ -115,9 +101,10 @@ subset_variants_by_samples <- function(bay, sample_name) {
 #' @param annotations Sample DataFrame
 #' @return Sets sample_annotations slot {no return}
 #' @examples
-#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-#' bay <- new("bagel")
-#' set_sample_annotations(bay, annotations)
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
+#' sample_annotations <- read.table(system.file("testdata",
+#' "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
+#' set_sample_annotations(bay, data.table::as.data.table(sample_annotations))
 #' @export
 set_sample_annotations <- function(bay, annotations) {
   eval.parent(substitute(bay@sample_annotations <- annotations))
@@ -128,11 +115,13 @@ set_sample_annotations <- function(bay, annotations) {
 #' @param bay Bagel object we input sample into
 #' @return Sets sample_annotations slot {no return}
 #' @examples
-#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-#' bay <- new("bagel")
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
 #' init_sample_annotations(bay)
+#' bay
 #' @export
 init_sample_annotations <- function(bay) {
+  #samples <- unique(tools::file_path_sans_ext(
+  #  bay@variants$Tumor_Sample_Barcode))
   samples <- unique(bay@variants$sample)
   sample_dt <- data.table::data.table(Samples = samples)
   eval.parent(substitute(bay@sample_annotations <- sample_dt))
@@ -146,9 +135,13 @@ init_sample_annotations <- function(bay) {
 #' @param columns_to_add which annotation columns to add, defaults to all
 #' @return Sets sample_annotations slot {no return}
 #' @examples
-#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-#' bay <- new("bagel")
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
 #' init_sample_annotations(bay)
+#' sample_annotations <- read.table(system.file("testdata",
+#' "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
+#' add_sample_annotations(bay = bay, annotations = sample_annotations,
+#' sample_column = "Sample_Names", columns_to_add = "Tumor_Subtypes")
+#' bay
 #' @export
 add_sample_annotations <- function(bay, annotations, sample_column =
                                      "Sample_ID", columns_to_add =
@@ -187,8 +180,7 @@ add_sample_annotations <- function(bay, annotations, sample_column =
 #' @param bay Bagel object we input sample into
 #' @return Sets sample_annotations slot {no return}
 #' @examples
-#' annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-#' bay <- new("bagel")
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' init_sample_annotations(bay)
 #' get_sample_annotations(bay)
 #' @export
@@ -226,8 +218,8 @@ get_variants <- function(bay) {
 #' @param table_name Name of table used for subsetting
 #' @param num_counts Minimum sum count value to drop samples
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
-#' subset_bagel_by_counts(bay, "SNV96", 5)
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
+#' subset_bagel_by_counts(bay, "SBS96", 20)
 #' @export
 subset_bagel_by_counts <- function(bay, table_name, num_counts) {
   tab <- extract_count_table(bay, table_name)
@@ -236,7 +228,7 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
   bay@count_tables <- subset_count_tables(bay, min_samples)
 
   #Subset variants
-  bay@variants <- bay@variants[which(bay@variants$sample %in%
+  bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
                                       min_samples), ]
 
   #Subset sample annotations
@@ -253,7 +245,7 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
 #' @param annot_col Annotation class to use for subsetting
 #' @param annot_names Annotational value to subset to
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
 #' sample_annotations <- read.table(system.file("testdata",
 #' "sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
 #' init_sample_annotations(bay)
@@ -275,7 +267,7 @@ subset_bagel_by_annotation <- function(bay, annot_col, annot_names) {
   bay@sample_annotations <- bay@sample_annotations[annotation_index, ]
   annotation_samples <- bay@sample_annotations$"Samples"
   bay@count_tables <- subset_count_tables(bay, annotation_samples)
-  bay@variants <- bay@variants[which(bay@variants$sample %in%
+  bay@variants <- bay@variants[which(bay@variants$Tumor_Sample_Barcode %in%
                                       annotation_samples), ]
   return(bay)
 }

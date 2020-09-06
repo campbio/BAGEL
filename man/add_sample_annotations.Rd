@@ -27,7 +27,11 @@ Sets sample_annotations slot {no return}
 Adds sample annotation to bagel object with available samples
 }
 \examples{
-annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-bay <- new("bagel")
+bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
 init_sample_annotations(bay)
+sample_annotations <- read.table(system.file("testdata",
+"sample_annotations.txt", package = "BAGEL"), sep = "\t", header=TRUE)
+add_sample_annotations(bay = bay, annotations = sample_annotations,
+sample_column = "Sample_Names", columns_to_add = "Tumor_Subtypes")
+bay
 }

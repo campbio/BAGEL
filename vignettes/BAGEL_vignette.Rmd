@@ -91,14 +91,14 @@ motifs are constructed from an SBS mutation and one upsteam and one downstream
 base sandwiched together. We build tables by counting these motifs for each 
 sample. 
 ```{r}
-build_standard_table(bagel, "SNV96")
+build_standard_table(bagel, "SBS96")
 ```
 
 # Discover Signatures/Exposures
 Discovery and prediction result are loaded into a self-contained result object 
 that includes signatures and sample exposures.
 ```{r}
-result = discover_signatures(input = bagel, table_name = "SNV96", 
+result = discover_signatures(input = bagel, table_name = "SBS96", 
                               num_signatures = 4, method = "lda", nstart = 10)
 ```
 
@@ -116,7 +116,7 @@ name_signatures(result, c("unknown", "smoking", "apobec", "uv"))
 ```{r}
 plot_exposures(result, proportional = TRUE)
 plot_exposures(result, proportional = FALSE)
-plot_sample_counts(bagel, "SNV96", get_sample_names(bagel)[1])
+plot_sample_counts(bagel, "SBS96", get_sample_names(bagel)[1])
 ```
 
 ## Comparison to external signatures (e.g. COSMIC)
@@ -129,14 +129,14 @@ compare_cosmic_v2(result, threshold = 0.8)
 cosmic_v2_subtype_map("lung")
 
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
-cosmic_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
+cosmic_post = predict_exposure(bagel = bagel, "SBS96", signature_res = 
                                  cosmic_v2_sigs, signatures_to_use = 
                                  c(12, 4, 11, 15), algorithm = "lda")
 ```
 
 # Predicting exposures using existing signatures
 ```{r}
-our_sigs_post = predict_exposure(bagel = bagel, "SNV96", signature_res = 
+our_sigs_post = predict_exposure(bagel = bagel, "SBS96", signature_res = 
                                    result, algorithm = "lda")
 
 #Plot results from posterior calculation
@@ -166,7 +166,7 @@ add_sample_annotations(bay = bagel, annotations = sample_annotations,
 ## Standard discovery using BAGEL with sample annotations
 ```{r}
 #Add tumor type annotations to our samples
-res <- discover_signatures(bagel, table_name = "SNV96", num_signatures = 3, 
+res <- discover_signatures(bagel, table_name = "SBS96", num_signatures = 3, 
                            seed = 1)
 
 plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes")

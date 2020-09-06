@@ -16,8 +16,7 @@ Sets sample_annotations slot {no return}
 Return sample annotation from bagel object
 }
 \examples{
-annotations <- readRDS(system.file("testdata", "dt.rds", package = "BAGEL"))
-bay <- new("bagel")
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 init_sample_annotations(bay)
 get_sample_annotations(bay)
 }

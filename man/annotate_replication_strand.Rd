@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotate_variants.R
 \name{annotate_replication_strand}
 \alias{annotate_replication_strand}
-\title{Add replication strand annotation to SNV variants based on bedgraph file}
+\title{Add replication strand annotation to SBS variants based on bedgraph file}
 \usage{
 annotate_replication_strand(bay, rep_range, build_table = TRUE)
 }
@@ -14,7 +14,7 @@ annotate_replication_strand(bay, rep_range, build_table = TRUE)
 \item{build_table}{Automatically build a table from this annotation}
 }
 \description{
-Add replication strand annotation to SNV variants based on bedgraph file
+Add replication strand annotation to SBS variants based on bedgraph file
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))

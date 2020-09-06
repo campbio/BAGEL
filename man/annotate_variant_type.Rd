@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotate_variants.R
 \name{annotate_variant_type}
 \alias{annotate_variant_type}
-\title{Annotate variants with variant type ("SNV", "INS", "DEl", "DBS")}
+\title{Annotate variants with variant type ("SBS", "INS", "DEl", "DBS")}
 \usage{
 annotate_variant_type(bay)
 }
@@ -10,7 +10,7 @@ annotate_variant_type(bay)
 \item{bay}{Input bagel}
 }
 \description{
-Annotate variants with variant type ("SNV", "INS", "DEl", "DBS")
+Annotate variants with variant type ("SBS", "INS", "DEl", "DBS")
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))

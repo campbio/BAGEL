@@ -15,4 +15,5 @@ Adds an annotation to the variant table with length of each variant
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 annotate_variant_length(bay)
+bay
 }
