@@ -62,7 +62,7 @@ create_sbs96_table <- function(bay) {
   zero_samps <- which(colSums(mut_table) == 0)
   if (length(zero_samps) > 0) {
     warning(paste0("Dropping the following zero count samples: ",
-                   paste(colnames(mut_table[zero_samps, ]), collapse = ", ")))
+                   paste(names(zero_samps), collapse = ", ")))
     mut_table <- mut_table[, -zero_samps, drop = FALSE]
   }
   tab <- create_count_table(bay = bay, table = mut_table, name = "SBS96",
