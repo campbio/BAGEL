@@ -592,7 +592,7 @@ whichSignatures = function(tumor.ref = NA,
 
   #Set the weights matrix to 0
   weights         <- matrix(0, nrow = nrow(tumor), ncol = nrow(signatures),
-                            imnames = list(rownames(tumor),
+                            dimnames = list(rownames(tumor),
                                            rownames(signatures)))
 
   seed            <- deconstructSigs::findSeed(tumor, signatures)
