@@ -15,12 +15,12 @@ extract_variants(
   multiallele = c("expand", "exclude"),
   fix_vcf_errors = TRUE,
   extra_fields = NULL,
-  chromosome_col = "Chromosome",
-  start_col = "Start_Position",
-  end_col = "End_Position",
-  ref_col = "Tumor_Seq_Allele1",
-  alt_col = "Tumor_Seq_Allele2",
-  sample_col = "Tumor_Sample_Barcode",
+  chromosome_col = "chr",
+  start_col = "start",
+  end_col = "end",
+  ref_col = "ref",
+  alt_col = "alt",
+  sample_col = "sample",
   verbose = TRUE
 )
 }
@@ -95,7 +95,7 @@ Default \code{"Tumor_Seq_Allele2"}.}
 
 \item{sample_col}{The name of the column that contains the sample
 id for each variant. Only used if the input is a matrix or data.frame.
-Default \code{"Tumor_Sample_Barcode"}.}
+Default \code{"sample"}.}
 
 \item{verbose}{Show progress of variant extraction. Default \code{TRUE}.}
 }

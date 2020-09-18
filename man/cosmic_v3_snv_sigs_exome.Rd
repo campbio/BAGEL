@@ -3,7 +3,7 @@
 \docType{data}
 \name{cosmic_v3_snv_sigs_exome}
 \alias{cosmic_v3_snv_sigs_exome}
-\title{COSMIC v3 SNV96 Exome Signatures Result Object}
+\title{COSMIC v3 SBS96 Exome Signatures Result Object}
 \format{
 An object of class \code{"Result"}; see [BAGEL::predict_exposure()].
 }

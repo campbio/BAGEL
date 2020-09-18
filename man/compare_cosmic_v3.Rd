@@ -3,7 +3,7 @@
 \name{compare_cosmic_v3}
 \alias{compare_cosmic_v3}
 \title{Compare a result object to COSMIC V3 Signatures; Select exome or genome for
-SNV and only genome for DBS or Indel classes}
+SBS and only genome for DBS or Indel classes}
 \usage{
 compare_cosmic_v3(
   result,
@@ -16,9 +16,9 @@ compare_cosmic_v3(
 \arguments{
 \item{result}{Result to compare}
 
-\item{variant_class}{Compare to SNV, DBS, or Indel}
+\item{variant_class}{Compare to SBS, DBS, or Indel}
 
-\item{sample_type}{exome (SNV only) or genome}
+\item{sample_type}{exome (SBS only) or genome}
 
 \item{threshold}{threshold for similarity}
 
@@ -29,9 +29,9 @@ Returns the comparisons
 }
 \description{
 Compare a result object to COSMIC V3 Signatures; Select exome or genome for
-SNV and only genome for DBS or Indel classes
+SBS and only genome for DBS or Indel classes
 }
 \examples{
 res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-compare_cosmic_v3(res, "SNV", "genome", threshold = 0.8)
+compare_cosmic_v3(res, "SBS", "genome", threshold = 0.8)
 }

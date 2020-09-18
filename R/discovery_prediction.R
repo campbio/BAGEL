@@ -13,8 +13,8 @@ NULL
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SNV96")
-#' discover_signatures(input = bay, table_name = "SNV96",
+#' build_standard_table(bay, "SBS96")
+#' discover_signatures(input = bay, table_name = "SBS96",
 #' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
 discover_signatures <- function(input, table_name, num_signatures, method="lda",
@@ -191,26 +191,26 @@ compare_results <- function(result, other_result,
 }
 
 #' Compare a result object to COSMIC V3 Signatures; Select exome or genome for
-#' SNV and only genome for DBS or Indel classes
+#' SBS and only genome for DBS or Indel classes
 #'
 #' @param result Result to compare
-#' @param variant_class Compare to SNV, DBS, or Indel
-#' @param sample_type exome (SNV only) or genome
+#' @param variant_class Compare to SBS, DBS, or Indel
+#' @param sample_type exome (SBS only) or genome
 #' @param threshold threshold for similarity
 #' @param result_name title for plot user result signatures
 #' @return Returns the comparisons
 #' @examples
 #' res <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' compare_cosmic_v3(res, "SNV", "genome", threshold = 0.8)
+#' compare_cosmic_v3(res, "SBS", "genome", threshold = 0.8)
 #' @export
 compare_cosmic_v3 <- function(result, variant_class, sample_type,
                               threshold = 0.9, result_name =
                               deparse(substitute(result))) {
   if (sample_type == "exome") {
-    if (variant_class %in% c("snv", "SNV", "SNV96", "SBS")) {
+    if (variant_class %in% c("snv", "SNV", "SNV96", "SBS", "SBS96")) {
       cosmic_res <- cosmic_v3_snv_sigs_exome
     } else {
-      stop(paste("Only SNV class is available for whole-exome, please choose",
+      stop(paste("Only SBS class is available for whole-exome, please choose",
                  " `genome` for DBS or Indel", sep = ""))
     }
   } else if (sample_type == "genome") {
@@ -222,7 +222,7 @@ compare_cosmic_v3 <- function(result, variant_class, sample_type,
                                   "ID")) {
       cosmic_res <- cosmic_v3_indel_sigs
     } else {
-      stop("Only SNV, DBS, and Indel classes are supported")
+      stop("Only SBS, DBS, and Indel classes are supported")
     }
   } else {
     stop("Sample type must be exome or genome")
@@ -247,7 +247,7 @@ compare_cosmic_v3 <- function(result, variant_class, sample_type,
   return(comparison)
 }
 
-#' Compare a result object to COSMIC V2 SNV Signatures (combination whole-exome
+#' Compare a result object to COSMIC V2 SBS Signatures (combination whole-exome
 #' and whole-genome)
 #'
 #' @param result Result to compare
@@ -337,8 +337,8 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SNV96")
-#' predict_exposure(bay, "SNV96", BAGEL::cosmic_v2_sigs, algorithm = "lda")
+#' build_standard_table(bay, "SBS96")
+#' predict_exposure(bay, "SBS96", BAGEL::cosmic_v2_sigs, algorithm = "lda")
 #' @export
 predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                              signatures_to_use = seq_len(ncol(
@@ -372,19 +372,19 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
     ifelse(is.null(seed),
            sigs.input <- deconstructSigs:: mut.to.sigs.input(mut.ref =
                                                                bagel@variants,
-                                      sample.id = "Tumor_Sample_Barcode",
-                                      chr = "Chromosome",
-                                      pos = "Start_Position",
-                                      ref = "Tumor_Seq_Allele1",
-                                      alt = "Tumor_Seq_Allele2",
+                                      sample.id = "sample",
+                                      chr = "chr",
+                                      pos = "start",
+                                      ref = "ref",
+                                      alt = "alt",
                                       bsg = bagel@genome),
            sigs.input <- withr::with_seed(
              deconstructSigs::mut.to.sigs.input(mut.ref = bagel@variants,
-                                             sample.id = "Tumor_Sample_Barcode",
-                                             chr = "Chromosome",
-                                             pos = "Start_Position",
-                                             ref = "Tumor_Seq_Allele1",
-                                             alt = "Tumor_Seq_Allele2",
+                                             sample.id = "sample",
+                                             chr = "chr",
+                                             pos = "start",
+                                             ref = "ref",
+                                             alt = "alt",
                                              bsg = bagel@genome)))
     sig_all <- t(signature)
     middle <- unlist(lapply(strsplit(colnames(sig_all), "_"), "[", 1))
@@ -591,7 +591,9 @@ whichSignatures = function(tumor.ref = NA,
   }
 
   #Set the weights matrix to 0
-  weights         <- matrix(0, nrow = nrow(tumor), ncol = nrow(signatures), dimnames = list(rownames(tumor), rownames(signatures)))
+  weights         <- matrix(0, nrow = nrow(tumor), ncol = nrow(signatures),
+                            dimnames = list(rownames(tumor),
+                                           rownames(signatures)))
 
   seed            <- deconstructSigs::findSeed(tumor, signatures)
   weights[seed]   <- 1
@@ -651,8 +653,8 @@ whichSignatures = function(tumor.ref = NA,
 #' @param verbose Whether to output loop iterations
 #' @return Results a result object containing signatures and sample weights
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
-#' grid <- generate_result_grid(bay, "SNV96", "nmf", k_start = 2, k_end = 5)
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
+#' grid <- generate_result_grid(bay, "SBS96", "nmf", k_start = 2, k_end = 5)
 #' @export
 generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
                                  annotation = NA, k_start, k_end, n_start = 1,
@@ -747,7 +749,7 @@ reconstruct_sample <- function(result, sample_number) {
 #' specific annotation
 #'
 #' @param bagel Input samples to predit signature weights
-#' @param table_name Name of table used for posterior prediction (e.g. SNV96)
+#' @param table_name Name of table used for posterior prediction (e.g. SBS96)
 #' @param signature_res Signatures to automatically subset from for prediction
 #' @param algorithm Algorithm to use for prediction. Choose from
 #' "lda_posterior", decompTumor2Sig, and deconstructSigs
@@ -768,10 +770,9 @@ reconstruct_sample <- function(result, sample_number) {
 #' combines into a single result if combines_res = TRUE
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda",
+#' auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda",
 #' "Tumor_Subtypes")
-#'
-#' auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda")
+#' auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda")
 #' @export
 auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
                               sample_annotation = NULL, min_exists = 0.05,
@@ -820,7 +821,7 @@ auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
 #' Automatic filtering of inactive signatures
 #'
 #' @param bagel Input samples to predit signature weights
-#' @param table_name Name of table used for posterior prediction (e.g. SNV96)
+#' @param table_name Name of table used for posterior prediction (e.g. SBS96)
 #' @param signature_res Signatures to automatically subset from for prediction
 #' @param algorithm Algorithm to use for prediction. Choose from
 #' "lda_posterior", decompTumor2Sig, and deconstructSigs
@@ -863,7 +864,7 @@ auto_subset_sigs <- function(bagel, table_name, signature_res, algorithm,
 #' in that annotation type.
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-#' grid <- auto_predict_grid(bay, "SNV96", BAGEL::cosmic_v2_sigs, "lda",
+#' grid <- auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda",
 #' "Tumor_Subtypes", combine_res = FALSE)
 #' combined <- combine_predict_grid(grid, bay, BAGEL::cosmic_v2_sigs)
 #' plot_exposures_by_annotation(combined, "Tumor_Subtypes")

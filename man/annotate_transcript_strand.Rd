@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotate_variants.R
 \name{annotate_transcript_strand}
 \alias{annotate_transcript_strand}
-\title{Add transcript strand annotation to SNV variants (defined in genes only)}
+\title{Add transcript strand annotation to SBS variants (defined in genes only)}
 \usage{
 annotate_transcript_strand(bay, genome_build, build_table = TRUE)
 }
@@ -15,7 +15,7 @@ object}
 \item{build_table}{Automatically build a table from this annotation}
 }
 \description{
-Add transcript strand annotation to SNV variants (defined in genes only)
+Add transcript strand annotation to SBS variants (defined in genes only)
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))

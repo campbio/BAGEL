@@ -9,3 +9,4 @@ validation/
 inst/doc
 BAGEL.Rproj
 bagel_scratch.Rmd
+vignettes/BAGEL_vignette.log

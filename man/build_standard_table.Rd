@@ -9,9 +9,9 @@ build_standard_table(bay, table_name, strand_type = NA)
 \arguments{
 \item{bay}{Input samples}
 
-\item{table_name}{Name of standard table to build SNV96, SNV192, DBS}
+\item{table_name}{Name of standard table to build SBS96, SBS192, DBS}
 
-\item{strand_type}{Only for SNV192 Transcript_Strand or Replication_Strand
+\item{strand_type}{Only for SBS192 Transcript_Strand or Replication_Strand
 Indel}
 }
 \description{
@@ -19,15 +19,15 @@ Builds a standard table from user variants
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-build_standard_table(bay, "SNV96")
+build_standard_table(bay, "SBS96")
 
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 annotate_transcript_strand(bay, "19")
-build_standard_table(bay, "SNV192", "Transcript_Strand")
+build_standard_table(bay, "SBS192", "Transcript_Strand")
 
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 annotate_replication_strand(bay, BAGEL::rep_range)
-build_standard_table(bay, "SNV192", "Replication_Strand")
+build_standard_table(bay, "SBS192", "Replication_Strand")
 
 bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 package = "BAGEL"))

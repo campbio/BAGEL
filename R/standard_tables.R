@@ -1,61 +1,46 @@
-#' Uses a genome object to find context and generate standard SNV96 tables
+#' Uses a genome object to find context and generate standard SBS96 tables
 #'
 #' @param bay Input samples
-create_snv96_table <- function(bay) {
-  dat <- bay@variants
+create_sbs96_table <- function(bay) {
+  dat <- subset_variant_by_type(bay@variants, type = "SBS")
   g <- bay@genome
-  mut_type <- paste(dat$ref, ">", dat$alt, sep = "")
-
-  chr <- as.character(dat$chr)
-  range_start <- dat$start
-  range_end <- dat$end
   ref <- as.character(dat$ref)
   alt <- as.character(dat$alt)
-  type <- mut_type
+  mut_type <- paste(ref, ">", alt, sep = "")
 
   #Mutation Context
-  lflank <- BSgenome::getSeq(g, chr, range_start - 1, range_start - 1,
-                   as.character = TRUE)
-  rflank <- BSgenome::getSeq(g, chr, range_end + 1, range_end + 1,
-                   as.character = TRUE)
+  context <- BSgenome::getSeq(x = g, names = as.character(dat$chr),
+                              start = dat$start - 1,
+                              end = dat$end + 1,
+                              as.character = TRUE)
+  #type <- mut_type
+
 
   final_mut_type <- rep(NA, length(ref))
   final_mut_context <- rep(NA, length(ref))
 
   # Get mutation context info for those on "+" strand
   forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
-  ind <- type %in% forward_change
-
+  ind <- mut_type %in% forward_change
   final_mut_type[ind] <- paste(as.character(ref[ind]), ">",
                                as.character(alt[ind]), sep = "")
-  final_mut_context[ind] <- paste(lflank[ind], ref[ind], rflank[ind], sep = "")
+  final_mut_context[ind] <- context[ind]
 
   # Get mutation context info for those on "-" strand
   rev_change <- c("A>G", "A>T", "A>C", "G>T", "G>C", "G>A")
-  ind <- type %in% rev_change
+  ind <- mut_type %in% rev_change
 
   # Reverse complement the context so only 6 mutation categories instead of 12
-  rev_refbase <- ref[ind] %>%
-    Biostrings::DNAStringSet() %>%
-    Biostrings::reverseComplement()
-  rev_altbase <- alt[ind] %>%
-    Biostrings::DNAStringSet() %>%
-    Biostrings::reverseComplement()
-  rev_lflank <- lflank[ind] %>%
-    Biostrings::DNAStringSet() %>%
-    Biostrings::reverseComplement()
-  rev_rflank <- rflank[ind] %>%
-    Biostrings::DNAStringSet() %>%
-    Biostrings::reverseComplement()
+  rev_context = as.character(Biostrings::reverseComplement(
+    Biostrings::DNAStringSet(context[ind])))
+  rev_refbase = as.character(Biostrings::reverseComplement(
+    Biostrings::DNAStringSet(ref[ind])))
+  rev_altbase = as.character(Biostrings::reverseComplement(
+    Biostrings::DNAStringSet(alt[ind])))
 
-  final_mut_lflank <- as.character(rev_lflank)
-  final_mut_rflank <- as.character(rev_rflank)
-
-  final_mut_type[ind] <- paste(as.character(rev_refbase), ">",
-                               as.character(rev_altbase), sep = "")
-  final_mut_context[ind] <- paste(final_mut_lflank, rev_refbase,
-                                  final_mut_rflank, sep = "")
-  maf_mut_id <- paste(final_mut_type, final_mut_context, sep = "_")
+  final_mut_type[ind] <- paste0(rev_refbase, ">", rev_altbase)
+  final_mut_context[ind] <- rev_context
+  final_motif <- paste0(final_mut_type, "_", final_mut_context)
 
   ###### Now we separate into samples
   ## Define all mutation types for 96 substitution scheme
@@ -65,40 +50,34 @@ create_snv96_table <- function(bay) {
   mut_trinuc <- apply(cbind(b1, b2, b3), 1, paste, collapse = "")
   mut_type <- rep(rep(forward_change, each = 4), 4)
 
-  sample_names <- unique(dat$sample)
-  num_samples <- length(sample_names)
-  maf_mut_summaries <- vector("list", length = num_samples)
-  for (i in seq_len(num_samples)) {
-    sample_index <- which(dat$sample == sample_names[i])
-    mut_id <- apply(cbind(mut_type, mut_trinuc), 1, paste, collapse = "_")
-    mutation <- factor(maf_mut_id[sample_index], levels = mut_id)
-    mut_summary <- data.frame(mutation, Type = final_mut_type[sample_index],
-                              Context = final_mut_context[sample_index],
-                              stringsAsFactors = FALSE)
-    maf_mut_summaries[[i]] <- mut_summary
-  }
-  mut_summary_mat <- do.call(cbind, lapply(maf_mut_summaries, function(x)
-    table(x[, "mutation"])))
-  colnames(mut_summary_mat) <- sample_names
-  zero_samps <- which(colSums(mut_summary_mat) == 0)
+
+  mut_id <- apply(cbind(mut_type, mut_trinuc), 1, paste,
+                  collapse = "_")
+  mutation <- factor(final_motif, levels = mut_id)
+
+  mut_table <- as.matrix(as.data.frame.matrix(xtabs(~ mutation + dat$sample)))
+  #xtabs adds dat$sample as dimname[2] so we remove it
+  dimnames(mut_table) <- list(rownames(mut_table), colnames(mut_table))
+
+  zero_samps <- which(colSums(mut_table) == 0)
   if (length(zero_samps) > 0) {
     warning(paste0("Dropping the following zero count samples: ",
-                   paste(colnames(mut_summary_mat[zero_samps]), sep = ", ")))
-    mut_summary_mat <- mut_summary_mat[, -zero_samps]
+                   paste(names(zero_samps), collapse = ", ")))
+    mut_table <- mut_table[, -zero_samps, drop = FALSE]
   }
-  tab <- create_count_table(bay = bay, table = mut_summary_mat, name = "SNV96",
-                     description = paste("Single Nucleotide Variant table with",
+  tab <- create_count_table(bay = bay, table = mut_table, name = "SBS96",
+                     description = paste("Single Base Substitution table with",
                      " one base upstream and downstream",
                                          sep = ""), return_instead = TRUE)
   return(tab)
 }
 
-#' Uses a genome object to find context and generate standard SNV192 table
+#' Uses a genome object to find context and generate standard SBS192 table
 #' using transcript strand
 #'
 #' @param bay Input samples
 #' @param strand_type Transcript_Strand or Replication_Strand
-create_snv192_table <- function(bay, strand_type) {
+create_sbs192_table <- function(bay, strand_type) {
   if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
     stop("Please select either Transcript_Strand or Replication_Strand")
   }
@@ -124,14 +103,14 @@ create_snv192_table <- function(bay, strand_type) {
 
   ## Get mutation context info for those on "+" strand
   forward_change <- c("C>A", "C>G", "C>T", "T>A", "T>C", "T>G")
-  ind <- dat$Variant_Type == "SNV" & initial_maf_type %in% forward_change
+  ind <- dat$Variant_Type == "SBS" & initial_maf_type %in% forward_change
 
   final_mut_type[ind] <- initial_maf_type[ind]
   final_mut_context[ind] <- ref_context[ind]
 
   ## Get mutation context info for those on "-" strand
   rev_change <- c("A>G", "A>T", "A>C", "G>T", "G>C", "G>A")
-  ind <- dat$Variant_Type == "SNV" & initial_maf_type %in% rev_change
+  ind <- dat$Variant_Type == "SBS" & initial_maf_type %in% rev_change
 
   ## Reverse complement the context so only 6 mutation categories instead of 12
   rev_context <- Biostrings::reverseComplement(Biostrings::DNAStringSet(
@@ -177,9 +156,9 @@ create_snv192_table <- function(bay, strand_type) {
     mut_table <- mut_table[, -zero_samps]
   }
   tab <- create_count_table(
-    bay = bay, table = mut_table, name = paste0("SNV192_", ifelse(
+    bay = bay, table = mut_table, name = paste0("SBS192_", ifelse(
       strand_type == "Transcript_Strand", "Trans", "Rep")), description =
-      paste("Single Nucleotide Variant table with one base upstream and",
+      paste("Single Base Substitution table with one base upstream and",
             " downstream and transcript strand", sep = ""),
     return_instead = TRUE)
   return(tab)
@@ -253,7 +232,7 @@ create_dbs_table <- function(bay) {
   }
   tab <- create_count_table(bay = bay, table = table, name = "DBS",
                             description = paste("Standard count table for ",
-                                                "double-base substitutions",
+                                                "double base substitutions",
                                                 sep = ""),
                             return_instead = TRUE)
   return(tab)
@@ -292,20 +271,20 @@ create_indel_table <- function(bay) {
 #' Builds a standard table from user variants
 #'
 #' @param bay Input samples
-#' @param table_name Name of standard table to build SNV96, SNV192, DBS
-#' @param strand_type Only for SNV192 Transcript_Strand or Replication_Strand
+#' @param table_name Name of standard table to build SBS96, SBS192, DBS
+#' @param strand_type Only for SBS192 Transcript_Strand or Replication_Strand
 #' Indel
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SNV96")
+#' build_standard_table(bay, "SBS96")
 #'
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_transcript_strand(bay, "19")
-#' build_standard_table(bay, "SNV192", "Transcript_Strand")
+#' build_standard_table(bay, "SBS192", "Transcript_Strand")
 #'
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_replication_strand(bay, BAGEL::rep_range)
-#' build_standard_table(bay, "SNV192", "Replication_Strand")
+#' build_standard_table(bay, "SBS192", "Replication_Strand")
 #'
 #' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 #' package = "BAGEL"))
@@ -313,18 +292,17 @@ create_indel_table <- function(bay) {
 #'
 #' @export
 build_standard_table <- function(bay, table_name, strand_type = NA) {
-
-  if (table_name %in% c("SNV96", "SNV", "96", "SBS")) {
-    tab <- create_snv96_table(bay)
-  } else if (table_name %in% c("SNV192", "192")) {
-    tab <- create_snv192_table(bay, strand_type)
+  if (table_name %in% c("SNV96", "SNV", "96", "SBS", "SBS96")) {
+    tab <- create_sbs96_table(bay)
+  } else if (table_name %in% c("SBS192", "192")) {
+    tab <- create_sbs192_table(bay, strand_type)
   } else if (table_name %in% c("DBS", "doublet")) {
     tab <- create_dbs_table(bay)
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {
     tab <- create_indel_table(bay)
   } else {
     stop(paste0("There is no standard table named: ", table_name,
-               " please select from SNV96, SNV192, DBS, Indel."))
+               " please select from SBS96, SBS192, DBS, Indel."))
   }
   eval.parent(substitute(bay@count_tables <- tab))
 }

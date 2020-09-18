@@ -1,4 +1,4 @@
-#' COSMIC v2 SNV96 Signatures Result Object
+#' COSMIC v2 SBS96 Signatures Result Object
 #'
 #' Data from COSMIC formatted to be used for prediction with individual tumors
 #' and cohorts.
@@ -18,7 +18,7 @@
 #' @source COSMIC v2, <https://cancer.sanger.ac.uk/cosmic/signatures_v2>
 "cosmic_v2_sigs"
 
-#' COSMIC v3 SNV96 Exome Signatures Result Object
+#' COSMIC v3 SBS96 Exome Signatures Result Object
 #'
 #' Data from COSMIC formatted to be used for prediction with individual tumors
 #' and cohorts.
@@ -38,7 +38,7 @@
 #' @source COSMIC v3, <https://cancer.sanger.ac.uk/cosmic/signatures>
 "cosmic_v3_snv_sigs_exome"
 
-#' COSMIC v3 SNV96 Genome Signatures Result Object
+#' COSMIC v3 SBS96 Genome Signatures Result Object
 #'
 #' Data from COSMIC formatted to be used for prediction with individual tumors
 #' and cohorts.

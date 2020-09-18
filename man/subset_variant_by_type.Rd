@@ -9,7 +9,7 @@ subset_variant_by_type(tab, type)
 \arguments{
 \item{tab}{Input variant table}
 
-\item{type}{Variant type to return e.g. "SNV", "INS", "DEL", "DBS"}
+\item{type}{Variant type to return e.g. "SBS", "INS", "DEL", "DBS"}
 }
 \description{
 Subsets a variant table based on Variant Type
@@ -17,5 +17,5 @@ Subsets a variant table based on Variant Type
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 annotate_variant_type(bay)
-subset_variant_by_type(get_variants(bay), "SNV")
+subset_variant_by_type(get_variants(bay), "SBS")
 }

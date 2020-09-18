@@ -10,8 +10,8 @@ NULL
 #' @param sample_name Sample name to plot counts
 #' @return Generates sample plot {no return}
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_snv96.rds", package = "BAGEL"))
-#' plot_sample_counts(bay, "SNV96", get_sample_names(bay)[1])
+#' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
+#' plot_sample_counts(bay, "SBS96", get_sample_names(bay)[1])
 #' @export
 plot_sample_counts <- function(bay, table_name, sample_name) {
   if (length(sample_name) != 1) {
@@ -83,6 +83,7 @@ plot_full <- function(sample) {
 #' @export
 plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
                             text_size = 20, facet_size = 20) {
+  DBS <- FALSE
   signatures <- result@signatures
   groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
                                                                     "context"))
@@ -95,6 +96,12 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
     tidyr::gather("var", "val", -"Motif") %>%
     cbind(mutation) -> plot_dat
 
+  if (nrow(signatures) %in% 78) {
+    DBS <- TRUE
+    plot_dat$context <- substr(plot_dat$Motif, 7, 8)
+    text_size = 17
+  }
+
   plot_dat %>%
     ggplot(aes_string(y = "val", x = "Motif", fill = "mutation")) +
     geom_bar(stat = "identity") +
@@ -102,17 +109,24 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
                labeller = ggplot2::as_labeller(structure(sig_names, names =
                                                            unique(
                                                              plot_dat$var)))) +
-    theme_bw() + xlab("Motifs") + ylab("Proportion") + theme(
-      axis.text.x = element_blank(), axis.ticks.x = element_blank(),
+    theme_bw() + xlab("Motifs") + ylab("Proportion") +
+    theme(
       strip.text.y = element_text(size = facet_size), panel.grid.minor.x =
-        element_blank(), panel.grid.major.x = element_blank(),
+        element_blank(),
       text=element_text(family="Courier", size = text_size)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
-  if (nrow(signatures) %in% c(6, 96, 192)) {
+  if (nrow(signatures) %in% c(6, 96, 192, 83)) {
     #Use standard COSMIC coloring
     p <- p + ggplot2::scale_fill_manual(values = c(
       "#5ABCEBFF", "#050708FF", "#D33C32FF", "#CBCACBFF", "#ABCD72FF",
-      "#E7C9C6FF"))
+      "#E7C9C6FF")) + theme(axis.text.x = element_blank(),
+                            axis.ticks.x = element_blank(),
+                            panel.grid.major.x = element_blank())
+  }
+  if (DBS) {
+    p <- p + ggplot2::scale_x_discrete(labels = plot_dat$context,
+                                       breaks = plot_dat$Motif) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   }
   if (no_legend) {
     p <- p + theme(legend.position = "none")
