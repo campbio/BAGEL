@@ -20,7 +20,8 @@ create a \code{bagel} object.
 Add description
 }
 \examples{
-maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+package = "BAGEL")
 library(maftools)
 maf <- read.maf(maf_file)
 variants <- extract_variants_from_maf(maf = maf)

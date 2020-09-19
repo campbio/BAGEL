@@ -115,8 +115,10 @@ will be ignored for these items.
 }
 \examples{
 # Get loations of two vcf files and a maf file
-luad_vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", package = "BAGEL")
-lusc_maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+luad_vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
+package = "BAGEL")
+lusc_maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+package = "BAGEL")
 melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 

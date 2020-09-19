@@ -8,8 +8,9 @@ plot_signatures(
   result,
   no_legend = FALSE,
   plotly = FALSE,
-  text_size = 20,
-  facet_size = 20
+  text_size = 17,
+  facet_size = 20,
+  x_labels = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ plot_signatures(
 \item{text_size}{Size of axis text}
 
 \item{facet_size}{Size of facet text}
+
+\item{x_labels}{Toggle plotting of x-axis labels}
 }
 \value{
 Generates plot {no return}

@@ -338,7 +338,8 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' build_standard_table(bay, "SBS96")
-#' predict_exposure(bay, "SBS96", BAGEL::cosmic_v2_sigs, algorithm = "lda")
+#' predict_exposure(bagel = bay, table_name = "SBS96",
+#' signature_res = BAGEL::cosmic_v2_sigs, algorithm = "lda")
 #' @export
 predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                              signatures_to_use = seq_len(ncol(
@@ -370,7 +371,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
     type_name <- "decompTumor2Sig"
   }else if (algorithm %in% c("ds", "deconstruct", "deconstructSigs")) {
     ifelse(is.null(seed),
-           sigs.input <- deconstructSigs:: mut.to.sigs.input(mut.ref =
+           sigs.input <- deconstructSigs::mut.to.sigs.input(mut.ref =
                                                                bagel@variants,
                                       sample.id = "sample",
                                       chr = "chr",
@@ -378,7 +379,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                       ref = "ref",
                                       alt = "alt",
                                       bsg = bagel@genome),
-           sigs.input <- withr::with_seed(
+           sigs.input <- withr::with_seed(seed,
              deconstructSigs::mut.to.sigs.input(mut.ref = bagel@variants,
                                              sample.id = "sample",
                                              chr = "chr",
@@ -391,21 +392,21 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
     context <- lapply(strsplit(colnames(sig_all), "_"), "[", 2)
     first <- unlist(lapply(context, substr, 1, 1))
     last <- unlist(lapply(context, substr, 3, 3))
-    new_cols <- paste(first, "[", middle, "]", last, sep="")
+    new_cols <- paste(first, "[", middle, "]", last, sep = "")
     colnames(sig_all) <- new_cols
 
     ds_res <- sapply(rownames(sigs.input), function(x) {
-      ds_result <- whichSignatures(tumor.ref = sigs.input,
-                                   contexts.needed = TRUE,
-                                   signatures.limit = ncol(signature),
-                                   tri.counts.method = "default",
-                                   sample.id = x, signatures.ref = sig_all)
+      ds_result <- whichSignatures(tumor_ref = sigs.input,
+                                   contexts_needed = TRUE,
+                                   signatures_limit = ncol(signature),
+                                   tri_counts_method = "default",
+                                   sample_id = x, signatures_ref = sig_all)
       return(as.matrix(ds_result$weights))
+    })
     exposures <- ds_res
     colnames(exposures) <- colnames(counts_table)
     rownames(exposures) <- colnames(signature)
-    type <- "deconstructSigs"
-    })
+    type_name <- "deconstructSigs"
   } else {
     stop("Type must be lda or decomp")
   }
@@ -486,25 +487,27 @@ lda_posterior <- function(counts_table, signature, max.iter = 100,
   return(list(samp_sig_prob_mat = samp_sig_prob_mat, theta.poster = theta))
 }
 
-predict_decompTumor2Sig <- function(sample_mat, signature_mat){
+predict_decompTumor2Sig <- function(sample_mat, signature_mat) {
   #Alexandrov-type prediction
   input_signatures_normalized <- apply(signature_mat, 2,
-                                       function(x){x / sum(x)})
+                                       function(x) {x / sum(x)})
   signatures <- split(input_signatures_normalized,
                       col(input_signatures_normalized))
-  signatures_ref <- decompTumor2Sig::readAlexandrovSignatures()
+  #signatures_ref <- decompTumor2Sig::readAlexandrovSignatures()
   ns <- as.matrix(row.names(signature_mat))
-  ns <- apply(ns, 1, function(x){stringr::str_c(substr(x,5,5), '[',
-                                                substr(x, 1, 3), ']',
-                                                substr(x, 7, 7))})
+  ns <- apply(ns, 1, function(x) {
+    stringr::str_c(substr(x, 5, 5), "[", substr(x, 1, 3), "]",
+                   substr(x, 7, 7))})
   signatures <- lapply(signatures, setNames, ns)
 
-  input_samples_normalized <- apply(sample_mat, 2, function(x){x / sum(x)})
+  input_samples_normalized <- apply(sample_mat, 2, function(x) {x / sum(x)})
   input_samples1 <- split(input_samples_normalized,
                           col(input_samples_normalized))
   genomes <- lapply(input_samples1, setNames, ns)
 
-  sample_weight_mat <- decompTumor2Sig::decomposeTumorGenomes(genomes, signatures, verbose=FALSE)
+  sample_weight_mat <- decompTumor2Sig::decomposeTumorGenomes(genomes,
+                                                              signatures,
+                                                              verbose = FALSE)
   return(sample_weight_mat)
 }
 
@@ -520,74 +523,74 @@ predict_decompTumor2Sig <- function(sample_mat, signature_mat){
   print(dim(lflank))
 }
 
-whichSignatures = function(tumor.ref = NA,
-                           sample.id,
-                           signatures.ref,
+whichSignatures <- function(tumor_ref = NA,
+                           sample_id,
+                           signatures_ref,
                            associated = c(),
-                           signatures.limit = NA,
-                           signature.cutoff = 0.06,
-                           contexts.needed = FALSE,
-                           tri.counts.method = "default") {
-  if(class(tumor.ref) == 'matrix'){
-    stop(paste('Input tumor.ref needs to be a data frame or location of input text file', sep = ''))
+                           signatures_limit = NA,
+                           signature_cutoff = 0.06,
+                           contexts_needed = FALSE,
+                           tri_counts_method = "default") {
+  if (class(tumor_ref) == 'matrix') {
+    stop(paste("Input tumor.ref needs to be a data frame or location of input text file", sep = ""))
   }
 
-  if(exists("tumor.ref", mode = "list")){
-    tumor     <- tumor.ref
-    if(contexts.needed == TRUE){
+  if (exists("tumor.ref", mode = "list") | is(tumor_ref, "data.frame")) {
+    tumor     <- tumor_ref
+    if(contexts_needed == TRUE) {
       tumor   <- deconstructSigs::getTriContextFraction(mut.counts.ref = tumor,
                                                         trimer.counts.method =
-                                                          tri.counts.method)
+                                                          tri_counts_method)
     }
   } else {
-    if(file.exists(tumor.ref)){
-      tumor   <- utils::read.table(tumor.ref, sep = "\t", header = TRUE,
+    if (file.exists(tumor_ref)) {
+      tumor   <- utils::read.table(tumor_ref, sep = "\t", header = TRUE,
                                    as.is = TRUE, check.names = FALSE)
-      if(contexts.needed == TRUE){
+      if (contexts_needed == TRUE) {
         tumor <- deconstructSigs::getTriContextFraction(tumor,
                                                         trimer.counts.method =
-                                                          tri.counts.method)
+                                                          tri_counts_method)
       }
     } else {
       print("tumor.ref is neither a file nor a loaded data frame")
     }
   }
 
-  if (missing(sample.id) && nrow(tumor) == 1) {
-    sample.id = rownames(tumor)[1]
+  if (missing(sample_id) && nrow(tumor) == 1) {
+    sample_id <- rownames(tumor)[1]
   }
   # Take patient id given
   tumor <- as.matrix(tumor)
-  if(!sample.id %in% rownames(tumor)){
-    stop(paste(sample.id, " not found in rownames of tumor.ref", sep = ''))
+  if (!sample_id %in% rownames(tumor)) {
+    stop(paste(sample_id, " not found in rownames of tumor.ref", sep = ""))
   }
-  tumor <- subset(tumor, rownames(tumor) == sample.id)
-  if(round(rowSums(tumor), digits = 1) != 1){
-    stop(paste('Sample: ', sample.id, ' is not normalized\n', 'Consider using "contexts.needed = TRUE"', sep = ' '))
+  tumor <- subset(tumor, rownames(tumor) == sample_id)
+  if (round(rowSums(tumor), digits = 1) != 1) {
+    stop(paste("Sample: ", sample_id, " is not normalized\n", 'Consider using "contexts.needed = TRUE"', sep = " "))
   }
-  signatures <- signatures.ref
+  signatures <- signatures_ref
 
   signatures    <- as.matrix(signatures)
-  original.sigs <- signatures
+  original_sigs <- signatures
 
   # Check column names are formatted correctly
-  if(length(colnames(tumor)[colnames(tumor) %in% colnames(signatures)]) < length(colnames(signatures))){
+  if (length(colnames(tumor)[colnames(tumor) %in% colnames(signatures)]) < length(colnames(signatures))) {
     colnames(tumor) <- deconstructSigs::changeColumnNames(colnames(tumor))
-    if(length(colnames(tumor)[colnames(tumor) %in% colnames(signatures)]) < length(colnames(signatures))){
+    if (length(colnames(tumor)[colnames(tumor) %in% colnames(signatures)]) < length(colnames(signatures))) {
       stop("Check column names on input file")
     }
   }
 
   # Ensure that columns in tumor match the order of those in signatures
-  tumor <- tumor[,colnames(signatures), drop = FALSE]
+  tumor <- tumor[, colnames(signatures), drop = FALSE]
 
   #Take a subset of the signatures
-  if(!is.null(associated)){
+  if (!is.null(associated)) {
     signatures <- signatures[rownames(signatures) %in% associated, ]
   }
 
-  if(is.na(signatures.limit)){
-    signatures.limit <- nrow(signatures)
+  if (is.na(signatures_limit)) {
+    signatures_limit <- nrow(signatures)
   }
 
   #Set the weights matrix to 0
@@ -597,38 +600,38 @@ whichSignatures = function(tumor.ref = NA,
 
   seed            <- deconstructSigs::findSeed(tumor, signatures)
   weights[seed]   <- 1
-  w               <- weights*10
+  w               <- weights * 10
 
   error_diff      <- Inf
   error_threshold <- 1e-3
 
   num <- 0
-  while(error_diff > error_threshold){
+  while (error_diff > error_threshold) {
     num        <- num + 1
     #print(num)
     error_pre  <- deconstructSigs::getError(tumor, signatures, w)
-    if(error_pre == 0){
+    if (error_pre == 0) {
       break
     }
     w          <- deconstructSigs::updateW_GR(tumor, signatures, w,
                                               signatures.limit =
-                                                signatures.limit)
+                                                signatures_limit)
     error_post <- deconstructSigs::getError(tumor, signatures, w)
-    error_diff <- (error_pre-error_post)/error_pre
+    error_diff <- (error_pre - error_post) / error_pre
   }
 
-  weights <- w/sum(w)
+  weights <- w / sum(w)
   unknown <- 0
 
   ## filtering on a given threshold value (0.06 default)
-  weights[weights < signature.cutoff ] <- 0
+  weights[weights < signature_cutoff] <- 0
   unknown <- 1 - sum(weights)
 
   product <- weights %*% signatures
   diff    <- tumor - product
 
-  x       <- matrix(data = 0, nrow = 1, ncol = nrow(original.sigs),
-                    dimnames = list(rownames(weights), rownames(original.sigs)))
+  x       <- matrix(data = 0, nrow = 1, ncol = nrow(original_sigs),
+                    dimnames = list(rownames(weights), rownames(original_sigs)))
   x       <- data.frame(x)
   x[colnames(weights)] <- weights
   weights <- x
@@ -779,8 +782,8 @@ auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
                               proportion_samples = 0.25, rare_exposure = 0.4,
                               verbose = TRUE, combine_res = TRUE, seed = 1) {
   if (is.null(sample_annotation)) {
-    combine_res = FALSE
-    result = auto_subset_sigs(bagel = bagel, table_name =
+    combine_res <- FALSE
+    result <- auto_subset_sigs(bagel = bagel, table_name =
                        table_name, signature_res =
                        signature_res, algorithm = algorithm,
                        min_exists = min_exists, proportion_samples =
@@ -813,7 +816,7 @@ auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
     }
   }
   if (combine_res) {
-    result = combine_predict_grid(result, bagel, signature_res)
+    result <- combine_predict_grid(result, bagel, signature_res)
   }
   return(result)
 }
@@ -871,14 +874,14 @@ auto_subset_sigs <- function(bagel, table_name, signature_res, algorithm,
 #' @export
 combine_predict_grid <- function(grid_list, bagel, signature_res) {
   sig_names <- NULL
-  for(i in 1:length(grid_list)) {
+  for (i in seq_len(length(grid_list))) {
     sig_names <- c(sig_names, rownames(grid_list[[i]]@exposures))
   }
   sig_names <- unique(sig_names)
   sig_names <- sig_names[order(sig_names)]
 
   comb <- NULL
-  for(i in 1:length(grid_list)) {
+  for (i in seq_len(length(grid_list))) {
     samp <- grid_list[[i]]@exposures
     missing <- sig_names[!sig_names %in% rownames(samp)]
     missing_mat <- matrix(0, length(missing), ncol(samp))

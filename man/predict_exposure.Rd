@@ -40,5 +40,6 @@ LDA prediction of samples based on existing signatures
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 build_standard_table(bay, "SBS96")
-predict_exposure(bay, "SBS96", BAGEL::cosmic_v2_sigs, algorithm = "lda")
+predict_exposure(bagel = bay, table_name = "SBS96",
+signature_res = BAGEL::cosmic_v2_sigs, algorithm = "lda")
 }
