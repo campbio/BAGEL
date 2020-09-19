@@ -19,6 +19,7 @@ Returns a data.table of variants from a maf
 Add Description - Aaron
 }
 \examples{
-maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+package = "BAGEL")
 maf <- extract_variants_from_maf_file(maf_file = maf_file)
 }

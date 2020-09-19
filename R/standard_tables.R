@@ -13,8 +13,6 @@ create_sbs96_table <- function(bay) {
                               start = dat$start - 1,
                               end = dat$end + 1,
                               as.character = TRUE)
-  #type <- mut_type
-
 
   final_mut_type <- rep(NA, length(ref))
   final_mut_context <- rep(NA, length(ref))
@@ -31,11 +29,11 @@ create_sbs96_table <- function(bay) {
   ind <- mut_type %in% rev_change
 
   # Reverse complement the context so only 6 mutation categories instead of 12
-  rev_context = as.character(Biostrings::reverseComplement(
+  rev_context <- as.character(Biostrings::reverseComplement(
     Biostrings::DNAStringSet(context[ind])))
-  rev_refbase = as.character(Biostrings::reverseComplement(
+  rev_refbase <- as.character(Biostrings::reverseComplement(
     Biostrings::DNAStringSet(ref[ind])))
-  rev_altbase = as.character(Biostrings::reverseComplement(
+  rev_altbase <- as.character(Biostrings::reverseComplement(
     Biostrings::DNAStringSet(alt[ind])))
 
   final_mut_type[ind] <- paste0(rev_refbase, ">", rev_altbase)

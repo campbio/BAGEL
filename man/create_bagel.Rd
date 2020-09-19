@@ -69,7 +69,8 @@ Returns a bagel object
 Add description
 }
 \examples{
-maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+package = "BAGEL")
 variants <- extract_variants_from_maf_file(maf_file)
 g <- select_genome("38")
 bagel <- create_bagel(x = variants, genome = g)

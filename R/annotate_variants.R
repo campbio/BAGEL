@@ -126,7 +126,7 @@ add_variant_type <- function(tab) {
   type[which(tab$ref == "-")] <- "INS"
   type[which(tab$alt == "-")] <- "DEL"
   type[which(is.na(type))] <- "unknown"
-  tab$Variant_Type <- type
+  tab[[Variant_Type]] <- type
   return(tab)
 }
 

@@ -59,6 +59,7 @@ Suggests:
     XVector,
     qpdf,
     deconstructSigs,
-    decompTumor2Sig
+    decompTumor2Sig,
+    covr
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr

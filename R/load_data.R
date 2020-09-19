@@ -101,8 +101,10 @@ select_genome <- function(x) {
 #' @return Returns a data.table of variants from a vcf
 #' @examples
 #' # Get loations of two vcf files and a maf file
-#' luad_vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf", package = "BAGEL")
-#' lusc_maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+#' luad_vcf_file <- system.file("testdata", "public_LUAD_TCGA-97-7938.vcf",
+#' package = "BAGEL")
+#' lusc_maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+#' package = "BAGEL")
 #' melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"),
 #'   pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
 #'
@@ -120,7 +122,7 @@ select_genome <- function(x) {
 extract_variants <- function(inputs, id = NULL, rename = NULL,
                              sample_field = NULL,
                              filename_as_id = FALSE,
-                             strip_extension = c(".vcf",".vcf.gz",".gz"),
+                             strip_extension = c(".vcf", ".vcf.gz", ".gz"),
                              filter = TRUE,
                              multiallele = c("expand", "exclude"),
                              fix_vcf_errors = TRUE,
@@ -141,16 +143,16 @@ extract_variants <- function(inputs, id = NULL, rename = NULL,
 
   # Check arguments
   multiallele <- match.arg(multiallele)
-  if(!is.null(rename)) {
-    if(length(rename) != length(input_list)) {
+  if (!is.null(rename)) {
+    if (length(rename) != length(input_list)) {
       stop("The length of 'rename' must be the same as the length of 'input'.",
            " Only vcf object or file.vcf inputs will be renamed.")
     }
   } else {
     rename <- rep(NULL, length(input_list))
   }
-  if(!is.null(id)) {
-    if(length(id) != length(input_list)) {
+  if (!is.null(id)) {
+    if (length(id) != length(input_list)) {
       stop("The lenght of 'rename' must be the same as the length of 'input'.",
            " This only applies to vcf object or file.vcf inputs.")
     }
@@ -262,7 +264,7 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
 
   # Process MultiAllelic Sites
   num_alleles <- lengths(VariantAnnotation::fixed(vcf)[, "ALT"])
-  if(multiallele == "expand") {
+  if (multiallele == "expand") {
     vcf <- VariantAnnotation::expand(vcf)
   } else {
     multi_allelic <- which(num_alleles != 1)
@@ -273,32 +275,32 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
 
   # Configure ID
   vcf_samples <- colnames(vcf)
-  if(is.null(id)) {
+  if (is.null(id)) {
     id <- vcf_samples[1]
   } else {
-    if(!(id %in% vcf_samples)) {
+    if (!(id %in% vcf_samples)) {
       stop("The value for id, '", id, "', was not found among the list of,",
            " samples in the VCF: ",
-           paste(vcf_samples, collapse=", "))
+           paste(vcf_samples, collapse = ", "))
     }
   }
 
   # Configure sample name
   vcf_name <- id
-  if(!is.null(rename)) {
+  if (!is.null(rename)) {
     vcf_name <- rename
-  } else if(!is.null(sample_field)) {
+  } else if (!is.null(sample_field)) {
     df <- VariantAnnotation::meta(VariantAnnotation::header(vcf))$SAMPLE
-    if(!(id %in% rownames(df))) {
+    if (!(id %in% rownames(df))) {
       stop("The value for id, '", id, "' was not found in the 'SAMPLE' ",
            "metadata within the VCF.")
     }
-    if(!sample_field %in% colnames(df)) {
+    if (!sample_field %in% colnames(df)) {
       stop("The value for header_sample_name_field, '",
            sample_field, "' was not found ",
            "in the 'SAMPLE' metadata within the VCF.")
     }
-    vcf_name <- as.character(df[id,sample_field])
+    vcf_name <- as.character(df[id, sample_field])
   }
 
   # Perform filtering based on FILTER column
@@ -314,9 +316,9 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
   }
 
   # Find variants in that sample (alt allele having number other than 0)
-  pass <- stringr::str_detect(VariantAnnotation::geno(vcf)$GT[,id], "[1-9]")
+  pass <- stringr::str_detect(VariantAnnotation::geno(vcf)$GT[, id], "[1-9]")
   if (sum(pass) == 0) {
-    if(id != vcf_name) {
+    if (id != vcf_name) {
       warning("All variants matched the reference allele ",
               "for: ", vcf_name, " (", id, ")")
 
@@ -326,11 +328,11 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
     }
     return(NULL)
   }
-  vcf <- vcf[pass,]
+  vcf <- vcf[pass, ]
 
   # What does this do?
   rows <- SummarizedExperiment::rowRanges(vcf)
-  dt <- cbind(data.table::as.data.table(rows)[,c("seqnames", "REF", "ALT",
+  dt <- cbind(data.table::as.data.table(rows)[, c("seqnames", "REF", "ALT",
                                                  "start", "end")],
               "sample" = vcf_name)
 
@@ -342,12 +344,12 @@ extract_variants_from_vcf <- function(vcf, id = NULL, rename = NULL,
   if (!is.null(extra_fields)) {
     info_field <- VariantAnnotation::info(vcf)
     temp <- setdiff(extra_fields, colnames(info_field))
-    if(length(temp) > 0) {
+    if (length(temp) > 0) {
       warning("Values in extra_fields were not found in the INFO field within",
               " the VCF: ", paste(temp, collapse = ", "))
     }
     temp <- intersect(extra_fields, colnames(info_field))
-    dt <- cbind(dt, info_field[,temp])
+    dt <- cbind(dt, info_field[, temp])
   }
   return(dt)
 }
@@ -406,13 +408,13 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
   vcf <- try(VariantAnnotation::readVcf(vcf_file), silent = TRUE)
 
   # Extract the filebase name and use it as the sample name
-  if(isTRUE(filename_as_id)) {
+  if (isTRUE(filename_as_id)) {
     rename <- basename(vcf_file)
-    if(!is.null(strip_extension)) {
-      if(isTRUE(strip_extension)) {
+    if (!is.null(strip_extension)) {
+      if (isTRUE(strip_extension)) {
         rename <- tools::file_path_sans_ext(rename)
       } else {
-        rename <- gsub(paste(paste0(strip_extension, "$"), collapse="|"),
+        rename <- gsub(paste(paste0(strip_extension, "$"), collapse = "|"),
                        "", rename)
       }
     }
@@ -487,13 +489,14 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
 #' @return Returns a data.table of variants from a maf which can be used to
 #' create a \code{bagel} object.
 #' @examples
-#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+#' package = "BAGEL")
 #' library(maftools)
 #' maf <- read.maf(maf_file)
 #' variants <- extract_variants_from_maf(maf = maf)
 #' @export
 extract_variants_from_maf <- function(maf, extra_fields = NULL) {
-  if(!inherits(maf, "MAF")) {
+  if (!inherits(maf, "MAF")) {
     stop("'maf' needs to be a 'MAF' object created by the 'read.maf' function
          from package 'maftools'")
   }
@@ -532,7 +535,8 @@ extract_variants_from_maf <- function(maf, extra_fields = NULL) {
 #' @return Returns a data.table of variants from a maf which can be used to
 #' create a \code{bagel} object.
 #' @examples
-#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+#' package = "BAGEL")
 #' library(maftools)
 #' maf <- read.maf(maf_file)
 #' variants <- extract_variants_from_maf(maf = maf)
@@ -544,7 +548,7 @@ extract_variants_from_matrix <- function(mat, chromosome_col = "chr",
                                          alt_col = "alt",
                                          sample_col = "sample",
                                          extra_fields = NULL) {
-  if(!inherits(mat, c("matrix", "data.frame"))) {
+  if (!inherits(mat, c("matrix", "data.frame"))) {
     stop("'mat' needs to inherit classes 'matrix' or 'data.frame'")
   }
   dt <- .check_headers(data.table::as.data.table(mat),
@@ -558,7 +562,7 @@ extract_variants_from_matrix <- function(mat, chromosome_col = "chr",
   # Add extra columns if requested
   if (!is.null(extra_fields)) {
     temp <- setdiff(extra_fields, colnames(dt))
-    if(length(temp) > 0) {
+    if (length(temp) > 0) {
       warning("Values in 'extra_fields' were not found in column names in",
               " the MAF object: ", paste(temp, collapse = ", "))
     }
@@ -580,7 +584,8 @@ extract_variants_from_matrix <- function(mat, chromosome_col = "chr",
 #' object. Default \code{NULL}.
 #' @return Returns a data.table of variants from a maf
 #' @examples
-#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+#' package = "BAGEL")
 #' maf <- extract_variants_from_maf_file(maf_file = maf_file)
 #' @export
 extract_variants_from_maf_file <- function(maf_file, extra_fields = NULL) {
@@ -624,7 +629,8 @@ extract_variants_from_maf_file <- function(maf_file, extra_fields = NULL) {
 #' Default \code{TRUE}.
 #' @return Returns a bagel object
 #' @examples
-#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL")
+#' maf_file <- system.file("testdata", "public_TCGA.LUSC.maf",
+#' package = "BAGEL")
 #' variants <- extract_variants_from_maf_file(maf_file)
 #' g <- select_genome("38")
 #' bagel <- create_bagel(x = variants, genome = g)
@@ -642,14 +648,14 @@ create_bagel <- function(x, genome,
                          verbose = TRUE) {
 
   used_fields <- c(.required_bagel_headers(), extra_fields)
-  if(canCoerce(x, "data.table")) {
+  if (canCoerce(x, "data.table")) {
     dt <- data.table::as.data.table(x)
   } else {
     stop("'x' needs to be an object which can be coerced to a data.table. ",
          "Valid classes include but are not limited to 'matrix', 'data.frame'",
          " and 'data.table'.")
   }
-  if(!inherits(genome, "BSgenome")) {
+  if (!inherits(genome, "BSgenome")) {
     stop("'genome' needs to be a 'BSgenome' object containing the genome ",
          "reference that was used when calling the variants.")
   }
@@ -677,129 +683,129 @@ create_bagel <- function(x, genome,
     dt <- dt[-non_variant, ]
   }
 
-  if(isTRUE(check_ref_chromosomes)){
+  if (isTRUE(check_ref_chromosomes)) {
     # Check for genome style and attempt to convert variants to reference
     # genome if they don't match
-    if(isTRUE(verbose)) {
+    if (isTRUE(verbose)) {
       message("Checking that chromosomes in the 'variant' object match ",
               "chromosomes in the 'genome' object.")
     }
     dt <- .check_variant_genome(dt = dt, genome = genome)
   }
 
-  if(isTRUE(check_ref_bases)) {
-    if(isTRUE(verbose)) {
-      message("Checking that the reference bases in the 'variant' object match ",
-              "the reference bases in the 'genome' object.")
+  if (isTRUE(check_ref_bases)) {
+    if (isTRUE(verbose)) {
+      message("Checking that the reference bases in the 'variant' object ",
+              "match the reference bases in the 'genome' object.")
     }
     .check_variant_ref_in_genome(dt = dt, genome = genome)
   }
 
   # Create and return a BAGEL object
-  bagel = new("bagel", variants = dt, genome = genome)
+  bagel <- new("bagel", variants = dt, genome = genome)
   return(bagel)
 }
 
 
 .check_variant_genome <- function(dt, genome) {
 
-  chr.header <- .required_bagel_headers()["chromosome"]
-  if(!chr.header %in% colnames(dt)) {
-    stop("The column '", chr.header, "' was not found in the data.table.")
+  chr_header <- .required_bagel_headers()["chromosome"]
+  if (!chr_header %in% colnames(dt)) {
+    stop("The column '", chr_header, "' was not found in the data.table.")
   }
-  chr <- as.data.frame(dt[,chr.header, with=FALSE])[,1]
-  chr.u <- unique(chr)
-  genome.u <- unique(GenomeInfoDb::seqnames(genome))
-  diff <- setdiff(chr.u, genome.u)
+  chr <- as.data.frame(dt[, chr_header, with = FALSE])[, 1]
+  chr_u <- unique(chr)
+  genome_u <- unique(GenomeInfoDb::seqnames(genome))
+  diff <- setdiff(chr_u, genome_u)
 
 
-  if(length(diff) > 0) {
+  if (length(diff) > 0) {
     # Try to use GenomeInfoDb to determine style of variants and genome
-    g.error <- try(genome.style <-
-                     GenomeInfoDb::seqlevelsStyle(genome.u)[1],
+    g_error <- try(genome_style <-
+                     GenomeInfoDb::seqlevelsStyle(genome_u)[1],
                    silent = TRUE)
-    v.error <- try(variant.style <-
-                     GenomeInfoDb::seqlevelsStyle(as.character(chr.u))[1],
+    v_error <- try(variant_style <-
+                     GenomeInfoDb::seqlevelsStyle(as.character(chr_u))[1],
                    silent = TRUE)
 
-    inter <- intersect(chr.u, genome.u)
-    if(length(inter) == 0) {
+    inter <- intersect(chr_u, genome_u)
+    if (length(inter) == 0) {
       # Error 1: No matching of genome and variants
-      if(class(g.error) == "try-error" & class(v.error) == "try-error") {
+      if (class(g_error) == "try-error" & class(v_error) == "try-error") {
         stop("The style of the genome references in the 'variant' and ",
              "'genome' objects did not match each other or any style ",
              "from the 'GenomeInfoDb' package. Please ensure that the entries ",
-             "in the'", chr.header, "' column in the variant table match ",
+             "in the'", chr_header, "' column in the variant table match ",
              "entries in 'seqnames(genome)'. First five chromosomes:\n",
-             "variant: ", paste(head(chr.u, 5), collapse = ", "), "\n",
-             "genome: ", paste(head(genome.u, 5), collapse = ", "))
-      } else if(class(g.error) == "try-error") {
+             "variant: ", paste(head(chr_u, 5), collapse = ", "), "\n",
+             "genome: ", paste(head(genome_u, 5), collapse = ", "))
+      } else if (class(g_error) == "try-error") {
         stop("The style of the genome references in the 'variant' and ",
              "'genome' objects did not match each other. The style for the ",
-             "variant table was determined to be ", variant.style, " by the ",
+             "variant table was determined to be ", variant_style, " by the ",
              "'GenomeInfoDb' package. However, the 'genome' object did not ",
              "match any known styles and therefore could not be automatically ",
              "mapped. Please ensure that the entries ",
-             "in the'", chr.header, "' column in the variant table match ",
+             "in the'", chr_header, "' column in the variant table match ",
              "entries in 'seqnames(genome)'. First five chromosomes:\n",
-             "variant: ", paste(head(chr.u, 5), collapse = ", "), "\n",
-             "genome: ", paste(head(genome.u, 5), collapse = ", "))
-      } else if (class(v.error) == "try-error") {
+             "variant: ", paste(head(chr_u, 5), collapse = ", "), "\n",
+             "genome: ", paste(head(genome_u, 5), collapse = ", "))
+      } else if (class(v_error) == "try-error") {
         stop("The style of the genome references in the 'variant' and ",
              "'genome' objects did not match each other. The style for the ",
-             "genome object was determined to be ", genome.style, " by the ",
+             "genome object was determined to be ", genome_style, " by the ",
              "'GenomeInfoDb' package. However, the variant table did not ",
              "match any known styles and therefore could not be automatically ",
              "mapped. Please ensure that the entries ",
-             "in the'", chr.header, "' column in the variant table match ",
+             "in the'", chr_header, "' column in the variant table match ",
              "entries in 'seqnames(genome)'. First five chromosomes:\n",
-             "variant: ", paste(head(chr.u, 5), collapse = ", "), "\n",
-             "genome: ", paste(head(genome.u, 5), collapse = ", "))
+             "variant: ", paste(head(chr_u, 5), collapse = ", "), "\n",
+             "genome: ", paste(head(genome_u, 5), collapse = ", "))
       } else {
         # Attempt to map variants to genome object
-        new.chr <- chr
-        map.error <- try(GenomeInfoDb::seqlevelsStyle(new.chr) <-
-                           genome.style, silent = TRUE)
-        if(class(map.error) == "try-error") {
+        new_chr <- chr
+        map_error <- try(GenomeInfoDb::seqlevelsStyle(new_chr) <-
+                           genome_style, silent = TRUE)
+        if (class(map_error) == "try-error") {
           stop("The style of the genome references in the 'variant' and ",
                "'genome' objects did not match each other. The style for the ",
-               "genome object was determined to be ", genome.style, " and the ",
-               "style of the variants was determined to be ", variant.style,
+               "genome object was determined to be ", genome_style, " and the ",
+               "style of the variants was determined to be ", variant_style,
                " by the 'GenomeInfoDb' package. However, they were not able ",
                "to be automatically mapped. Please ensure that the entries ",
-               "in the'", chr.header, "' column in the variant table match ",
+               "in the'", chr_header, "' column in the variant table match ",
                "entries in 'seqnames(genome)'. First five chromosomes:\n",
-               "variant: ", paste(head(chr.u, 5), collapse = ", "), "\n",
-               "genome: ", paste(head(genome.u, 5), collapse = ", "))
+               "variant: ", paste(head(chr_u, 5), collapse = ", "), "\n",
+               "genome: ", paste(head(genome_u, 5), collapse = ", "))
         } else {
           # Set new chromosomes
-          dt[,eval(quote(chr.header))] <- new.chr
+          dt[, eval(quote(chr_header))] <- new_chr
 
           # Determine if mapping was complete or partial
-          new.chr.u <- unique(new.chr)
-          new.diff <- setdiff(new.chr.u, genome.u)
-          if(length(new.diff) > 0) {
+          new_chr_u <- unique(new_chr)
+          new_diff <- setdiff(new_chr_u, genome_u)
+          if (length(new_diff) > 0) {
             # If conversion was partial, need to subset to overlapping variants
-            dt <- subset(dt, new.chr %in% genome.u)
+            dt <- subset(dt, new_chr %in% genome_u)
 
-            new.inter <- intersect(new.chr.u, genome.u)
-            inter.sum <- sum(new.chr %in% genome.u)
-            diff.sum <- sum(!new.chr %in% genome.u)
+            new.inter <- intersect(new_chr_u, genome_u)
+            inter_sum <- sum(new_chr %in% genome_u)
+            diff.sum <- sum(!new_chr %in% genome_u)
             warning("The style of the genome references in the 'variant' and ",
               "'genome' objects did not match each other. The style for the ",
-              "genome object was determined to be ", genome.style, " and the ",
-              "style of the variants was determined to be ", variant.style,
-              " by the 'GenomeInfoDb' package. ", inter.sum, " variants were ",
+              "genome object was determined to be ", genome_style, " and the ",
+              "style of the variants was determined to be ", variant_style,
+              " by the 'GenomeInfoDb' package. ", inter_sum, " variants were ",
               "automatically converted to those in the genome object. ",
               diff.sum, " variants were not able to be converted and ",
               "were excluded from the final variant table. Variant ",
               "chromosomes that were not able to be converted: \n",
-              paste(new.diff, collapse = ", "))
+              paste(new_diff, collapse = ", "))
           } else {
             warning("The style of the genome references in the 'variant' and ",
               "'genome' objects did not match each other. The style for the ",
-              "genome object was determined to be ", genome.style, " and the ",
-              "style of the variants was determined to be ", variant.style,
+              "genome object was determined to be ", genome_style, " and the ",
+              "style of the variants was determined to be ", variant_style,
               " by the 'GenomeInfoDb' package. All variant chromosomes were ",
               "automatically converted to those in the genome object.")
           }
@@ -813,10 +819,10 @@ create_bagel <- function(x, genome,
 
 .check_variant_ref_in_genome <- function(dt, genome) {
   headers <- .required_bagel_headers()
-  chr <- as.character(as.data.frame(dt)[,headers["chromosome"]])
-  start <- as.numeric(as.data.frame(dt)[,headers["start"]])
-  end <- as.numeric(as.data.frame(dt)[,headers["end"]])
-  ref <- as.character(as.data.frame(dt)[,headers["ref"]])
+  chr <- as.character(as.data.frame(dt)[, headers["chromosome"]])
+  start <- as.numeric(as.data.frame(dt)[, headers["start"]])
+  end <- as.numeric(as.data.frame(dt)[, headers["end"]])
+  ref <- as.character(as.data.frame(dt)[, headers["ref"]])
 
   genome_ref <- BSgenome::getSeq(x = genome,
                    names = chr, start = start, end = end,
@@ -824,10 +830,10 @@ create_bagel <- function(x, genome,
 
   # Only check references that have bases. For example maf files will have "-"
   # for all insertions which cannot be checked.
-  ix = grepl("[^ACGT]", ref)
-  no.match.sum <- sum(ref[!ix] != genome_ref[!ix])
-  if(no.match.sum > 0) {
-    warning("Reference bases for ", no.match.sum, " out of ",
+  ix <- grepl("[^ACGT]", ref)
+  no_match_sum <- sum(ref[!ix] != genome_ref[!ix])
+  if (no_match_sum > 0) {
+    warning("Reference bases for ", no_match_sum, " out of ",
          length(ref), " variantsdid not match the reference base in the ",
          "'genome'. Make sure the genome reference is correct.")
   }
@@ -838,44 +844,44 @@ create_bagel <- function(x, genome,
                            update_fields = TRUE) {
   # If headers are not given in arguments, then use headers from maf as default
   rfields <- .required_maf_headers()
-  if(!is.null(chromosome)) rfields["chromosome"] <- chromosome
-  if(!is.null(start)) rfields["start"] <- start
-  if(!is.null(end)) rfields["end"] <- end
-  if(!is.null(ref)) rfields["ref"] <- ref
-  if(!is.null(alt))  rfields["alt"] <- alt
-  if(!is.null(sample))  rfields["sample"] <- sample
+  if (!is.null(chromosome)) rfields["chromosome"] <- chromosome
+  if (!is.null(start)) rfields["start"] <- start
+  if (!is.null(end)) rfields["end"] <- end
+  if (!is.null(ref)) rfields["ref"] <- ref
+  if (!is.null(alt))  rfields["alt"] <- alt
+  if (!is.null(sample))  rfields["sample"] <- sample
 
   # Check for missing columns
   col.ix <- match(tolower(rfields), tolower(colnames(dt)))
-  if(sum(is.na(col.ix) > 0)) {
+  if (sum(is.na(col.ix) > 0)) {
     missing.cols <- rfields[is.na(col.ix)]
     stop("Some required columns are missing in the maf: ",
-         paste(missing.cols, collapse=", "))
+         paste(missing.cols, collapse = ", "))
   }
 
   # Adjust column case if needed
-  prev.col <- colnames(dt)[col.ix]
+  prev_col <- colnames(dt)[col.ix]
   colnames(dt)[col.ix] <- rfields
-  mismatch.ix <- colnames(dt)[col.ix] != prev.col
-  if(sum(mismatch.ix) > 0) {
+  mismatch_ix <- colnames(dt)[col.ix] != prev_col
+  if (sum(mismatch_ix) > 0) {
     warning("Some columns in maf had the wrong case and were automatically ",
-            "adjusted: ", paste(prev.col[mismatch.ix], collapse=", "))
+            "adjusted: ", paste(prev_col[mismatch_ix], collapse = ", "))
   }
 
   # Change columns of data.table to match the required bagel format
-  if(isTRUE(update_fields)) {
+  if (isTRUE(update_fields)) {
     data.table::setnames(dt, rfields, .required_bagel_headers())
   }
   return(dt)
 }
 
 .required_bagel_headers <- function() {
-  return(c(chromosome="chr", start="start", end="end", ref="ref", alt="alt",
-           sample="sample"))
+  return(c(chromosome = "chr", start = "start", end = "end", ref = "ref",
+           alt = "alt", sample = "sample"))
 }
 
 .required_maf_headers <- function() {
-  return(c(chromosome="Chromosome", start="Start_Position", end="End_Position",
-           ref="Tumor_Seq_Allele1", alt="Tumor_Seq_Allele2",
-           sample="Tumor_Sample_Barcode"))
+  return(c(chromosome = "Chromosome", start = "Start_Position",
+           end = "End_Position", ref = "Tumor_Seq_Allele1",
+           alt = "Tumor_Seq_Allele2", sample = "Tumor_Sample_Barcode"))
 }

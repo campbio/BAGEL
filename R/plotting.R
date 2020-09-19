@@ -36,7 +36,7 @@ plot_full <- function(sample) {
                                                fill = "Var1")) + geom_bar(stat =
                                                                "identity") +
     theme(axis.text.x = element_text(angle = 70, vjust = 0.5),
-          text=element_text(family="Courier"), legend.position = "none") +
+          text = element_text(family = "Courier"), legend.position = "none") +
     xlab("Major Motif") + ylab("Counts")  + ggplot2::scale_fill_manual(
       values = c("#5ABCEBFF", "#050708FF", "#D33C32FF", "#CBCACBFF",
                  "#ABCD72FF", "#E7C9C6FF"))
@@ -51,9 +51,9 @@ plot_full <- function(sample) {
     geom_bar(stat = "identity") + cowplot::background_grid(major = "y",
                                                            minor = "none") +
     cowplot::panel_border() + theme(axis.text.x = element_text(angle = 90,
-                                                               vjust = 1,
+                                                               vjust = 0.5,
                                                                hjust = 1),
-                                    text=element_text(family="Courier")) +
+                                    text = element_text(family = "Courier")) +
     xlab("Minor Motif") + ylab("Counts") + ggplot2::labs(fill = "SNP") +
     ggplot2::scale_fill_manual(values = c(
       "#5ABCEBFF", "#050708FF", "#D33C32FF", "#CBCACBFF", "#ABCD72FF",
@@ -82,7 +82,7 @@ plot_full <- function(sample) {
 #' plot_signatures(result)
 #' @export
 plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
-                            text_size = 20, facet_size = 20) {
+                            text_size = 17, facet_size = 20, x_labels = FALSE) {
   DBS <- FALSE
   signatures <- result@signatures
   groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
@@ -93,13 +93,13 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
   signatures %>%
     as.data.frame %>%
     tibble::rownames_to_column(var = "Motif") %>%
+    tibble::tibble(.name_repair = "minimal") %>%
     tidyr::gather("var", "val", -"Motif") %>%
     cbind(mutation) -> plot_dat
 
   if (nrow(signatures) %in% 78) {
     DBS <- TRUE
     plot_dat$context <- substr(plot_dat$Motif, 7, 8)
-    text_size = 17
   }
 
   plot_dat %>%
@@ -113,20 +113,26 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
     theme(
       strip.text.y = element_text(size = facet_size), panel.grid.minor.x =
         element_blank(),
-      text=element_text(family="Courier", size = text_size)) +
+      text = element_text(family = "Courier", size = text_size)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
   if (nrow(signatures) %in% c(6, 96, 192, 83)) {
     #Use standard COSMIC coloring
     p <- p + ggplot2::scale_fill_manual(values = c(
       "#5ABCEBFF", "#050708FF", "#D33C32FF", "#CBCACBFF", "#ABCD72FF",
-      "#E7C9C6FF")) + theme(axis.text.x = element_blank(),
-                            axis.ticks.x = element_blank(),
-                            panel.grid.major.x = element_blank())
+      "#E7C9C6FF")) +
+      ggplot2::scale_x_discrete(labels = substr(plot_dat$Motif, 5, 7),
+                                       breaks = plot_dat$Motif) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   }
   if (DBS) {
     p <- p + ggplot2::scale_x_discrete(labels = plot_dat$context,
                                        breaks = plot_dat$Motif) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  }
+  if (!x_labels) {
+    p <- p + theme(axis.text.x = element_blank(),
+                   axis.ticks.x = element_blank(),
+                   panel.grid.major.x = element_blank())
   }
   if (no_legend) {
     p <- p + theme(legend.position = "none")
@@ -152,7 +158,7 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
                                              plotly = FALSE) {
   signatures <- extract_count_table(result@bagel, table_name)[, sample_number,
                                                               drop = FALSE]
-  sample_name = colnames(signatures)
+  sample_name <- colnames(signatures)
   reconstructed <- reconstruct_sample(result, sample_number)
   error <- signatures - reconstructed
   colnames(error) <- "Error"
@@ -190,7 +196,7 @@ plot_sample_reconstruction_error <- function(result, table_name, sample_number,
                                                 axis.ticks.x = element_blank(),
                                                 strip.text.y =
                                                   element_text(size = 7),
-                               text=element_text(family="Courier")) +
+                               text = element_text(family = "Courier")) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
     ggplot2::facet_wrap(~ var, drop = TRUE, scales = "fixed") +
     ggplot2::scale_x_discrete(breaks = NULL) -> p
@@ -228,7 +234,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = FALSE,
                            thresh_zero = FALSE, no_legend = FALSE,
                            plotly = FALSE) {
   samples <- result@exposures
-  if(thresh_zero) {
+  if (thresh_zero) {
     samples[samples < thresh_zero] <- 0
   }
   if (!all(samples_plotted %in% colnames(samples))) {
@@ -236,7 +242,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = FALSE,
     not in this dataset, available samples are as follows: "), "\n",
          paste0(colnames(samples), collapse = "\n"))
   }
-  samples <- samples[, samples_plotted]
+  samples <- samples[, samples_plotted, drop = FALSE]
   y_label <- "counts"
   counts <- colSums(samples)
   if (proportional) {
@@ -291,7 +297,7 @@ plot_exposures <- function(result, proportional = TRUE, label_samples = FALSE,
                                                   element_blank(), axis.text.x =
                          element_text(angle = 90, hjust = 1, vjust = 0.5),
                        panel.grid.major.x = element_blank(),
-                       text=element_text(family="Courier")) +
+                       text = element_text(family = "Courier")) +
     xlab("Samples") + ylab(paste("Signatures (", y_label, ")", sep = "")) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
   if (!label_samples) {
@@ -335,7 +341,7 @@ plot_exposures_by_annotation <- function(result, annotation,
                                          no_legend = FALSE, thresh_zero = FALSE,
                                          plotly = FALSE) {
   samples <- result@exposures
-  if(thresh_zero) {
+  if (thresh_zero) {
     samples[samples < thresh_zero] <- 0
   }
   y_label <- "counts"
@@ -403,7 +409,8 @@ plot_exposures_by_annotation <- function(result, annotation,
   }
   if (by_group) {
     plot_dat_table %>%
-      ggplot(aes_string(y = "val", x = "var", fill = "make", text = "annotation")) + geom_bar(
+      ggplot(aes_string(y = "val", x = "var", fill = "make",
+                        text = "annotation")) + geom_bar(
                           stat = "identity") + theme_bw() + theme(
                             legend.title = element_blank(), axis.text.x =
               element_text(angle = 90, hjust = 1, vjust = 0.5),
@@ -413,7 +420,8 @@ plot_exposures_by_annotation <- function(result, annotation,
     p <- p + ggplot2::facet_wrap(~ annotation, drop = TRUE, scales = "free")
   } else {
     plot_dat_table %>%
-      ggplot(aes_string(x = "annotation", y = "val", fill = "annotation", text = "annotation")) +
+      ggplot(aes_string(x = "annotation", y = "val", fill = "annotation",
+                        text = "annotation")) +
       ggplot2::geom_boxplot() + theme_bw() + theme(legend.title =
                                                      element_blank(),
                                                    axis.text.x =
@@ -425,9 +433,8 @@ plot_exposures_by_annotation <- function(result, annotation,
 
     p <- p + ggplot2::facet_wrap(~ make, drop = FALSE, scales = "free")
   }
-  p <- p + theme(text=element_text(family="Courier", size = 10),
+  p <- p + theme(text = element_text(family = "Courier", size = 10),
                  strip.text.y = element_text(size = 5))
-  #+ ggplot2::scale_fill_manual(values = scales::hue_pal()(4)[order(c(1,2,4,3))])
   if (!label_samples) {
     p <- p + theme(axis.text.x = element_blank(), axis.ticks.x =
                      element_blank())
@@ -470,7 +477,9 @@ plot_exposures_by_annotation <- function(result, annotation,
 create_umap <- function(result, annotation, n_neighbors = 30, min_dist = 0.75,
                         spread = 1, proportional = TRUE, seed = FALSE) {
   samples <- t(result@exposures)
-  range_limit <- function(x){(x/max(x))}
+  range_limit <- function(x) {
+    (x / max(x))
+    }
   if (proportional) {
     samples <- sweep(samples, 2, colSums(samples), FUN = "/")
   }
@@ -485,18 +494,18 @@ create_umap <- function(result, annotation, n_neighbors = 30, min_dist = 0.75,
                             min_dist = min_dist, spread = spread,
                             n_threads = 1, pca = NULL, metric = "cosine")
   }
-  x=umap_out[,1]
-  y=umap_out[,2]
-  annot = result@bagel@sample_annotations
-  samp_ind = match(rownames(samples), annot$Samples)
+  x <- umap_out[, 1]
+  y <- umap_out[, 2]
+  annot <- result@bagel@sample_annotations
+  samp_ind <- match(rownames(samples), annot$Samples)
   df <- data.frame(x = x, y = y, type = annot[[annotation]][samp_ind],
                    samp = rownames(samples))
 
   sig_df <- NULL
-  n_sigs = ncol(samples)
+  n_sigs <- ncol(samples)
   n_samples <- nrow(samples)
-  sig_names = colnames(samples)
-  for(i in 1:n_sigs) {
+  sig_names <- colnames(samples)
+  for (i in 1:n_sigs) {
     sig_name <- sig_names[i]
     sig_df <- rbind(sig_df, data.frame(x = x, y = y, level =
                                                      range_limit(
@@ -504,7 +513,7 @@ create_umap <- function(result, annotation, n_neighbors = 30, min_dist = 0.75,
                                                    Signatures = rep(sig_name,
                                                                     n_samples)))
   }
-  umaps = list(umap_df = df, umap_df_sigs = sig_df, umap_type =
+  umaps <- list(umap_df = df, umap_df_sigs = sig_df, umap_type =
                      ifelse(proportional, "Proportional", "Counts"))
   eval.parent(substitute(result@umap <- umaps))
 }
@@ -543,13 +552,13 @@ plot_umap <- function(result, point_size = 0.7, no_legend = FALSE,
     if (no_legend) {
       p <- p + theme(legend.position = "none")
     }
-    centroidList <- lapply(unique(cluster), function(x) {
-      df.sub <- umap_df[umap_df$type == x, ]
-      median.1 <- stats::median(df.sub[, "x"])
-      median.2 <- stats::median(df.sub[, "y"])
-      cbind(median.1, median.2, x)
+    centroid_list <- lapply(unique(cluster), function(x) {
+      df_sub <- umap_df[umap_df$type == x, ]
+      median_1 <- stats::median(df_sub[, "x"])
+      median_2 <- stats::median(df_sub[, "y"])
+      cbind(median_1, median_2, x)
     })
-    centroid <- do.call(rbind, centroidList)
+    centroid <- do.call(rbind, centroid_list)
     centroid <- data.frame(
       x = as.numeric(centroid[, 1]),
       y = as.numeric(centroid[, 2]),
@@ -558,7 +567,7 @@ plot_umap <- function(result, point_size = 0.7, no_legend = FALSE,
     p <- p + ggplot2::geom_point(data = centroid, mapping =
                                    ggplot2::aes_string(x = "x", y = "y"),
                                  size = 0, alpha = 0) +
-      theme(legend.position="none")
+      theme(legend.position = "none")
     if (text_box) {
       p <- p + ggrepel::geom_label_repel(data = centroid, mapping =
                                            ggplot2::aes_string(label = "type"),
@@ -584,10 +593,10 @@ plot_umap <- function(result, point_size = 0.7, no_legend = FALSE,
 #' @export
 plot_umap_sigs <- function(result) {
   umap_df_sigs <- result@umap$umap_df_sigs
-  ggplot(umap_df_sigs, aes_string(x="x", y="y", colour="level")) +
+  ggplot(umap_df_sigs, aes_string(x = "x", y = "y", colour = "level")) +
     ggplot2::facet_wrap(~ Signatures, drop = TRUE, scales = "free") +
     geom_point(aes_string(alpha = "level", size = "level")) +
-    ggplot2::scale_colour_gradientn(colours = c('grey', 'red', 'blue'),
+    ggplot2::scale_colour_gradientn(colours = c("grey", "red", "blue"),
                                     breaks = c(0, 0.0001, 0.1)) +
     ggplot2::scale_size_continuous(range = c(0.001, 1))
 

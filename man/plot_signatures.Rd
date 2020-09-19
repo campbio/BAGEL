@@ -8,8 +8,9 @@ plot_signatures(
   result,
   no_legend = FALSE,
   plotly = FALSE,
-  text_size = 20,
-  facet_size = 20
+  text_size = 17,
+  facet_size = 20,
+  x_labels = FALSE
 )
 }
 \arguments{
