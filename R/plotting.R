@@ -76,6 +76,7 @@ plot_full <- function(sample) {
 #' @param plotly add plotly layer for plot interaction
 #' @param text_size Size of axis text
 #' @param facet_size Size of facet text
+#' @param x_labels Toggle plotting of x-axis labels
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))

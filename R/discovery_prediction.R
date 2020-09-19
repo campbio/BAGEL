@@ -338,7 +338,8 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' build_standard_table(bay, "SBS96")
-#' predict_exposure(bay, "SBS96", BAGEL::cosmic_v2_sigs, algorithm = "lda")
+#' predict_exposure(bagel = bay, table_name = "SBS96",
+#' signature_res = BAGEL::cosmic_v2_sigs, algorithm = "lda")
 #' @export
 predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                              signatures_to_use = seq_len(ncol(
@@ -378,7 +379,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                       ref = "ref",
                                       alt = "alt",
                                       bsg = bagel@genome),
-           sigs.input <- withr::with_seed(
+           sigs.input <- withr::with_seed(seed,
              deconstructSigs::mut.to.sigs.input(mut.ref = bagel@variants,
                                              sample.id = "sample",
                                              chr = "chr",
@@ -395,17 +396,17 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
     colnames(sig_all) <- new_cols
 
     ds_res <- sapply(rownames(sigs.input), function(x) {
-      ds_result <- whichSignatures(tumor.ref = sigs.input,
-                                   contexts.needed = TRUE,
-                                   signatures.limit = ncol(signature),
-                                   tri.counts.method = "default",
-                                   sample.id = x, signatures.ref = sig_all)
+      ds_result <- whichSignatures(tumor_ref = sigs.input,
+                                   contexts_needed = TRUE,
+                                   signatures_limit = ncol(signature),
+                                   tri_counts_method = "default",
+                                   sample_id = x, signatures_ref = sig_all)
       return(as.matrix(ds_result$weights))
+    })
     exposures <- ds_res
     colnames(exposures) <- colnames(counts_table)
     rownames(exposures) <- colnames(signature)
     type_name <- "deconstructSigs"
-    })
   } else {
     stop("Type must be lda or decomp")
   }
@@ -534,7 +535,7 @@ whichSignatures <- function(tumor_ref = NA,
     stop(paste("Input tumor.ref needs to be a data frame or location of input text file", sep = ""))
   }
 
-  if (exists("tumor.ref", mode = "list")) {
+  if (exists("tumor.ref", mode = "list") | is(tumor_ref, "data.frame")) {
     tumor     <- tumor_ref
     if(contexts_needed == TRUE) {
       tumor   <- deconstructSigs::getTriContextFraction(mut.counts.ref = tumor,

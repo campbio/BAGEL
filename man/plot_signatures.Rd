@@ -23,6 +23,8 @@ plot_signatures(
 \item{text_size}{Size of axis text}
 
 \item{facet_size}{Size of facet text}
+
+\item{x_labels}{Toggle plotting of x-axis labels}
 }
 \value{
 Generates plot {no return}
