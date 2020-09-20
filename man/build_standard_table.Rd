@@ -33,4 +33,6 @@ bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 package = "BAGEL"))
 build_standard_table(bay, table_name = "DBS")
 
+bay <- readRDS(system.file("testdata", "indel_bagel.rds", package = "BAGEL"))
+build_standard_table(bay, table_name = "INDEL")
 }
