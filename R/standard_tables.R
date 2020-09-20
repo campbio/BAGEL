@@ -255,17 +255,6 @@ rc <- function(dna) {
   return(rev_com)
 }
 
-create_indel_table <- function(bay) {
-  temp <- methods::new("bagel", variants = subset_variant_by_type(bay@variants,
-                                                                  "indel"),
-                       count_tables = bay@count_tables)
-  tab <- build_custom_table(bay = temp, variant_annotation = "Variant_Length",
-                              name = "indel", description =
-                                "Standard count table for indels",
-                              return_instead = TRUE)
-  return(tab)
-}
-
 #' Builds a standard table from user variants
 #'
 #' @param bay Input samples
@@ -288,6 +277,8 @@ create_indel_table <- function(bay) {
 #' package = "BAGEL"))
 #' build_standard_table(bay, table_name = "DBS")
 #'
+#' bay <- readRDS(system.file("testdata", "indel_bagel.rds", package = "BAGEL"))
+#' build_standard_table(bay, table_name = "INDEL")
 #' @export
 build_standard_table <- function(bay, table_name, strand_type = NA) {
   if (table_name %in% c("SNV96", "SNV", "96", "SBS", "SBS96")) {
@@ -303,4 +294,235 @@ build_standard_table <- function(bay, table_name, strand_type = NA) {
                " please select from SBS96, SBS192, DBS, Indel."))
   }
   eval.parent(substitute(bay@count_tables <- tab))
+}
+
+create_indel_table <- function(bay) {
+  var <- bay@variants
+  g <- bay@genome
+  all_ins <- subset_variant_by_type(var, "INS")
+  all_del <- subset_variant_by_type(var, "DEL")
+  samples <- unique(c(as.character(all_ins$sample),
+                      as.character(all_del$sample)))
+  dimlist <- list(row_names = c(.get_indel_motifs("bp1", 0, 0),
+                                .get_indel_motifs("bp1", 1, 0),
+                                .get_indel_motifs("del", NA, NA),
+                                .get_indel_motifs("ins", NA, NA),
+                                .get_indel_motifs("micro", NA, NA)),
+                  column_names = samples)
+  table <- matrix(NA, nrow = 83, ncol = length(samples), dimnames = dimlist)
+  for(sample in samples) {
+    ins <- all_ins[which(all_ins$sample == sample), ]
+    del <- all_del[which(all_del$sample == sample), ]
+
+    ins_len = nchar(ins$alt)
+    del_len = nchar(del$ref)
+    ins1 = ins[which(ins_len == 1), ]
+    ins2 = ins[which(ins_len > 1), ]
+
+    del1 = del[which(del_len == 1), ]
+    del2 = del[which(del_len > 1), ]
+
+    if(nrow(del1) == 0) {
+      del1_counts <- setNames(rep(0, 12), .get_indel_motifs("bp1", 0, 0))
+    } else {
+      del1_counts <- .count1(del1, del1$ref, ins = FALSE, g = g)
+    }
+
+    if(nrow(ins1) == 0) {
+      ins1_counts <- setNames(rep(0, 12), .get_indel_motifs("bp1", 1, 0))
+    } else {
+      ins1_counts <- .count1(mut = ins1, type = ins1$alt, ins = TRUE, g = g)
+    }
+
+    if(nrow(ins2) == 0) {
+      ins2_counts <- setNames(rep(0, 24), .get_indel_motifs("ins", NA, NA))
+    } else {
+      ins2_counts <- .count2_ins(mut = ins2, type = ins2$alt, g = g)
+    }
+
+    if(nrow(del2) == 0) {
+      del2_counts <- list(del = setNames(rep(0, 24),
+                                         .get_indel_motifs("del", NA, NA)),
+                          micro = setNames(rep(0, 11),
+                                           .get_indel_motifs("micro", NA, NA)))
+    } else {
+      del2_counts = .count2_del(mut = del2, type = del2$ref, g)
+    }
+    table[, sample] <- c(del1_counts, ins1_counts, del2_counts$del, ins2_counts,
+                       del2_counts$micro)
+  }
+  tab <- create_count_table(bay = bay, table = table, name = "INDEL",
+                            description = paste("Standard count table for ",
+                                                "small insertions and deletions"
+                                                ,sep = ""),
+                            return_instead = TRUE)
+  return(tab)
+}
+
+.get_indel_motifs <- function(indel, ins, plus) {
+  if(indel == "bp1") {
+    return(paste(ifelse(ins, "INS", "DEL"), c("C", "C", "C", "C", "C", "C", "T",
+                                              "T", "T", "T", "T", "T"), 1,
+                 c(c(0, 1, 2, 3, 4, paste0(5 + plus, "+"), 0, 1, 2, 3, 4,
+                     paste0(5 + plus, "+"))), sep = "_"))
+  } else if(indel == "ins") {
+    return(paste(paste("INS_repeats", c("2", "2", "2", "2", "2", "2", "3", "3", "3", "3",
+                                        "3", "3", "4", "4", "4", "4", "4", "4", "5+",
+                                        "5+", "5+", "5+", "5+", "5+"),
+                       c("0", "1", "2", "3", "4", "5+", "0", "1", "2", "3", "4",
+                         "5+", "0", "1", "2", "3", "4", "5+", "0", "1", "2", "3",
+                         "4", "5+"), sep = "_")))
+  } else if(indel == "micro") {
+    return(paste("DEL_MH",  c("2", "3", "3", "4", "4", "4", "5+", "5+",
+                              "5+", "5+", "5+"),
+                 c("1", "1", "2", "1", "2", "3", "1", "2",
+                   "3", "4", "5+"), sep = "_"))
+  } else if(indel == "del") {
+    return(paste("DEL_repeats", c("2", "2", "2", "2", "2", "2", "3", "3", "3", "3",
+                                  "3", "3", "4", "4", "4", "4", "4", "4", "5+",
+                                  "5+", "5+", "5+", "5+", "5+"),
+                 c("0", "1", "2", "3", "4", "5+", "0", "1", "2", "3", "4",
+                   "5+", "0", "1", "2", "3", "4", "5+", "0", "1", "2", "3",
+                   "4", "5+"), sep = "_"))
+  } else {
+    stop("Unrecognized indel type")
+  }
+}
+
+.count1 <- function(mut, type, ins, g) {
+  ifelse(ins, plus <- 0, plus <- 0)
+  chr <- mut$chr
+  range_start <- mut$start
+  range_end <- mut$end
+  lflank <- VariantAnnotation::getSeq(g, chr, range_start - 10, range_start - 1,
+                                      as.character = TRUE)
+  rflank <- VariantAnnotation::getSeq(g, chr, range_end + 1, range_end + 10,
+                                      as.character = TRUE)
+  ind <- which(type %in% c("A", "G"))
+  lflank[ind] <- lflank[ind] %>%
+    Biostrings::DNAStringSet() %>%
+    Biostrings::reverseComplement() %>%
+    as.character()
+  rflank[ind] <- rflank[ind] %>%
+    Biostrings::DNAStringSet() %>%
+    Biostrings::reverseComplement() %>%
+    as.character()
+  final_type <- type
+  final_type[ind] <- final_type[ind] %>% Biostrings::DNAStringSet() %>%
+    Biostrings::reverseComplement() %>% as.character()
+  repeats = rep(NA, length(final_type))
+  for(i in 1:length(type)) {
+    repeats[i] <- .count_repeat(final_type[i], rflank[i]) +
+      .count_repeat(final_type[i], rev(lflank[i])) + plus
+  }
+  repeats[repeats >= 5 + plus] <- paste0(5 + plus, "+")
+  bp1_motif <- .get_indel_motifs("bp1", ins, plus)
+  return(table(factor(paste(ifelse(ins, "INS", "DEL"), final_type, 1,
+                            repeats, sep = "_"), levels = bp1_motif)))
+}
+
+.count2_ins <- function(mut, type, g) {
+  chr <- mut$chr
+  range_start <- mut$start
+  range_end <- mut$end
+  lflank <- VariantAnnotation::getSeq(g, chr, range_start - 10, range_start - 1,
+                                      as.character = TRUE)
+  rflank <- VariantAnnotation::getSeq(g, chr, range_end + 1, range_end + 10,
+                                      as.character = TRUE)
+  repeats = rep(NA, length(type))
+  for(i in 1:length(type)) {
+    repeats[i] <- .count_repeat(type[i], rflank[i]) +
+      .count_repeat(type[i], rev(lflank[i]))
+  }
+  repeats[repeats >= 5] <- paste0(5, "+")
+  len <- nchar(type)
+  len[which(len >= 5)] <- "5+"
+  ins_motif <- .get_indel_motifs("ins", NA, NA)
+  return(table(factor(paste("INS_repeats", len, repeats, sep = "_"),
+                      levels = ins_motif)))
+}
+
+.count2_del <- function(mut, type, g) {
+  chr <- mut$chr
+  range_start <- mut$start
+  range_end <- mut$end
+
+  len <- nchar(type)
+  lflank <- VariantAnnotation::getSeq(g, chr, range_start - len,
+                                      range_start - 1, as.character = TRUE)
+  rflank <- VariantAnnotation::getSeq(g, chr, range_end + 1,
+                                      range_end + len, as.character = TRUE)
+  has_repeat <- type == lflank | type == rflank
+  maybe_micro <- which(!has_repeat)
+
+  micro <- rep(NA, length(type))
+  for(i in 1:length(type)) {
+    micro[i] <- max(.micro_left(type[i], lflank[i]),
+                    .micro_right(type[i], rflank[i]))
+  }
+
+  repeats = rep(NA, length(type))
+  for(i in 1:length(type)) {
+    repeats[i] <- .count_repeat(type[i], rflank[i]) +
+      .count_repeat(type[i], rev(lflank[i])) + 1
+  }
+  micro_ind <- which(repeats == 1 & micro > 0)
+  repeat_ind <- which(micro == 0)
+  final_micro <- micro[micro_ind]
+  final_repeats <- repeats[repeat_ind]
+  final_repeats[final_repeats >= 6] <- paste0(6, "+")
+  final_len <- len
+  final_len[which(final_len >= 5)] <- "5+"
+  final_micro[which(final_micro >= 5)] <- "5+"
+  micro_motif <- .get_indel_motifs("micro", NA, NA)
+  del_motif <- .get_indel_motifs("del", NA, NA)
+  del_tab <- table(factor(paste("DEL_repeats", final_len[repeat_ind],
+                                final_repeats, sep = "_"), levels = del_motif))
+  micro_tab <- table(factor(paste("DEL_MH", final_len[micro_ind], final_micro,
+                                  sep = "_"), levels = micro_motif))
+  return(list(del = del_tab, micro = micro_tab))
+}
+
+.micro_right <-  function(letter, string) {
+  len <- nchar(letter)
+  elem <- len - 1
+  while(elem > 0) {
+    if(substr(letter, 1, elem) == substr(string, 1, elem)) {
+      return(elem)
+    } else {
+      elem <- elem - 1
+    }
+  }
+  return(0)
+}
+
+.micro_left <-  function(letter, string) {
+  len <- nchar(letter)
+  elem <- 1
+  while(elem < len) {
+    if(substr(letter, elem, len) == substr(string, elem, len)) {
+      return(elem)
+    } else {
+      elem <- elem + 1
+    }
+  }
+  return(0)
+}
+
+.count_repeat <- function(letter, string) {
+  len <- nchar(letter)
+  if(letter != substr(string, 1, len)) {
+    return(0)
+  } else {
+    next_matches = TRUE
+    counts <- 1
+    while(next_matches) {
+      #print(paste0("Counts: ", counts))
+      if(letter != substr(string, counts*len + 1, counts*len + len)) {
+        return(counts)
+      } else {
+        counts <- counts + 1
+      }
+    }
+  }
 }

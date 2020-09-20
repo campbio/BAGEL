@@ -159,7 +159,7 @@ subset_variant_by_type <- function(tab, type) {
   if (!any(tab$Variant_Type %in% type)) {
     stop(paste("No variants of type: ", type))
   }
-  return(tab[which(tab$Variant_Type == type), ])
+  return(tab[which(tab$Variant_Type %in% type), ])
 }
 
 #' Add transcript strand annotation to SBS variants (defined in genes only)
