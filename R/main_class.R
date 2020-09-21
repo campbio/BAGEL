@@ -11,21 +11,27 @@
 #' tables at the first list level are modelled independantly. Combined tables
 #' must be named.
 #' list("tableA", comboTable = list("tableC", "tableD"))
+#' @importFrom S4Vectors Rle
 #' @export
-setClass("Count_Tables", representation(table_list = "list",
-                                        table_name = "list",
-                                        description = "list"))
+setClass("count_table", slots = c(name = "character",
+                                  count_table = "array",
+                                  annotation = "data.frame",
+                                  features = "data.frame",
+                                  type = "Rle",
+                                  color_variable = "character",
+                                  color_mapping = "character",
+                                  description = "character"))
 
-setMethod("show", "Count_Tables",
-          function(object)cat("Count_Tables Object containing: ",
-                              "\n**Count Tables: \n",
-                              apply(cbind(do.call("rbind", lapply(
-                                object@table_list, dim)), "\n"), 1, paste),
-                              "\n**Names: \n",
-                              paste(unlist(object@table_name), "\n", sep = ""),
-                              "\n**Descriptions: \n",
-                              paste(unlist(object@description), "\n", sep = ""))
-)
+#setMethod("show", "Count_Tables",
+#          function(object)cat("Count_Tables Object containing: ",
+#                              "\n**Count Tables: \n",
+#                              apply(cbind(do.call("rbind", lapply(
+#                                object@table_list, dim)), "\n"), 1, paste),
+#                              "\n**Names: \n",
+#                              paste(unlist(object@table_name), "\n", sep = ""),
+#                              "\n**Descriptions: \n",
+#                              paste(unlist(object@description), "\n", sep = ""))
+#)
 
 # Primary bagel object/methods -------------------------------
 
@@ -41,41 +47,41 @@ setMethod("show", "Count_Tables",
 #' @import data.table BSgenome
 setClass("bagel", slots = c(variants = "data.table",
                                  genome = "BSgenome",
-                                 count_tables = "Count_Tables",
+                                 count_tables = "list",
                                  sample_annotations = "data.table"),
          prototype = list(variants = data.table::data.table(),
-                   count_tables = new("Count_Tables"),
+                   count_tables = list(),
                    sample_annotations = data.table::data.table()))
 
-setMethod("show", "bagel",
-          function(object)cat(cat("BAGEL Object containing \n**Variants: \n"),
-                              if (!all(is.na(object@variants))) {
-                                cat(methods::show(object@variants))
-                                }else{
-                                  cat("Empty")
-                                    },
-                              cat("\n**Count_Tables Object containing: \n"),
-                              if (length(object@count_tables@table_name) > 0) {
-                                cat("\n**Count Tables: \n",
-                                    apply(cbind(do.call("rbind", lapply(
-                                      object@count_tables@table_list, dim)),
-                                      "\n"), 1, paste),
-                                    "\n**Names: \n", paste(
-                                        unlist(object@count_tables@table_name),
-                                        "\n", sep = ""), "\n**Descriptions: \n",
-                                    paste(unlist(
-                                      object@count_tables@description), "\n",
-                                      sep = ""))
-                                }else{
-                                  cat("Empty")
-                                  },
-                              cat("\n**Sample Level Annotations: \n"),
-                              if (!all(is.na(object@sample_annotations))) {
-                                cat(methods::show(object@sample_annotations))
-                              }else{
-                                cat("Empty")
-                              })
-)
+# setMethod("show", "bagel",
+#           function(object)cat(cat("BAGEL Object containing \n**Variants: \n"),
+#                               if (!all(is.na(object@variants))) {
+#                                 cat(methods::show(object@variants))
+#                                 }else{
+#                                   cat("Empty")
+#                                     },
+#                               cat("\n**Count_Tables Object containing: \n"),
+#                               if (length(object@count_tables@table_name) > 0) {
+#                                 cat("\n**Count Tables: \n",
+#                                     apply(cbind(do.call("rbind", lapply(
+#                                       object@count_tables@table_list, dim)),
+#                                       "\n"), 1, paste),
+#                                     "\n**Names: \n", paste(
+#                                         unlist(object@count_tables@table_name),
+#                                         "\n", sep = ""), "\n**Descriptions: \n",
+#                                     paste(unlist(
+#                                       object@count_tables@description), "\n",
+#                                       sep = ""))
+#                                 }else{
+#                                   cat("Empty")
+#                                   },
+#                               cat("\n**Sample Level Annotations: \n"),
+#                               if (!all(is.na(object@sample_annotations))) {
+#                                 cat(methods::show(object@sample_annotations))
+#                               }else{
+#                                 cat("Empty")
+#                               })
+# )
 
 # Variant-Level object/methods -------------------------------
 
@@ -291,6 +297,7 @@ drop_na_variants <- function(variants, annot_col) {
 #'
 #' @slot signatures A matrix of signatures by mutational motifs
 #' @slot exposures A matrix of samples by signature weights
+#' @slot tables A character vector of table names used to make the result
 #' @slot type Describes how the signatures/weights were generated
 #' @slot bagel The bagel object the results were generated from
 #' @slot log_lik Posterior likelihood of the result (LDA only)
@@ -298,6 +305,7 @@ drop_na_variants <- function(variants, annot_col) {
 #' @slot umap List of umap data.frames for plotting and analysis
 #' @export
 setClass("Result", representation(signatures = "matrix", exposures = "matrix",
+                                  tables = "character",
                                   type = "character", bagel = "bagel",
                                   log_lik = "numeric", perplexity = "numeric",
                                   umap = "list"))

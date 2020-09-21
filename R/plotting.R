@@ -82,26 +82,46 @@ plot_full <- function(sample) {
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_signatures(result)
 #' @export
-plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
+plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE, 
+                            color_mapping = NULL, color_variable = NULL,
                             text_size = 17, facet_size = 20, x_labels = FALSE) {
-  DBS <- FALSE
+  #DBS <- FALSE
   signatures <- result@signatures
-  groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
-                                                                    "context"))
+  #groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
+  #                                                                  "context"))
   sig_names <- colnames(signatures)
-  mutation <- groups[, "mutation"]
-
+  table_name <- result@tables
+  tab <- result@bagel@count_tables[[table_name]]
+  annot <- tab@annotation
+  
   signatures %>%
     as.data.frame %>%
     tibble::rownames_to_column(var = "Motif") %>%
     tibble::tibble(.name_repair = "minimal") %>%
-    tidyr::gather("var", "val", -"Motif") %>%
-    cbind(mutation) -> plot_dat
+    tidyr::gather("var", "val", -"Motif") -> plot_dat
 
-  if (nrow(signatures) %in% 78) {
-    DBS <- TRUE
-    plot_dat$context <- substr(plot_dat$Motif, 7, 8)
+  # Add color variables if supplied in table or by user
+  if(is.null(color_variable) & !is.null(tab@color_variable)) {
+    color_variable <- tab@color_variable  
+  } else {
+    if(!color_variable %in% colnames(annot) &
+       length(color_variable) != nrow(signatures)){
+      stop("'color_variable' must be a column in the table annotation or the ",
+           "same length as the number of motifs in the signatures: ",
+           nrow(signatures))
+    }
   }
+  if(!is.null(color_variable)) {
+    plot_dat <- cbind(plot_dat, mutation = annot[,color_variable])
+  }
+  if(is.null(color_mapping)) {
+    color_mapping <- tab@color_mapping
+  }
+  
+  #if (nrow(signatures) %in% 78) {
+  #  DBS <- TRUE
+  #  plot_dat$context <- substr(plot_dat$Motif, 7, 8)
+  #}
 
   plot_dat %>%
     ggplot(aes_string(y = "val", x = "Motif", fill = "mutation")) +
@@ -116,20 +136,18 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
         element_blank(),
       text = element_text(family = "Courier", size = text_size)) +
     ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
-  if (nrow(signatures) %in% c(6, 96, 192, 83)) {
-    #Use standard COSMIC coloring
-    p <- p + ggplot2::scale_fill_manual(values = c(
-      "#5ABCEBFF", "#050708FF", "#D33C32FF", "#CBCACBFF", "#ABCD72FF",
-      "#E7C9C6FF")) +
+  #if (nrow(signatures) %in% c(6, 96, 192, 83)) {
+  #  
+    p <- p + ggplot2::scale_fill_manual(values = color_mapping) +
       ggplot2::scale_x_discrete(labels = substr(plot_dat$Motif, 5, 7),
                                        breaks = plot_dat$Motif) +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-  }
-  if (DBS) {
-    p <- p + ggplot2::scale_x_discrete(labels = plot_dat$context,
-                                       breaks = plot_dat$Motif) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-  }
+  #}
+  #if (DBS) {
+  #  p <- p + ggplot2::scale_x_discrete(labels = plot_dat$context,
+  #                                     breaks = plot_dat$Motif) +
+  #    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  #}
   if (!x_labels) {
     p <- p + theme(axis.text.x = element_blank(),
                    axis.ticks.x = element_blank(),

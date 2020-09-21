@@ -17,20 +17,20 @@ NULL
 #' discover_signatures(input = bay, table_name = "SBS96",
 #' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
-discover_signatures <- function(input, table_name, num_signatures, method="lda",
+discover_signatures <- function(input, table_name = NULL, num_signatures, method="lda",
                             seed = 1, nstart = 1, par_cores = FALSE) {
   if (!methods::is(input, "bagel")) {
-    if (!methods::is(input, "matrix")) {
+#    if (!methods::is(input, "matrix")) {
       stop("Input to discover_signatures must be a bagel object or a matrix")
-    }
-    bagel <- methods::new("bagel")
-    bagel@count_tables@table_list[[1]] <- input
-    bagel@count_tables@table_name[1] <- table_name
-    input <- bagel
+#    }
+#    bagel <- methods::new("bagel")
+#    bagel@count_tables@table_list[[1]] <- input
+#    bagel@count_tables@table_name[1] <- table_name
+#    input <- bagel
   }
-  counts_table <- extract_count_table(input, table_name)
+  counts_table <- .extract_count_table(input, table_name)
 
-  #Determine if samples are present and can be used to scale weights
+  # Determine if samples are present and can be used to scale weights
   used_samples <- which(input@variants$sample %in%
                           colnames(counts_table))
   if (length(used_samples) == 0) {
@@ -51,10 +51,10 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
     lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
     lda_sigs <- exp(t(lda_out@beta))
     rownames(lda_sigs) <- colnames(counts_table)
-    colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")
+    colnames(lda_sigs) <- paste0("Signature", seq_len(num_signatures))
 
     weights <- t(lda_out@gamma)
-    rownames(weights) <- paste("Signature", seq_len(num_signatures), sep = "")
+    rownames(weights) <- paste0("Signature", seq_len(num_signatures))
     colnames(weights) <- rownames(counts_table)
 
     # Multiply Weights by sample counts
@@ -62,6 +62,7 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
       weights <- sweep(weights, 2, sample_counts[matched], FUN = "*")
     }
     lda_result <- methods::new("Result", signatures = lda_sigs,
+                               tables = table_name,
                                exposures = weights, type = "LDA", bagel = input,
                                log_lik = stats::median(lda_out@loglikelihood),
                                perplexity = topicmodels::perplexity(lda_out))
@@ -82,6 +83,7 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
     colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures),
                                     sep = "")
     nmf_result <- methods::new("Result", signatures = decomp@fit@W,
+                               tables = table_name,
                                exposures = decomp@fit@H, type = "NMF",
                                bagel = input, log_lik = decomp@residuals)
     nmf_result@signatures <- sweep(nmf_result@signatures, 2,
@@ -96,7 +98,8 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
     }
     return(nmf_result)
   } else{
-    stop("That method is not supported. Use lda or nmf to generate signatures.")
+    stop("That method is not supported. Please select 'lda' or 'nmf' ",
+         "to generate signatures.")
   }
 }
 

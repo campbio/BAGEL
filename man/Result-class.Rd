@@ -16,6 +16,8 @@ the bagel object the result was generated from
 
 \item{\code{exposures}}{A matrix of samples by signature weights}
 
+\item{\code{tables}}{A character vector of table names used to make the result}
+
 \item{\code{type}}{Describes how the signatures/weights were generated}
 
 \item{\code{bagel}}{The bagel object the results were generated from}

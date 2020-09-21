@@ -6,7 +6,7 @@
 \usage{
 discover_signatures(
   input,
-  table_name,
+  table_name = NULL,
   num_signatures,
   method = "lda",
   seed = 1,

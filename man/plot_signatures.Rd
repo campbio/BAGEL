@@ -8,6 +8,8 @@ plot_signatures(
   result,
   no_legend = FALSE,
   plotly = FALSE,
+  color_mapping = NULL,
+  color_variable = NULL,
   text_size = 17,
   facet_size = 20,
   x_labels = FALSE

@@ -42,31 +42,50 @@ create_sbs96_table <- function(bay) {
 
   ###### Now we separate into samples
   ## Define all mutation types for 96 substitution scheme
-  b1 <- rep(c("A", "C", "G", "T"), each = 24)
-  b2 <- rep(rep(c("C", "T"), each = 12), 4)
+  b1 <- rep(rep(c("A", "C", "G", "T"), each=4), 6)
+  b2 <- rep(c("C", "T"), each = 48)
   b3 <- rep(c("A", "C", "G", "T"), 24)
   mut_trinuc <- apply(cbind(b1, b2, b3), 1, paste, collapse = "")
-  mut_type <- rep(rep(forward_change, each = 4), 4)
+  mut <- rep(forward_change, each = 16)
+  annotation <- data.frame("motif" = paste0(mut, "_", mut_trinuc),
+                           "mutation" = mut,
+                           "context" = mut_trinuc)
+  rownames(annotation) <- annotation$motif
+  
 
-
-  mut_id <- apply(cbind(mut_type, mut_trinuc), 1, paste,
+  mut_id <- apply(cbind(mut, mut_trinuc), 1, paste,
                   collapse = "_")
-  mutation <- factor(final_motif, levels = mut_id)
+  mutation <- factor(final_motif, levels = annotation$motif)
 
   mut_table <- as.matrix(as.data.frame.matrix(xtabs(~ mutation + dat$sample)))
   #xtabs adds dat$sample as dimname[2] so we remove it
   dimnames(mut_table) <- list(rownames(mut_table), colnames(mut_table))
 
-  zero_samps <- which(colSums(mut_table) == 0)
-  if (length(zero_samps) > 0) {
-    warning(paste0("Dropping the following zero count samples: ",
-                   paste(names(zero_samps), collapse = ", ")))
-    mut_table <- mut_table[, -zero_samps, drop = FALSE]
-  }
-  tab <- create_count_table(bay = bay, table = mut_table, name = "SBS96",
-                     description = paste("Single Base Substitution table with",
-                     " one base upstream and downstream",
-                                         sep = ""), return_instead = TRUE)
+  # Use COSMIC color scheme
+  color_mapping <- c("C>A" = "#5ABCEBFF",
+                     "C>G" = "#050708FF",
+                     "C>T" = "#D33C32FF",
+                     "T>A" = "#CBCACBFF",
+                     "T>C" = "#ABCD72FF",
+                     "T>G" = "#E7C9C6FF")
+ 
+# Need to think about this more carefully - what happens if indel are zero but
+#  not SNV and the user wants to combine them? 
+#  zero_samps <- which(colSums(mut_table) == 0)
+#  if (length(zero_samps) > 0) {
+#    warning(paste0("Dropping the following zero count samples: ",
+#                   paste(names(zero_samps), collapse = ", ")))
+#    mut_table <- mut_table[, -zero_samps, drop = FALSE]
+#  }
+  tab <- .create_count_table(bay = bay, name = "SBS96",
+                            count_table = mut_table, 
+                            annotation = annotation,
+                            features = data.frame(mutation = final_motif),
+                            type = as.character(dat$Variant_Type),
+                            color_variable = "mutation",
+                            color_mapping = color_mapping,
+                     description = paste0("Single Base Substitution table with",
+                     " one base upstream and downstream"))
   return(tab)
 }
 

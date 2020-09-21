@@ -28,29 +28,27 @@ table_96 <- function(sample_df) {
   return(mut_summary)
 }
 
-extract_count_table <- function(bagel, table_name) {
+.extract_count_table <- function(bagel, table_name) {
   #Check that object is a bagel
   if (!methods::is(bagel, "bagel")) {
     stop(strwrap(prefix = " ", initial = "", "The input object is not a
-    bagel object, please use new('bagel') to create one."))
+    'bagel' object, please use 'create_bagel' to create one."))
   }
 
-  tabs <- bagel@count_tables
-
   #Check that at least one table exists
-  if (length(tabs@table_name) == 0) {
+  if (length(bagel@count_tables) == 0) {
     stop(strwrap(prefix = " ", initial = "", "The counts table is either
     missing or malformed, please run create tables e.g. [build_standard_table]
     prior to this function."))
   }
 
   #Check that table exists within this bagel
-  if (!table_name %in% tabs@table_name) {
-    stop(paste(table_name, " does not exist. Current table names are: ",
-               tabs@table_name, sep = ""))
+  if (!table_name %in% names(bagel@count_tables)) {
+    stop(paste0("'", table_name, "' does not exist. Current table names are: ",
+               paste(names(bagel@count_tables), collapse = ", ")))
   }
 
-  counts_table <- tabs@table_list[[table_name]]
+  counts_table <- bagel@count_tables[[table_name]]@count_table
   return(counts_table)
 }
 
@@ -65,28 +63,63 @@ subset_count_tables <- function(bay, samples) {
   return(tables)
 }
 
-create_count_table <- function(bay, table, name, description = NA,
-                               return_instead = FALSE) {
-  tab <- bay@count_tables
-
-  #Check that table names are unique
-  if (name %in% tab@table_name) {
+.create_count_table <- function(bay, name, count_table, features = NULL,
+                               type = NULL, annotation = NULL, 
+                               color_variable = NULL, color_mapping = NULL,
+                               description = "",
+                               return_table = FALSE) {
+  
+  # Check that table name is unique compared to existing tables
+  if (name %in% names(bay@count_tables)) {
     stop(paste("Table names must be unique. Current table names are: ",
-               paste(tab@table_name, collapse = ", "), sep = ""))
+               paste(names(bay@count_tables), collapse = ", "), sep = ""))
   }
 
-  if (is(table, "matrix")) {
-    tab@table_list[[name]] <- table
+  # Error checking of variables
+  if (!inherits(count_table, "array")) {
+    stop("The count table must be a matrix or array.")
+  }
+  if(!is.null(features) & is.null(type)) {
+    stop("'type' must be supplied when including 'features.'")
+  }
+  if (!is.null(type)) {
+    if(length(type) != nrow(features)) {
+      stop("'type' must be the same length as the number of rows in 'features'")
+    }
+    type.rle = S4Vectors::Rle(type)
   } else {
-    stop("Error: Table must be a matrix")
+    type.rle = NULL
   }
-
-  tab@table_name[[name]] <- name
-  tab@description[[name]] <- description
-  if (return_instead) {
+  if(!is.null(color_mapping)) {
+    if(is.null(annotation)) {
+      stop("In order to set 'color_mapping', the 'annotation' data ",
+           "frame must be supplied.")
+    }
+    # checks for color_variable
+  }
+  if(!is.null(color_mapping) & !is.null(color_variable) &
+     !is.null(annotation)) {
+    no_match = setdiff(names(color_mapping), annotation[,color_variable])
+    if(length(no_match) > 0) {
+      #warning()
+    }
+  }
+  # Check for color_variable in column names of annotation
+  
+  tab <- new("count_table", name = name, count_table = count_table,
+             annotation = annotation, features = features,
+             type = type.rle, color_variable = color_variable,
+             color_mapping = color_mapping, description = description)
+  
+  if (isTRUE(return_table)) {
     return(tab)
   } else {
-    eval.parent(substitute(bay@count_tables <- tab))
+    #tab <- list(tab)
+    #names(tab) <- name
+    #bay@count_tables <- c(bay@count_tables, tab)
+    #eval.parent(substitute(bay@count_tables[[name]] <- tab))
+    bay@count_tables[[name]] <- tab
+    return(bay)
   }
 }
 
