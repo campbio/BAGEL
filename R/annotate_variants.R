@@ -12,10 +12,10 @@ NULL
 #' @param build_table Automatically build a table using the annotation and add
 #' it to the bagel
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
-#' package = "BAGEL"))
-#' add_flank_to_variants(bay, 1, 2)
-#' add_flank_to_variants(bay, -2, -1)
+#' #bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
+#' #package = "BAGEL"))
+#' #add_flank_to_variants(bay, 1, 2)
+#' #add_flank_to_variants(bay, -2, -1)
 #' @export
 add_flank_to_variants <- function(bay, flank_start, flank_end,
                                   build_table = TRUE) {

@@ -20,8 +20,8 @@ it to the bagel}
 Uses a genome object to find context and add it to the variant table
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
-package = "BAGEL"))
-add_flank_to_variants(bay, 1, 2)
-add_flank_to_variants(bay, -2, -1)
+#bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
+#package = "BAGEL"))
+#add_flank_to_variants(bay, 1, 2)
+#add_flank_to_variants(bay, -2, -1)
 }
