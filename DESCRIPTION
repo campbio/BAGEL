@@ -39,7 +39,6 @@ Imports:
     GenomicRanges,
     IRanges,
     plotly,
-    topicmodels,
     S4Vectors,
     uwot,
     withr,
@@ -60,6 +59,7 @@ Suggests:
     qpdf,
     deconstructSigs,
     decompTumor2Sig,
+    topicmodels,
     covr
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
