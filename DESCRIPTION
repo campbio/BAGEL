@@ -43,7 +43,8 @@ Imports:
     uwot,
     withr,
     ggrepel,
-    stringr
+    stringr,
+    TxDb.Hsapiens.UCSC.hg38.knownGene
 Suggests:
     testthat,
     knitr,
@@ -54,7 +55,6 @@ Suggests:
     BSgenome.Mmusculus.UCSC.mm9,
     BSgenome.Mmusculus.UCSC.mm10,
     TxDb.Hsapiens.UCSC.hg19.knownGene,
-    TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,
     qpdf,
     deconstructSigs,
