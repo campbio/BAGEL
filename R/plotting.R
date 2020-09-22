@@ -76,7 +76,7 @@ plot_full <- function(sample) {
 #' @param plotly add plotly layer for plot interaction
 #' @param text_size Size of axis text
 #' @param facet_size Size of facet text
-#' @param x_labels Toggle plotting of x-axis labels
+#' @param show_x_labels Toggle plotting of x-axis labels
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
@@ -84,7 +84,8 @@ plot_full <- function(sample) {
 #' @export
 plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE, 
                             color_mapping = NULL, color_variable = NULL,
-                            text_size = 17, facet_size = 20, x_labels = FALSE) {
+                            text_size = 10, facet_size = 10,
+                            show_x_labels = TRUE) {
   #DBS <- FALSE
   signatures <- result@signatures
   #groups <- reshape2::colsplit(rownames(signatures), "_", names = c("mutation",
@@ -94,69 +95,64 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
   tab <- result@bagel@count_tables[[table_name]]
   annot <- tab@annotation
   
+  # Format signatures
   signatures %>%
     as.data.frame %>%
     tibble::rownames_to_column(var = "Motif") %>%
     tibble::tibble(.name_repair = "minimal") %>%
     tidyr::gather("var", "val", -"Motif") -> plot_dat
 
-  # Add color variables if supplied in table or by user
-  if(is.null(color_variable) & !is.null(tab@color_variable)) {
-    color_variable <- tab@color_variable  
-  } else {
-    if(!color_variable %in% colnames(annot) &
-       length(color_variable) != nrow(signatures)){
-      stop("'color_variable' must be a column in the table annotation or the ",
-           "same length as the number of motifs in the signatures: ",
-           nrow(signatures))
-    }
+  # Add color variable to data
+  final_color_variable <- NULL
+  if(is.null(color_variable) && !is.null(tab@color_variable)) {
+    color_variable <- tab@color_variable
   }
-  if(!is.null(color_variable)) {
-    plot_dat <- cbind(plot_dat, mutation = annot[,color_variable])
+  if(length(color_variable) == 1 && color_variable %in% colnames(annot)) {
+    final_color_variable <- annot[,tab@color_variable]
+  } else if (length(color_variable) == nrow(signatures)) {
+    final_color_variable <- color_variable
+  } else {
+    warning("'color_variable' must be a column in the table annotation: ",
+        paste(colnames(annot), collapse = ", "), ". Or it must be the ",
+       "same length as the number of motifs in the signatures: ",
+       nrow(signatures))
+  }
+  if(!is.null(final_color_variable)) {
+    plot_dat <- cbind(plot_dat, mutation = final_color_variable)
   }
   if(is.null(color_mapping)) {
     color_mapping <- tab@color_mapping
   }
   
-  #if (nrow(signatures) %in% 78) {
-  #  DBS <- TRUE
-  #  plot_dat$context <- substr(plot_dat$Motif, 7, 8)
-  #}
-
   plot_dat %>%
     ggplot(aes_string(y = "val", x = "Motif", fill = "mutation")) +
     geom_bar(stat = "identity") +
     facet_grid(factor(var, levels = unique(var), ordered = TRUE) ~ .,
                labeller = ggplot2::as_labeller(structure(sig_names, names =
-                                                           unique(
-                                                             plot_dat$var)))) +
-    theme_bw() + xlab("Motifs") + ylab("Proportion") +
-    theme(
-      strip.text.y = element_text(size = facet_size), panel.grid.minor.x =
-        element_blank(),
-      text = element_text(family = "Courier", size = text_size)) +
-    ggplot2::scale_y_continuous(expand = c(0, 0)) -> p
-  #if (nrow(signatures) %in% c(6, 96, 192, 83)) {
-  #  
-    p <- p + ggplot2::scale_fill_manual(values = color_mapping) +
-      ggplot2::scale_x_discrete(labels = substr(plot_dat$Motif, 5, 7),
-                                       breaks = plot_dat$Motif) +
-      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-  #}
-  #if (DBS) {
-  #  p <- p + ggplot2::scale_x_discrete(labels = plot_dat$context,
-  #                                     breaks = plot_dat$Motif) +
-  #    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-  #}
-  if (!x_labels) {
+                                              colnames(signatures)))) +
+    xlab("Motifs") + ylab("Probability") +
+    ggplot2::guides(fill = ggplot2::guide_legend(nrow = 1)) +
+    ggplot2::scale_y_continuous(expand = c(0, 0)) +
+    ggplot2::scale_fill_manual(values = color_mapping) +
+    ggplot2::scale_x_discrete(labels=annot$context) -> p
+  
+    
+    p <- .gg_default_theme(p, text_size = text_size, facet_size = facet_size) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+    
+    
+  if (!isTRUE(show_x_labels)) {
     p <- p + theme(axis.text.x = element_blank(),
                    axis.ticks.x = element_blank(),
                    panel.grid.major.x = element_blank())
   }
-  if (no_legend) {
+  if (isTRUE(no_legend)) {
     p <- p + theme(legend.position = "none")
+  } else {
+    p <- .addSmallLegend(p) + theme(legend.position="top",
+                                    legend.title = element_blank())
   }
-  if (plotly) {
+  if (isTRUE(plotly)) {
     p <- plotly::ggplotly(p)
   }
   return(p)
@@ -620,3 +616,31 @@ plot_umap_sigs <- function(result) {
     ggplot2::scale_size_continuous(range = c(0.001, 1))
 
 }
+
+
+
+
+
+.addSmallLegend <- function(myPlot, pointSize = 2,
+                            textSize = 10, spaceLegend = 0.5) {
+  myPlot +
+    ggplot2::guides(shape = ggplot2::guide_legend(override.aes =
+                                                    list(size = pointSize)),
+                    color = ggplot2::guide_legend(override.aes =
+                                                    list(size = pointSize))) +
+    ggplot2::theme(legend.title = element_text(size = textSize), 
+            legend.text  = element_text(size = textSize),
+            legend.key.size = ggplot2::unit(spaceLegend, "lines"),
+            legend.box.background = ggplot2::element_rect(colour = "black"),
+            legend.spacing.x = ggplot2::unit(0.25, 'cm'))
+}
+
+.gg_default_theme <- function(p, text_size = 10, facet_size = 10) {
+  p <- p + theme_bw() + theme(
+    strip.text.y = element_text(size = facet_size),
+    panel.grid = element_blank(), 
+    text = element_text(family = "Courier",
+                        size = text_size))
+  return(p)
+}
+
