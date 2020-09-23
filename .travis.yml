@@ -3,7 +3,6 @@ env:
     global:
         - TRAVIS_R_VERSION=4.0.0
 cache: packages
-sudo: false
 addons:
    apt:
      packages:

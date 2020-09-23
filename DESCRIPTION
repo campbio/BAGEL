@@ -6,7 +6,10 @@ Authors@R: person("Aaron", "Chevalier", email = "atgc@bu.edu", role = "cre", com
 Description: What the package does (one paragraph).
 Depends: 
     R (>= 4.0.0),
-    NMF
+    NMF,methods, BiocGenerics (>= 0.13.8),
+	S4Vectors (>= 0.17.28), IRanges (>= 2.13.16),
+	GenomeInfoDb (>= 1.25.6), GenomicRanges (>= 1.31.10),
+	Biostrings (>= 2.47.6), rtracklayer (>= 1.39.7), TxDb.Hsapiens.UCSC.hg38.knownGene
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
@@ -44,7 +47,9 @@ Imports:
     withr,
     ggrepel,
     stringr,
-    TxDb.Hsapiens.UCSC.hg38.knownGene
+    TxDb.Hsapiens.UCSC.hg38.knownGene, methods, utils, stats, matrixStats,
+	BiocGenerics, S4Vectors, IRanges, XVector (>= 0.29.3),
+	GenomeInfoDb, GenomicRanges, Biostrings, Rsamtools, rtracklayer
 Suggests:
     testthat,
     knitr,
