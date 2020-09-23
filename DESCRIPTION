@@ -4,12 +4,6 @@ Title: Novel Mutational Signature Analysis
 Version: 0.99.0
 Authors@R: person("Aaron", "Chevalier", email = "atgc@bu.edu", role = "cre", comment = c(ORCHID = "0000-0002-3968-9250"))
 Description: What the package does (one paragraph).
-Depends: 
-    R (>= 4.0.0),
-    NMF, BiocGenerics (>= 0.13.8),
-	S4Vectors (>= 0.17.28), IRanges (>= 2.13.16),
-	GenomeInfoDb (>= 1.23.9), GenomicRanges (>= 1.31.10),
-	Biostrings (>= 2.47.6), rtracklayer (>= 1.39.7), TxDb.Hsapiens.UCSC.hg38.knownGene
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
@@ -46,9 +40,7 @@ Imports:
     uwot,
     withr,
     ggrepel,
-    stringr,
-    TxDb.Hsapiens.UCSC.hg38.knownGene, methods, utils, stats, matrixStats,
-	BiocGenerics, S4Vectors, IRanges, XVector, GenomeInfoDb, GenomicRanges, Biostrings, Rsamtools, rtracklayer
+    stringr
 Suggests:
     testthat,
     knitr,
@@ -59,6 +51,7 @@ Suggests:
     BSgenome.Mmusculus.UCSC.mm9,
     BSgenome.Mmusculus.UCSC.mm10,
     TxDb.Hsapiens.UCSC.hg19.knownGene,
+    TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,
     qpdf,
     deconstructSigs,
