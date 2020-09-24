@@ -39,6 +39,7 @@ Imports:
     IRanges,
     S4Vectors,
     uwot,
+    ggplot2,
     stringr
 Suggests:
     testthat,
@@ -58,7 +59,6 @@ Suggests:
     topicmodels,
     ggrepel,
     withr,
-    ggplot2,
     plotly,
     covr
 RoxygenNote: 7.1.1
