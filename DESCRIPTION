@@ -11,6 +11,9 @@ biocViews:
     Software,
     BiologicalQuestion,
     SomaticMutation
+Depends:
+    R (>= 4.0.2), 
+    NMF
 Imports:
     SummarizedExperiment,
     VariantAnnotation,

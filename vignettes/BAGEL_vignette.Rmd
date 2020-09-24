@@ -9,10 +9,6 @@ date: "`r Sys.Date()`"
 output: 
   BiocStyle::pdf_document:
     toc: true
-vignette: >
-  %\VignetteIndexEntry{BAGEL Mutational Signature Analysis Toolkit}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
