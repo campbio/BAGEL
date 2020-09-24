@@ -13,7 +13,8 @@ biocViews:
     SomaticMutation
 Depends:
     R (>= 4.0.2), 
-    NMF
+    NMF,
+    TxDb.Hsapiens.UCSC.hg38.knownGene
 Imports:
     SummarizedExperiment,
     VariantAnnotation,
@@ -51,7 +52,6 @@ Suggests:
     BSgenome.Mmusculus.UCSC.mm9,
     BSgenome.Mmusculus.UCSC.mm10,
     TxDb.Hsapiens.UCSC.hg19.knownGene,
-    TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,
     qpdf,
     deconstructSigs,
