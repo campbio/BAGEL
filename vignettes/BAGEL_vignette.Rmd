@@ -6,9 +6,11 @@ author:
 - name: Joshua Campbell
   affiliiation: Fill this in
 date: "`r Sys.Date()`"
-output: 
-  BiocStyle::pdf_document:
-    toc: true
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Put the title of your vignette here}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}

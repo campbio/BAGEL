@@ -17,7 +17,6 @@ Depends:
 Imports:
     SummarizedExperiment,
     VariantAnnotation,
-    ggplot2,
     cowplot,
     Biostrings,
     base,
@@ -38,11 +37,8 @@ Imports:
     GenomicFeatures,
     GenomicRanges,
     IRanges,
-    plotly,
     S4Vectors,
     uwot,
-    withr,
-    ggrepel,
     stringr
 Suggests:
     testthat,
@@ -60,6 +56,10 @@ Suggests:
     deconstructSigs,
     decompTumor2Sig,
     topicmodels,
+    ggrepel,
+    withr,
+    ggplot2,
+    plotly,
     covr
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
