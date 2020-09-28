@@ -12,7 +12,7 @@ biocViews:
     BiologicalQuestion,
     SomaticMutation
 Depends:
-    R (>= 4.0.2), 
+    R (>= 4.0.0), 
     NMF,
     TxDb.Hsapiens.UCSC.hg38.knownGene
 Imports:
@@ -41,7 +41,8 @@ Imports:
     S4Vectors,
     uwot,
     ggplot2,
-    stringr
+    stringr,
+    TxDb.Hsapiens.UCSC.hg38.knownGene
 Suggests:
     testthat,
     BiocStyle,
