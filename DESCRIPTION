@@ -41,6 +41,7 @@ Imports:
     uwot,
     ggplot2,
     stringr,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
     TxDb.Hsapiens.UCSC.hg38.knownGene
 Suggests:
     testthat,
@@ -52,7 +53,6 @@ Suggests:
     BSgenome.Hsapiens.UCSC.hg38,
     BSgenome.Mmusculus.UCSC.mm9,
     BSgenome.Mmusculus.UCSC.mm10,
-    TxDb.Hsapiens.UCSC.hg19.knownGene,
     XVector,
     qpdf,
     deconstructSigs,

@@ -179,10 +179,10 @@ subset_variant_by_type <- function(tab, type) {
 annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (genome_build %in% c("19", "hg19")) {
     genes <- genes(
-      TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)
+      TxDb.Hsapiens.UCSC.hg19.knownGene)
   } else if (genome_build %in% c("38", "hg38")) {
     genes <- genes(
-      TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene)
+      TxDb.Hsapiens.UCSC.hg38.knownGene)
   } else if (methods::isClass(genome_build, "TxDb")) {
     genes <- genome_build
   } else {
