@@ -14,7 +14,6 @@ biocViews:
 Depends:
     R (>= 4.0.0), 
     NMF,
-    TxDb.Hsapiens.UCSC.hg38.knownGene
 Imports:
     SummarizedExperiment,
     VariantAnnotation,

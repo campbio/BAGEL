@@ -2,6 +2,8 @@
 #' @importFrom GenomicFeatures genes
 #' @importFrom S4Vectors queryHits decode subjectHits
 #' @importFrom GenomicRanges strand
+#' @importFrom TxDb.Hsapiens.UCSC.hg38.knownGene TxDb.Hsapiens.UCSC.hg38.knownGene
+#' @importFrom TxDb.Hsapiens.UCSC.hg19.knownGene TxDb.Hsapiens.UCSC.hg19.knownGene
 NULL
 
 #' Uses a genome object to find context and add it to the variant table
