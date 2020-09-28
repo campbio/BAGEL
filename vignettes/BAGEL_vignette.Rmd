@@ -5,8 +5,9 @@ author:
   affiliation: Boston University College of Engineering
 - name: Joshua Campbell
   affiliiation: Fill this in
-output: rmarkdown::html_vignette
+output:
   pdf_document:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{BAGEL Mutational Signature Analysis Toolkit}
   %\VignetteEngine{knitr::rmarkdown}
