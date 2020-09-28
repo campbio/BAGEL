@@ -171,8 +171,8 @@ subset_variant_by_type <- function(tab, type) {
 #' object
 #' @param build_table Automatically build a table from this annotation
 #' @examples
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #annotate_transcript_strand(bay, 19)
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_transcript_strand(bay, 19)
 #' @export
 annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (genome_build %in% c("19", "hg19")) {
@@ -218,11 +218,11 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (build_table) {
     dat_bagel <- methods::new("bagel", variants = drop_na_variants(
       dat, "Transcript_Strand"), count_tables = bay@count_tables,
-      sample_annotations = bay@sample_annotations)
-    tab <- build_custom_table(dat_bagel, variant_annotation =
+      sample_annotations = bay@sample_annotations, genome = bay@genome)
+    tab <- build_custom_table(bay = dat_bagel, variant_annotation =
                                   "Transcript_Strand", name =
-                                  "Transcript_Strand", return_instead = FALSE)
-    eval.parent(substitute(bay@count_tables <- tab))
+                                  "Transcript_Strand", return_instead = TRUE)
+    eval.parent(substitute(bay@count_tables[["Transcript_Strand"]] <- tab))
   }
 }
 
@@ -232,8 +232,8 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
 #' @param rep_range A GRanges object with replication timing as metadata
 #' @param build_table Automatically build a table from this annotation
 #' @examples
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #annotate_replication_strand(bay, BAGEL::rep_range)
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_replication_strand(bay, BAGEL::rep_range)
 #' @export
 annotate_replication_strand <- function(bay, rep_range, build_table = TRUE) {
   dat <- bay@variants
@@ -262,6 +262,6 @@ annotate_replication_strand <- function(bay, rep_range, build_table = TRUE) {
                                 "Replication_Strand", data_factor =
                                 factor(c("leading", "lagging")),
                               return_instead = FALSE)
-    eval.parent(substitute(bay@count_tables <- tab))
+    eval.parent(substitute(bay@count_tables[["Replication_Strand"]] <- tab))
   }
 }

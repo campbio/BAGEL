@@ -86,7 +86,7 @@ create_sbs96_table <- function(bay, overwrite = FALSE) {
                             color_variable = "mutation",
                             color_mapping = color_mapping,
                      description = paste0("Single Base Substitution table with",
-                     " one base upstream and downstream"),
+                     " one base upstream and downstream"), return_table = TRUE,
                      overwrite = overwrite)
   return(tab)
 }
@@ -103,6 +103,7 @@ create_sbs192_table <- function(bay, strand_type, overwrite = FALSE) {
   }
   g <- bay@genome
   dat <- bay@variants
+  dat <- subset_variant_by_type(dat, "SBS")
   dat <- drop_na_variants(dat, strand_type)
 
   chr <- dat$chr
@@ -169,18 +170,33 @@ create_sbs192_table <- function(bay, strand_type, overwrite = FALSE) {
   #Convert to table by dropping xtabs class and call
   attr(mut_table, "call") <- NULL
   attr(mut_table, "class") <- NULL
-  zero_samps <- which(colSums(mut_table) == 0)
-  if (length(zero_samps) > 0) {
-    warning(paste0("Dropping the following zero count samples: ",
-                   paste(colnames(mut_table[zero_samps]), sep = ", ")))
-    mut_table <- mut_table[, -zero_samps]
-  }
-  tab <- .create_count_table(
-    bay = bay, table = mut_table, name = paste0("SBS192_", ifelse(
-      strand_type == "Transcript_Strand", "Trans", "Rep")), description =
-      paste("Single Base Substitution table with one base upstream and",
-            " downstream and transcript strand", sep = ""),
-    return_instead = TRUE, overwrite = overwrite)
+
+  annotation <- data.frame(motif = mut_id, mutation =
+                             unlist(lapply(strsplit(mut_id, "_"), "[[", 1)),
+                           context = paste(unlist(lapply(strsplit(mut_id, "_"),
+                                                   "[[", 2)),
+                                           unlist(lapply(strsplit(mut_id, "_"),
+                                                         "[[", 3)), sep = "_"),
+                           row.names = mut_id)
+  color_mapping <- .gg_color_hue(length(unique(annotation$mutation)))
+  names(color_mapping) <- unique(annotation$mutation)
+
+  tab <- .create_count_table(bay = bay, name = paste0("SBS192_", ifelse(
+    strand_type == "Transcript_Strand", "Trans", "Rep")),
+                             count_table = mut_table,
+                             annotation = annotation,
+                             features = data.frame(mutation = maf_mut_id),
+                             type = paste(as.character(dat$Variant_Type),
+                                          ifelse(strand_type ==
+                                                   "Transcript_Strand",
+                                                 "Trans", "Rep"), sep = "_"),
+                             color_variable = "mutation",
+                             color_mapping = color_mapping,
+                             description = paste0("Single Base Substitution ",
+                                                  "table with one base ",
+                                                  "upstream and downstream and",
+                                                  " transcript strand"),
+                             return_table = TRUE, overwrite = overwrite)
   return(tab)
 }
 
@@ -262,7 +278,7 @@ create_dbs_table <- function(bay, overwrite = overwrite) {
                              color_mapping = color_mapping,
                              description = paste0("Standard count table for ",
                                                   "double base substitutions"),
-                             overwrite = overwrite)
+                             return_table = TRUE, overwrite = overwrite)
   return(tab)
 }
 
@@ -301,13 +317,13 @@ rc <- function(dna) {
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' build_standard_table(bay, "SBS96", overwrite = TRUE)
 #'
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #annotate_transcript_strand(bay, "19")
-#' #build_standard_table(bay, "SBS192", "Transcript_Strand")
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_transcript_strand(bay, "19")
+#' build_standard_table(bay, "SBS192", "Transcript_Strand")
 #'
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #annotate_replication_strand(bay, BAGEL::rep_range)
-#' #build_standard_table(bay, "SBS192", "Replication_Strand")
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_replication_strand(bay, BAGEL::rep_range)
+#' build_standard_table(bay, "SBS192", "Replication_Strand")
 #'
 #' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 #' package = "BAGEL"))
@@ -320,21 +336,33 @@ build_standard_table <- function(bay, table_name, strand_type = NA,
                                  overwrite = FALSE) {
   if (table_name %in% c("SNV96", "SNV", "96", "SBS", "SBS96")) {
     .table_exists_warning(bay, "SBS96", overwrite)
+    tab_list <- list()
     tab <- create_sbs96_table(bay, overwrite)
+    tab_list[[tab@name]] <- tab
+    tab_list <- c(bay@count_tables, tab_list)
   } else if (table_name %in% c("SBS192", "192")) {
     .table_exists_warning(bay, "SBS192", overwrite)
+    tab_list <- list()
     tab <- create_sbs192_table(bay, strand_type, overwrite)
+    tab_list[[tab@name]] <- tab
+    tab_list <- c(bay@count_tables, tab_list)
   } else if (table_name %in% c("DBS", "doublet")) {
     .table_exists_warning(bay, "DDBS", overwrite)
+    tab_list <- list()
     tab <- create_dbs_table(bay, overwrite)
+    tab_list[[tab@name]] <- tab
+    tab_list <- c(bay@count_tables, tab_list)
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {
     .table_exists_warning(bay, "INDEL", overwrite)
+    tab_list <- list()
     tab <- create_indel_table(bay, overwrite)
+    tab_list[[tab@name]] <- tab
+    tab_list <- c(bay@count_tables, tab_list)
   } else {
     stop(paste0("There is no standard table named: ", table_name,
                " please select from SBS96, SBS192, DBS, Indel."))
   }
-  eval.parent(substitute(bay@count_tables <- tab))
+  eval.parent(substitute(bay@count_tables <- tab_list))
 }
 
 .table_exists_warning <- function(bay, table_name, overwrite = FALSE) {
@@ -432,7 +460,7 @@ create_indel_table <- function(bay, overwrite = FALSE) {
                              description = paste0("Standard count table for ",
                                                   "small insertions and",
                                                   " deletions"),
-                             overwrite = overwrite)
+                             return_table = TRUE, overwrite = overwrite)
   return(tab)
 }
 

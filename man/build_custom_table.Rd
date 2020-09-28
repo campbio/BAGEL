@@ -31,6 +31,19 @@ build_custom_table(
 \item{data_factor}{Full set of table values, in case some are missing from
 the data. If NA, a superset of all available unique data values will be used}
 
+\item{annotation_df}{A data.frame of annotations to use for plotting}
+
+\item{features}{A data.frame of the input data from which the count table
+will be built}
+
+\item{type}{The type of data/mutation in each feature as an Rle object}
+
+\item{color_variable}{The name of the column of annotation_df used for the
+coloring in plots}
+
+\item{color_mapping}{The mapping from the values in the selected
+color_variable column to color values for plotting}
+
 \item{return_instead}{Instead of adding to bagel object, return the created
 table}
 
@@ -40,8 +53,8 @@ table}
 Builds a custom table from specified user variants
 }
 \examples{
-#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#annotate_transcript_strand(bay, "19", build_table = FALSE)
-#build_custom_table(bay, "Transcript_Strand", "Transcript_Strand",
-#data_factor = factor(c("T", "U")))
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+annotate_transcript_strand(bay, "19", build_table = FALSE)
+build_custom_table(bay, "Transcript_Strand", "Transcript_Strand",
+data_factor = factor(c("T", "U")))
 }

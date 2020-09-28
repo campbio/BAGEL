@@ -154,10 +154,10 @@ subset_count_tables <- function(bay, samples) {
 #' table
 #' @param overwrite Overwrite existing count table
 #' @examples
-#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' #annotate_transcript_strand(bay, "19", build_table = FALSE)
-#' #build_custom_table(bay, "Transcript_Strand", "Transcript_Strand",
-#' #data_factor = factor(c("T", "U")))
+#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' annotate_transcript_strand(bay, "19", build_table = FALSE)
+#' build_custom_table(bay, "Transcript_Strand", "Transcript_Strand",
+#' data_factor = factor(c("T", "U")))
 #' @export
 build_custom_table <- function(bay, variant_annotation, name,
                                  description = "", data_factor = NA,
@@ -194,7 +194,7 @@ build_custom_table <- function(bay, variant_annotation, name,
                                                     collapse = ", "), sep = ""))
   }
 
-  motif <- rownames(table)
+  motif <- rownames(count_table)
   if (!hasArg(type)) {
     type <- rep(NA, sum(count_table))
   }

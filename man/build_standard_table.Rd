@@ -23,13 +23,13 @@ Builds a standard table from user variants
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 build_standard_table(bay, "SBS96", overwrite = TRUE)
 
-#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#annotate_transcript_strand(bay, "19")
-#build_standard_table(bay, "SBS192", "Transcript_Strand")
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+annotate_transcript_strand(bay, "19")
+build_standard_table(bay, "SBS192", "Transcript_Strand")
 
-#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#annotate_replication_strand(bay, BAGEL::rep_range)
-#build_standard_table(bay, "SBS192", "Replication_Strand")
+bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+annotate_replication_strand(bay, BAGEL::rep_range)
+build_standard_table(bay, "SBS192", "Replication_Strand")
 
 bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 package = "BAGEL"))
