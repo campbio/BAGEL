@@ -18,7 +18,7 @@ plot_sample_counts <- function(bay, table_name, sample_name) {
     stop("`please specify exactly one sample")
   }
   sample_number <- which(get_sample_names(bay = bay) == sample_name)
-  sample <- extract_count_table(bay, table_name)[, sample_number]
+  sample <- .extract_count_table(bay, table_name)[, sample_number]
   plot_full(sample)
 }
 
@@ -74,6 +74,10 @@ plot_full <- function(sample) {
 #' @param no_legend Remove legend from plot
 #' @param no_legend Remove legend from plot
 #' @param plotly add plotly layer for plot interaction
+#' @param color_variable Annotation column to use for coloring plotted motifs,
+#' provided by counts table from input result's bagel object
+#' @param color_mapping Mapping from color_variable to color names, provided by
+#' counts table from input result's bagel object
 #' @param text_size Size of axis text
 #' @param facet_size Size of facet text
 #' @param show_x_labels Toggle plotting of x-axis labels
@@ -82,8 +86,8 @@ plot_full <- function(sample) {
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
 #' plot_signatures(result)
 #' @export
-plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE, 
-                            color_mapping = NULL, color_variable = NULL,
+plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
+                            color_variable = NULL, color_mapping = NULL,
                             text_size = 10, facet_size = 10,
                             show_x_labels = TRUE) {
   #DBS <- FALSE
@@ -94,7 +98,7 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
   table_name <- result@tables
   tab <- result@bagel@count_tables[[table_name]]
   annot <- tab@annotation
-  
+
   # Format signatures
   signatures %>%
     as.data.frame %>%
@@ -123,7 +127,7 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
   if(is.null(color_mapping)) {
     color_mapping <- tab@color_mapping
   }
-  
+
   plot_dat %>%
     ggplot(aes_string(y = "val", x = "Motif", fill = "mutation")) +
     geom_bar(stat = "identity") +
@@ -135,12 +139,12 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
     ggplot2::scale_y_continuous(expand = c(0, 0)) +
     ggplot2::scale_fill_manual(values = color_mapping) +
     ggplot2::scale_x_discrete(labels=annot$context) -> p
-  
-    
+
+
     p <- .gg_default_theme(p, text_size = text_size, facet_size = facet_size) +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
-    
-    
+
+
   if (!isTRUE(show_x_labels)) {
     p <- p + theme(axis.text.x = element_blank(),
                    axis.ticks.x = element_blank(),
@@ -167,11 +171,11 @@ plot_signatures <- function(result, no_legend = FALSE, plotly = FALSE,
 #' @return Generates plot {no return}
 #' @examples
 #' result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-#' plot_sample_reconstruction_error(result, "SNV96", 1)
+#' plot_sample_reconstruction_error(result, "SBS96", 1)
 #' @export
 plot_sample_reconstruction_error <- function(result, table_name, sample_number,
                                              plotly = FALSE) {
-  signatures <- extract_count_table(result@bagel, table_name)[, sample_number,
+  signatures <- .extract_count_table(result@bagel, table_name)[, sample_number,
                                                               drop = FALSE]
   sample_name <- colnames(signatures)
   reconstructed <- reconstruct_sample(result, sample_number)
@@ -628,7 +632,7 @@ plot_umap_sigs <- function(result) {
                                                     list(size = pointSize)),
                     color = ggplot2::guide_legend(override.aes =
                                                     list(size = pointSize))) +
-    ggplot2::theme(legend.title = element_text(size = textSize), 
+    ggplot2::theme(legend.title = element_text(size = textSize),
             legend.text  = element_text(size = textSize),
             legend.key.size = ggplot2::unit(spaceLegend, "lines"),
             legend.box.background = ggplot2::element_rect(colour = "black"),
@@ -638,7 +642,7 @@ plot_umap_sigs <- function(result) {
 .gg_default_theme <- function(p, text_size = 10, facet_size = 10) {
   p <- p + theme_bw() + theme(
     strip.text.y = element_text(size = facet_size),
-    panel.grid = element_blank(), 
+    panel.grid = element_blank(),
     text = element_text(family = "Courier",
                         size = text_size))
   return(p)

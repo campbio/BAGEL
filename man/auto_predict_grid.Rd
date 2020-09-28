@@ -59,7 +59,8 @@ specific annotation
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda",
-"Tumor_Subtypes")
+auto_predict_grid(bagel = bay, table_name = "SBS96",
+signature_res = cosmic_v2_sigs, algorithm = "lda",
+sample_annotation = "Tumor_Subtypes")
 auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda")
 }

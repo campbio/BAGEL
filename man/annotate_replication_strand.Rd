@@ -17,6 +17,6 @@ annotate_replication_strand(bay, rep_range, build_table = TRUE)
 Add replication strand annotation to SBS variants based on bedgraph file
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-annotate_replication_strand(bay, BAGEL::rep_range)
+#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#annotate_replication_strand(bay, BAGEL::rep_range)
 }

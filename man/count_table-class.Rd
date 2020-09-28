@@ -14,9 +14,24 @@ discover and infer signatures and exposures.
 \section{Slots}{
 
 \describe{
-\item{\code{table_list}}{A list of data.tables with counts}
+\item{\code{name}}{A name that describes the type of table (e.g. "SBS96")}
 
-\item{\code{table_name}}{The parameters the result grid was created using}
+\item{\code{count_table}}{An array of counts with samples as the columns and motifs
+as the rows}
+
+\item{\code{annotation}}{A data.frame of annotations with three columns used for
+plotting: motif, mutation, and context}
+
+\item{\code{features}}{Original features used to generate the count_table}
+
+\item{\code{type}}{The mutation type of each feature, in case we need to plot or
+model they differently}
+
+\item{\code{color_variable}}{The variable used for plotting colors, selected from
+the annotation slot}
+
+\item{\code{color_mapping}}{The mapping of the annotations chosen by color_variable
+to color values for plotting}
 
 \item{\code{description}}{A summary table of the result objects in result_list
 a list of lists. The nested lists created combined (rbind) tables, and the

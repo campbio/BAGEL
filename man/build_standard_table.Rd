@@ -4,30 +4,32 @@
 \alias{build_standard_table}
 \title{Builds a standard table from user variants}
 \usage{
-build_standard_table(bay, table_name, strand_type = NA)
+build_standard_table(bay, table_name, strand_type = NA, overwrite = FALSE)
 }
 \arguments{
 \item{bay}{Input samples}
 
-\item{table_name}{Name of standard table to build SBS96, SBS192, DBS}
-
-\item{strand_type}{Only for SBS192 Transcript_Strand or Replication_Strand
+\item{table_name}{Name of standard table to build SBS96, SBS192, DBS, or
 Indel}
+
+\item{strand_type}{Only for SBS192 Transcript_Strand or Replication_Strand}
+
+\item{overwrite}{Overwrite existing count table}
 }
 \description{
 Builds a standard table from user variants
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-build_standard_table(bay, "SBS96")
+build_standard_table(bay, "SBS96", overwrite = TRUE)
 
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-annotate_transcript_strand(bay, "19")
-build_standard_table(bay, "SBS192", "Transcript_Strand")
+#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#annotate_transcript_strand(bay, "19")
+#build_standard_table(bay, "SBS192", "Transcript_Strand")
 
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-annotate_replication_strand(bay, BAGEL::rep_range)
-build_standard_table(bay, "SBS192", "Replication_Strand")
+#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#annotate_replication_strand(bay, BAGEL::rep_range)
+#build_standard_table(bay, "SBS192", "Replication_Strand")
 
 bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 package = "BAGEL"))

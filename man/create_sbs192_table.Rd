@@ -5,12 +5,14 @@
 \title{Uses a genome object to find context and generate standard SBS192 table
 using transcript strand}
 \usage{
-create_sbs192_table(bay, strand_type)
+create_sbs192_table(bay, strand_type, overwrite = FALSE)
 }
 \arguments{
 \item{bay}{Input samples}
 
 \item{strand_type}{Transcript_Strand or Replication_Strand}
+
+\item{overwrite}{Overwrite existing count table}
 }
 \description{
 Uses a genome object to find context and generate standard SBS192 table

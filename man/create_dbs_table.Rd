@@ -4,10 +4,12 @@
 \alias{create_dbs_table}
 \title{Creates and adds a table for standard doublet base subsitution (DBS)}
 \usage{
-create_dbs_table(bay)
+create_dbs_table(bay, overwrite = overwrite)
 }
 \arguments{
 \item{bay}{Input bagel}
+
+\item{overwrite}{Overwrite existing count table}
 }
 \description{
 Creates and adds a table for standard doublet base subsitution (DBS)

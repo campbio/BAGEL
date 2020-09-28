@@ -1,7 +1,8 @@
 #' Uses a genome object to find context and generate standard SBS96 tables
 #'
 #' @param bay Input samples
-create_sbs96_table <- function(bay) {
+#' @param overwrite Overwrite existing count table
+create_sbs96_table <- function(bay, overwrite = FALSE) {
   dat <- subset_variant_by_type(bay@variants, type = "SBS")
   g <- bay@genome
   ref <- as.character(dat$ref)
@@ -51,7 +52,7 @@ create_sbs96_table <- function(bay) {
                            "mutation" = mut,
                            "context" = mut_trinuc)
   rownames(annotation) <- annotation$motif
-  
+
 
   mut_id <- apply(cbind(mut, mut_trinuc), 1, paste,
                   collapse = "_")
@@ -68,9 +69,9 @@ create_sbs96_table <- function(bay) {
                      "T>A" = "#CBCACBFF",
                      "T>C" = "#ABCD72FF",
                      "T>G" = "#E7C9C6FF")
- 
+
 # Need to think about this more carefully - what happens if indel are zero but
-#  not SNV and the user wants to combine them? 
+#  not SNV and the user wants to combine them?
 #  zero_samps <- which(colSums(mut_table) == 0)
 #  if (length(zero_samps) > 0) {
 #    warning(paste0("Dropping the following zero count samples: ",
@@ -78,14 +79,15 @@ create_sbs96_table <- function(bay) {
 #    mut_table <- mut_table[, -zero_samps, drop = FALSE]
 #  }
   tab <- .create_count_table(bay = bay, name = "SBS96",
-                            count_table = mut_table, 
+                            count_table = mut_table,
                             annotation = annotation,
                             features = data.frame(mutation = final_motif),
                             type = as.character(dat$Variant_Type),
                             color_variable = "mutation",
                             color_mapping = color_mapping,
                      description = paste0("Single Base Substitution table with",
-                     " one base upstream and downstream"))
+                     " one base upstream and downstream"),
+                     overwrite = overwrite)
   return(tab)
 }
 
@@ -94,7 +96,8 @@ create_sbs96_table <- function(bay) {
 #'
 #' @param bay Input samples
 #' @param strand_type Transcript_Strand or Replication_Strand
-create_sbs192_table <- function(bay, strand_type) {
+#' @param overwrite Overwrite existing count table
+create_sbs192_table <- function(bay, strand_type, overwrite = FALSE) {
   if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
     stop("Please select either Transcript_Strand or Replication_Strand")
   }
@@ -172,19 +175,20 @@ create_sbs192_table <- function(bay, strand_type) {
                    paste(colnames(mut_table[zero_samps]), sep = ", ")))
     mut_table <- mut_table[, -zero_samps]
   }
-  tab <- create_count_table(
+  tab <- .create_count_table(
     bay = bay, table = mut_table, name = paste0("SBS192_", ifelse(
       strand_type == "Transcript_Strand", "Trans", "Rep")), description =
       paste("Single Base Substitution table with one base upstream and",
             " downstream and transcript strand", sep = ""),
-    return_instead = TRUE)
+    return_instead = TRUE, overwrite = overwrite)
   return(tab)
 }
 
 #' Creates and adds a table for standard doublet base subsitution (DBS)
 #'
 #' @param bay Input bagel
-create_dbs_table <- function(bay) {
+#' @param overwrite Overwrite existing count table
+create_dbs_table <- function(bay, overwrite = overwrite) {
   dbs <- subset_variant_by_type(bay@variants, "DBS")
 
   ref <- dbs$ref
@@ -239,20 +243,32 @@ create_dbs_table <- function(bay) {
     variant_tables[[i]] <- table(factor(full[sample_index],
                                         levels = full_motif))
   }
-  table <- do.call(cbind, variant_tables)
-  colnames(table) <- sample_names
-  zero_samps <- which(colSums(table) == 0)
-  if (length(zero_samps) > 0) {
-    warning(paste0("Dropping the following zero count samples: ",
-                   paste(colnames(table[zero_samps]), sep = ", ")))
-    table <- table[, -zero_samps]
-  }
-  tab <- create_count_table(bay = bay, table = table, name = "DBS",
-                            description = paste("Standard count table for ",
-                                                "double base substitutions",
-                                                sep = ""),
-                            return_instead = TRUE)
+  mut_table <- do.call(cbind, variant_tables)
+  colnames(mut_table) <- sample_names
+
+  annotation <- data.frame(motif = full_motif, mutation =
+                             unlist(lapply(strsplit(full_motif, "_"), "[[", 1)),
+                           context = unlist(lapply(strsplit(full_motif, "_"),
+                                                   "[[", 2)),
+                           row.names = full_motif)
+  color_mapping <- .gg_color_hue(length(unique(annotation$mutation)))
+  names(color_mapping) <- unique(annotation$mutation)
+  tab <- .create_count_table(bay = bay, name = "DBS",
+                             count_table = mut_table,
+                             annotation = annotation,
+                             features = data.frame(mutation = full),
+                             type = as.character(dbs$Variant_Type),
+                             color_variable = "mutation",
+                             color_mapping = color_mapping,
+                             description = paste0("Standard count table for ",
+                                                  "double base substitutions"),
+                             overwrite = overwrite)
   return(tab)
+}
+
+.gg_color_hue <- function(n) {
+  hues = base::seq(15, 375, length = n + 1)
+  return(grDevices::hcl(h = hues, l = 65, c = 100)[1:n])
 }
 
 #' Reverse complement of a string using biostrings
@@ -277,20 +293,21 @@ rc <- function(dna) {
 #' Builds a standard table from user variants
 #'
 #' @param bay Input samples
-#' @param table_name Name of standard table to build SBS96, SBS192, DBS
-#' @param strand_type Only for SBS192 Transcript_Strand or Replication_Strand
+#' @param table_name Name of standard table to build SBS96, SBS192, DBS, or
 #' Indel
+#' @param strand_type Only for SBS192 Transcript_Strand or Replication_Strand
+#' @param overwrite Overwrite existing count table
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SBS96")
+#' build_standard_table(bay, "SBS96", overwrite = TRUE)
 #'
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' annotate_transcript_strand(bay, "19")
-#' build_standard_table(bay, "SBS192", "Transcript_Strand")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #annotate_transcript_strand(bay, "19")
+#' #build_standard_table(bay, "SBS192", "Transcript_Strand")
 #'
-#' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' annotate_replication_strand(bay, BAGEL::rep_range)
-#' build_standard_table(bay, "SBS192", "Replication_Strand")
+#' #bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#' #annotate_replication_strand(bay, BAGEL::rep_range)
+#' #build_standard_table(bay, "SBS192", "Replication_Strand")
 #'
 #' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 #' package = "BAGEL"))
@@ -299,15 +316,20 @@ rc <- function(dna) {
 #' bay <- readRDS(system.file("testdata", "indel_bagel.rds", package = "BAGEL"))
 #' build_standard_table(bay, table_name = "INDEL")
 #' @export
-build_standard_table <- function(bay, table_name, strand_type = NA) {
+build_standard_table <- function(bay, table_name, strand_type = NA,
+                                 overwrite = FALSE) {
   if (table_name %in% c("SNV96", "SNV", "96", "SBS", "SBS96")) {
-    tab <- create_sbs96_table(bay)
+    .table_exists_warning(bay, "SBS96", overwrite)
+    tab <- create_sbs96_table(bay, overwrite)
   } else if (table_name %in% c("SBS192", "192")) {
-    tab <- create_sbs192_table(bay, strand_type)
+    .table_exists_warning(bay, "SBS192", overwrite)
+    tab <- create_sbs192_table(bay, strand_type, overwrite)
   } else if (table_name %in% c("DBS", "doublet")) {
-    tab <- create_dbs_table(bay)
+    .table_exists_warning(bay, "DDBS", overwrite)
+    tab <- create_dbs_table(bay, overwrite)
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {
-    tab <- create_indel_table(bay)
+    .table_exists_warning(bay, "INDEL", overwrite)
+    tab <- create_indel_table(bay, overwrite)
   } else {
     stop(paste0("There is no standard table named: ", table_name,
                " please select from SBS96, SBS192, DBS, Indel."))
@@ -315,11 +337,22 @@ build_standard_table <- function(bay, table_name, strand_type = NA) {
   eval.parent(substitute(bay@count_tables <- tab))
 }
 
-create_indel_table <- function(bay) {
+.table_exists_warning <- function(bay, table_name, overwrite = FALSE) {
+  if (table_name %in% names(bay@count_tables)) {
+    if (!overwrite) {
+      stop(paste0("Table: ", table_name,
+                  " already exists, use overwrite to continue."))
+    } else {
+      warning(paste0("Overwriting counts table: ", table_name))
+    }
+  }
+}
+
+create_indel_table <- function(bay, overwrite = FALSE) {
   var <- bay@variants
   g <- bay@genome
-  all_ins <- subset_variant_by_type(var, "INS")
-  all_del <- subset_variant_by_type(var, "DEL")
+  all_ins <- as.data.frame(subset_variant_by_type(var, "INS"))
+  all_del <- as.data.frame(subset_variant_by_type(var, "DEL"))
   samples <- unique(c(as.character(all_ins$sample),
                       as.character(all_del$sample)))
   dimlist <- list(row_names = c(.get_indel_motifs("bp1", 0, 0),
@@ -328,7 +361,7 @@ create_indel_table <- function(bay) {
                                 .get_indel_motifs("ins", NA, NA),
                                 .get_indel_motifs("micro", NA, NA)),
                   column_names = samples)
-  table <- matrix(NA, nrow = 83, ncol = length(samples), dimnames = dimlist)
+  mut_table <- matrix(NA, nrow = 83, ncol = length(samples), dimnames = dimlist)
   for(sample in samples) {
     ins <- all_ins[which(all_ins$sample == sample), ]
     del <- all_del[which(all_del$sample == sample), ]
@@ -367,14 +400,39 @@ create_indel_table <- function(bay) {
     } else {
       del2_counts = .count2_del(mut = del2, type = del2$ref, g)
     }
-    table[, sample] <- c(del1_counts, ins1_counts, del2_counts$del, ins2_counts,
-                       del2_counts$micro)
+    mut_table[, sample] <- c(del1_counts, ins1_counts, del2_counts$del,
+                             ins2_counts, del2_counts$micro)
   }
-  tab <- create_count_table(bay = bay, table = table, name = "INDEL",
-                            description = paste("Standard count table for ",
-                                                "small insertions and deletions"
-                                                ,sep = ""),
-                            return_instead = TRUE)
+
+  motif <- rownames(mut_table)
+  mutation <- c(substr(motif[1:24], 1, 5),
+                paste(unlist(lapply(strsplit(motif[25:83], "_"), "[[", 1)),
+                      unlist(lapply(strsplit(motif[25:83], "_"), "[[", 2)),
+                      unlist(lapply(strsplit(motif[25:83], "_"), "[[", 3)),
+                      sep = "_"))
+  context <- c(substr(motif[1:24], 7, 9),
+               unlist(lapply(strsplit(motif[25:83], "_"), "[[", 3)))
+  annotation <- data.frame(motif = motif, mutation = mutation,
+                           context = context)
+
+  color_mapping <- .gg_color_hue(length(unique(annotation$mutation)))
+  names(color_mapping) <- unique(annotation$mutation)
+
+  #TODO error in counting, we're missing some
+  incorrect_features <- length(rep(rownames(mut_table), rowSums(mut_table)))
+  dummy_features <- rep(NA, length(var$Variant_Type))
+
+  tab <- .create_count_table(bay = bay, name = "INDEL",
+                             count_table = mut_table,
+                             annotation = annotation,
+                             features = data.frame(mutation = dummy_features),
+                             type = Rle(rep("INDEL", length(var$Variant_Type))),
+                             color_variable = "mutation",
+                             color_mapping = color_mapping,
+                             description = paste0("Standard count table for ",
+                                                  "small insertions and",
+                                                  " deletions"),
+                             overwrite = overwrite)
   return(tab)
 }
 
@@ -545,3 +603,4 @@ create_indel_table <- function(bay) {
     }
   }
 }
+

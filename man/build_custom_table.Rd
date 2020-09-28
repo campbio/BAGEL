@@ -8,9 +8,15 @@ build_custom_table(
   bay,
   variant_annotation,
   name,
-  description = NA,
+  description = "",
   data_factor = NA,
-  return_instead = FALSE
+  annotation_df = NULL,
+  features = NULL,
+  type = NULL,
+  color_variable = NULL,
+  color_mapping = NULL,
+  return_instead = FALSE,
+  overwrite = FALSE
 )
 }
 \arguments{
@@ -27,14 +33,15 @@ the data. If NA, a superset of all available unique data values will be used}
 
 \item{return_instead}{Instead of adding to bagel object, return the created
 table}
+
+\item{overwrite}{Overwrite existing count table}
 }
 \description{
 Builds a custom table from specified user variants
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-g <- select_genome("38")
-annotate_transcript_strand(bay, "19", build_table = FALSE)
-build_custom_table(bay, "Transcript_Strand", "Transcript_Strand",
-data_factor = factor(c("T", "U")))
+#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#annotate_transcript_strand(bay, "19", build_table = FALSE)
+#build_custom_table(bay, "Transcript_Strand", "Transcript_Strand",
+#data_factor = factor(c("T", "U")))
 }

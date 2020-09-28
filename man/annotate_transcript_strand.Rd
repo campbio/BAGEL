@@ -18,6 +18,6 @@ object}
 Add transcript strand annotation to SBS variants (defined in genes only)
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-annotate_transcript_strand(bay, 19)
+#bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
+#annotate_transcript_strand(bay, 19)
 }
