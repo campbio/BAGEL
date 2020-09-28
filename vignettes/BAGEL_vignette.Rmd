@@ -5,13 +5,12 @@ author:
   affiliation: Boston University College of Engineering
 - name: Joshua Campbell
   affiliiation: Fill this in
-output: 
+output: rmarkdown::html_vignette
   pdf_document:
-    toc: true
 vignette: >
   %\VignetteIndexEntry{BAGEL Mutational Signature Analysis Toolkit}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE, results = "asis"}
