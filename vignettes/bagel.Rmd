@@ -5,17 +5,17 @@ author:
   affiliation: Boston University College of Engineering
 - name: Joshua Campbell
   affiliiation: Fill this in
-date: "`r Sys.Date()`"
-output: 
-  BiocStyle::pdf_document:
+output:
+  pdf_document:
     toc: true
 vignette: >
   %\VignetteIndexEntry{BAGEL Mutational Signature Analysis Toolkit}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+  \usepackage[utf8]{inputenc}
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, results = "asis"}
+BiocStyle::markdown()
 knitr::opts_chunk$set(echo = TRUE, dev = "png")
 library("BAGEL")
 ```
@@ -98,8 +98,9 @@ build_standard_table(bagel, "SBS96")
 Discovery and prediction result are loaded into a self-contained result object 
 that includes signatures and sample exposures.
 ```{r}
-result = discover_signatures(input = bagel, table_name = "SBS96", 
-                              num_signatures = 4, method = "lda", nstart = 10)
+result = discover_signatures(bagel = bagel, table_name = "SBS96", 
+                              num_signatures = 4, method = "lda", nstart = 10, 
+                             seed = 1)
 ```
 
 # Plotting
@@ -123,8 +124,11 @@ plot_sample_counts(bagel, "SBS96", get_sample_names(bagel)[1])
 
 ```{r}
 ##Compare to COSMIC signatures by leaving the second result as default
-compare_cosmic_v2(result, threshold = 0.8)
+compare_cosmic_v2(result, threshold = 0.78)
+```
 
+# Predicting exposures using existing signatures
+```{r}
 #List which signatures correspond to subtypes including "lung"
 cosmic_v2_subtype_map("lung")
 
@@ -132,10 +136,8 @@ cosmic_v2_subtype_map("lung")
 cosmic_post = predict_exposure(bagel = bagel, "SBS96", signature_res = 
                                  cosmic_v2_sigs, signatures_to_use = 
                                  c(12, 4, 11, 15), algorithm = "lda")
-```
 
-# Predicting exposures using existing signatures
-```{r}
+#Calculate posterior based on our novel signatures
 our_sigs_post = predict_exposure(bagel = bagel, "SBS96", signature_res = 
                                    result, algorithm = "lda")
 
@@ -147,7 +149,8 @@ plot_signatures(our_sigs_post)
 plot_exposures(our_sigs_post, proportional = TRUE)
 
 #Compare posterior results to each other
-compare_results(cosmic_post, our_sigs_post, threshold = 0.70)
+compare_results(result = cosmic_post, other_result = our_sigs_post, 
+                threshold = 0.60)
 ```
 
 # Use of sample annotations for advanced sample comparisons
@@ -179,7 +182,7 @@ plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes",
 # Other functions
 ```{r}
 #Display what samples were added
-samples = get_sample_names(bagel)
+get_sample_names(bagel)
 ```
 
 # Session Information

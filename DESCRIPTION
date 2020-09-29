@@ -4,9 +4,6 @@ Title: Novel Mutational Signature Analysis
 Version: 0.99.0
 Authors@R: person("Aaron", "Chevalier", email = "atgc@bu.edu", role = "cre", comment = c(ORCHID = "0000-0002-3968-9250"))
 Description: What the package does (one paragraph).
-Depends: 
-    R (>= 4.0.0),
-    NMF
 License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
@@ -14,10 +11,12 @@ biocViews:
     Software,
     BiologicalQuestion,
     SomaticMutation
+Depends:
+    R (>= 4.0.0), 
+    NMF,
 Imports:
     SummarizedExperiment,
     VariantAnnotation,
-    ggplot2,
     cowplot,
     Biostrings,
     base,
@@ -38,15 +37,15 @@ Imports:
     GenomicFeatures,
     GenomicRanges,
     IRanges,
-    plotly,
-    topicmodels,
     S4Vectors,
     uwot,
-    withr,
-    ggrepel,
-    stringr
+    ggplot2,
+    stringr,
+    TxDb.Hsapiens.UCSC.hg19.knownGene,
+    TxDb.Hsapiens.UCSC.hg38.knownGene
 Suggests:
     testthat,
+    BiocStyle,
     knitr,
     rmarkdown,
     survival,
@@ -54,12 +53,14 @@ Suggests:
     BSgenome.Hsapiens.UCSC.hg38,
     BSgenome.Mmusculus.UCSC.mm9,
     BSgenome.Mmusculus.UCSC.mm10,
-    TxDb.Hsapiens.UCSC.hg19.knownGene,
-    TxDb.Hsapiens.UCSC.hg38.knownGene,
     XVector,
     qpdf,
     deconstructSigs,
     decompTumor2Sig,
+    topicmodels,
+    ggrepel,
+    withr,
+    plotly,
     covr
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr

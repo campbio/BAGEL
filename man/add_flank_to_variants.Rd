@@ -4,7 +4,13 @@
 \alias{add_flank_to_variants}
 \title{Uses a genome object to find context and add it to the variant table}
 \usage{
-add_flank_to_variants(bay, flank_start, flank_end, build_table = TRUE)
+add_flank_to_variants(
+  bay,
+  flank_start,
+  flank_end,
+  build_table = TRUE,
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{bay}{Input samples}
@@ -13,15 +19,17 @@ add_flank_to_variants(bay, flank_start, flank_end, build_table = TRUE)
 
 \item{flank_end}{End of flank area to add, can be positive or negative}
 
-\item{build_table}{Automatically build a table using the annotation and add
+\item{build_table}{Automatically build a table using the annotation and add}
+
+\item{overwrite}{Overwrite existing count table
 it to the bagel}
 }
 \description{
 Uses a genome object to find context and add it to the variant table
 }
 \examples{
-bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
-package = "BAGEL"))
-add_flank_to_variants(bay, 1, 2)
-add_flank_to_variants(bay, -2, -1)
+#bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
+#package = "BAGEL"))
+#add_flank_to_variants(bay, 1, 2)
+#add_flank_to_variants(bay, -2, -1)
 }

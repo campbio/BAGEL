@@ -5,8 +5,8 @@
 \title{Discovers signatures and weights from a table of counts using NMF}
 \usage{
 discover_signatures(
-  input,
-  table_name,
+  bagel,
+  table_name = NULL,
   num_signatures,
   method = "lda",
   seed = 1,
@@ -15,7 +15,7 @@ discover_signatures(
 )
 }
 \arguments{
-\item{input}{A bagel object or counts table}
+\item{bagel}{A bagel object or counts table}
 
 \item{table_name}{Name of table used for signature discovery}
 
@@ -37,7 +37,7 @@ Discovers signatures and weights from a table of counts using NMF
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-build_standard_table(bay, "SBS96")
-discover_signatures(input = bay, table_name = "SBS96",
+build_standard_table(bay, "SBS96", overwrite = TRUE)
+discover_signatures(bagel = bay, table_name = "SBS96",
 num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 }

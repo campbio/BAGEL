@@ -19,5 +19,5 @@ Return sample from bagel object
 }
 \examples{
 result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-name_signatures(result, c("smoking", "uv", "apobec", "unknown"))
+name_signatures(result, c("smoking", "apobec", "unknown"))
 }

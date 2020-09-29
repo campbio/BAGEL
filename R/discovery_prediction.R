@@ -3,7 +3,7 @@ NULL
 
 #' Discovers signatures and weights from a table of counts using NMF
 #'
-#' @param input A bagel object or counts table
+#' @param bagel A bagel object or counts table
 #' @param table_name Name of table used for signature discovery
 #' @param num_signatures Number of signatures to discover, k
 #' @param method Discovery of new signatures using either LDA or NMF
@@ -13,59 +13,49 @@ NULL
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SBS96")
-#' discover_signatures(input = bay, table_name = "SBS96",
+#' build_standard_table(bay, "SBS96", overwrite = TRUE)
+#' discover_signatures(bagel = bay, table_name = "SBS96",
 #' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
-discover_signatures <- function(input, table_name, num_signatures, method="lda",
+discover_signatures <- function(bagel, table_name = NULL, num_signatures, method="lda",
                             seed = 1, nstart = 1, par_cores = FALSE) {
-  if (!methods::is(input, "bagel")) {
-    if (!methods::is(input, "matrix")) {
-      stop("Input to discover_signatures must be a bagel object or a matrix")
-    }
-    bagel <- methods::new("bagel")
-    bagel@count_tables@table_list[[1]] <- input
-    bagel@count_tables@table_name[1] <- table_name
-    input <- bagel
-  }
-  counts_table <- extract_count_table(input, table_name)
+  #if (!methods::is(input, "bagel")) {
+#    if (!methods::is(input, "matrix")) {
+#      stop("Input to discover_signatures must be a bagel object or a matrix")
+#    }
+#    bagel <- methods::new("bagel")
+#    bagel@count_tables@table_list[[1]] <- input
+#    bagel@count_tables@table_name[1] <- table_name
+#    input <- bagel
+  #}
+  counts_table <- .extract_count_table(bagel, table_name)
+  present_samples <- which(colSums(counts_table) > 0)
+  counts_table <- counts_table[, present_samples]
 
-  #Determine if samples are present and can be used to scale weights
-  used_samples <- which(input@variants$sample %in%
-                          colnames(counts_table))
-  if (length(used_samples) == 0) {
-    warning(strwrap(prefix = " ", initial = "", "No samples overlap with
-                      counts table, exposures will not be scaled by sample
-                      counts."))
-  } else {
-    sample_counts <- table(input@variants$sample[used_samples])
-    matched <- match(colnames(counts_table), names(sample_counts))
-  }
   if (method == "lda") {
-    counts_table <- t(counts_table)
+    lda_counts_table <- t(counts_table)
     if (is.null(seed)) {
       control <- list(nstart = nstart)
     } else {
       control <- list(seed = (seq_len(nstart) - 1) + seed, nstart = nstart)
     }
-    lda_out <- topicmodels::LDA(counts_table, num_signatures, control = control)
+    lda_out <- topicmodels::LDA(lda_counts_table, num_signatures,
+                                control = control)
     lda_sigs <- exp(t(lda_out@beta))
-    rownames(lda_sigs) <- colnames(counts_table)
-    colnames(lda_sigs) <- paste("Signature", seq_len(num_signatures), sep = "")
+    rownames(lda_sigs) <- colnames(lda_counts_table)
+    colnames(lda_sigs) <- paste0("Signature", seq_len(num_signatures))
 
     weights <- t(lda_out@gamma)
-    rownames(weights) <- paste("Signature", seq_len(num_signatures), sep = "")
-    colnames(weights) <- rownames(counts_table)
+    rownames(weights) <- paste0("Signature", seq_len(num_signatures))
+    colnames(weights) <- rownames(lda_counts_table)
 
-    # Multiply Weights by sample counts
-    if (length(used_samples) != 0) {
-      weights <- sweep(weights, 2, sample_counts[matched], FUN = "*")
-    }
-    lda_result <- methods::new("Result", signatures = lda_sigs,
-                               exposures = weights, type = "LDA", bagel = input,
+    result <- methods::new("Result", signatures = lda_sigs,
+                               tables = table_name,
+                               exposures = weights, type = "LDA", bagel = bagel,
                                log_lik = stats::median(lda_out@loglikelihood),
                                perplexity = topicmodels::perplexity(lda_out))
-    return(lda_result)
+    result@exposures <- sweep(result@exposures, 2, colSums(result@exposures),
+                              FUN = "/")
   } else if (method == "nmf") {
     #Needed to prevent error with entirely zero rows
     epsilon <- 0.00000001
@@ -81,23 +71,24 @@ discover_signatures <- function(input, table_name, num_signatures, method="lda",
                                  sep = "")
     colnames(decomp@fit@W) <- paste("Signature", seq_len(num_signatures),
                                     sep = "")
-    nmf_result <- methods::new("Result", signatures = decomp@fit@W,
+    result <- methods::new("Result", signatures = decomp@fit@W,
+                               tables = table_name,
                                exposures = decomp@fit@H, type = "NMF",
-                               bagel = input, log_lik = decomp@residuals)
-    nmf_result@signatures <- sweep(nmf_result@signatures, 2,
-                                   colSums(nmf_result@signatures), FUN = "/")
-    nmf_result@exposures <- sweep(nmf_result@exposures, 2,
-                                   colSums(nmf_result@exposures), FUN = "/")
-
-    # Multiply Weights by sample counts
-    if (length(used_samples) != 0) {
-      nmf_result@exposures <- sweep(nmf_result@exposures, 2,
-                                  sample_counts[matched], FUN = "*")
-    }
-    return(nmf_result)
+                               bagel = bagel, log_lik = decomp@residuals)
+    result@signatures <- sweep(result@signatures, 2, colSums(result@signatures),
+                               FUN = "/")
+    result@exposures <- sweep(result@exposures, 2, colSums(result@exposures),
+                              FUN = "/")
   } else{
-    stop("That method is not supported. Use lda or nmf to generate signatures.")
+    stop("That method is not supported. Please select 'lda' or 'nmf' ",
+         "to generate signatures.")
   }
+  # Multiply Weights by sample counts
+  sample_counts <- colSums(counts_table)
+  matched <- match(colnames(counts_table), names(sample_counts))
+  result@exposures <- sweep(result@exposures, 2, sample_counts[matched],
+                            FUN = "*")
+  return(result)
 }
 
 kld <- function(a, b) {
@@ -177,11 +168,13 @@ compare_results <- function(result, other_result,
   result_subset <- methods::new("Result",
                       signatures = result@signatures[, comparison$xindex,
                                                      drop = FALSE], exposures =
-                        matrix(), type = "NMF")
+                        matrix(), type = "NMF", bagel = result@bagel,
+                      tables = result@tables)
   other_subset <- methods::new("Result",
                       signatures = other_result@signatures[, comparison$yindex,
                                                             drop = FALSE],
-                      exposures = matrix(), type = "NMF")
+                      exposures = matrix(), type = "NMF",
+                      bagel = other_result@bagel, tables = other_result@tables)
   result_plot <- BAGEL::plot_signatures(result_subset)
   result_plot <- result_plot + ggplot2::ggtitle(result_name)
   cosmic_plot <- BAGEL::plot_signatures(other_subset)
@@ -208,14 +201,14 @@ compare_cosmic_v3 <- function(result, variant_class, sample_type,
                               deparse(substitute(result))) {
   if (sample_type == "exome") {
     if (variant_class %in% c("snv", "SNV", "SNV96", "SBS", "SBS96")) {
-      cosmic_res <- cosmic_v3_snv_sigs_exome
+      cosmic_res <- cosmic_v3_sbs_sigs_exome
     } else {
       stop(paste("Only SBS class is available for whole-exome, please choose",
                  " `genome` for DBS or Indel", sep = ""))
     }
   } else if (sample_type == "genome") {
     if (variant_class %in% c("snv", "SNV", "SNV96", "SBS")) {
-      cosmic_res <- cosmic_v3_snv_sigs
+      cosmic_res <- cosmic_v3_sbs_sigs
     } else if (variant_class %in% c("DBS", "dbs", "doublet")) {
       cosmic_res <- cosmic_v3_dbs_sigs
     } else if (variant_class %in% c("INDEL", "Indel", "indel", "ind", "IND",
@@ -230,13 +223,14 @@ compare_cosmic_v3 <- function(result, variant_class, sample_type,
   signatures <- result@signatures
   comparison <- sig_compare(signatures, cosmic_res@signatures, threshold)
   result_subset <- methods::new(
-    "Result", signatures = result@signatures[,
-                                             comparison$xindex, drop = FALSE],
-    exposures = matrix(), type = "NMF")
-  other_subset <- methods::new(
-    "Result", signatures = cosmic_res@signatures[, comparison$yindex,
-                                                 drop = FALSE],
-    exposures = matrix(), type = "NMF")
+    "Result", signatures = result@signatures[, comparison$xindex, drop = FALSE],
+    exposures = matrix(), type = "NMF", tables = result@tables,
+    bagel = result@bagel)
+  other_subset <- methods::new("Result", signatures =
+                                 cosmic_res@signatures[, comparison$yindex,
+                                                       drop = FALSE],
+    exposures = matrix(), type = "NMF", tables = cosmic_res@tables,
+    bagel = cosmic_res@bagel)
   result_plot <- BAGEL::plot_signatures(result_subset)
   result_plot <- result_plot + ggplot2::ggtitle(result_name)
   cosmic_plot <- BAGEL::plot_signatures(other_subset)
@@ -266,12 +260,15 @@ compare_cosmic_v2 <- function(result, threshold = 0.9, result_name =
                                 signatures =
                                   result@signatures[, comparison$xindex, drop =
                                                       FALSE], exposures =
-                                  matrix(), type = "NMF")
+                                  matrix(), type = result@type, bagel = result@bagel,
+                                tables = result@tables)
   other_subset <- methods::new("Result",
                                signatures =
                                  cosmic_v2_sigs@signatures[, comparison$yindex,
                                                            drop = FALSE],
-                               exposures = matrix(), type = "NMF")
+                               exposures = matrix(), type = "NMF",
+                               bagel = cosmic_v2_sigs@bagel,
+                               tables = cosmic_v2_sigs@tables)
   result_plot <- BAGEL::plot_signatures(result_subset)
   legend <- cowplot::get_legend(result_plot)
   result_plot <- result_plot + ggplot2::ggtitle(result_name) +
@@ -337,7 +334,7 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SBS96")
+#' build_standard_table(bay, "SBS96", overwrite = TRUE)
 #' predict_exposure(bagel = bay, table_name = "SBS96",
 #' signature_res = BAGEL::cosmic_v2_sigs, algorithm = "lda")
 #' @export
@@ -346,7 +343,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                signature_res@signatures)), seed = 1,
                              verbose = FALSE) {
   signature <- signature_res@signatures[, signatures_to_use]
-  counts_table <- extract_count_table(bagel, table_name)
+  counts_table <- .extract_count_table(bagel, table_name)
   present_samples <- which(colSums(counts_table) > 0)
   counts_table <- counts_table[, present_samples]
 
@@ -412,21 +409,14 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
   }
   result <- methods::new("Result", signatures = signature,
                                        exposures = exposures,
-                                       type = type_name, bagel = bagel)
+                                       type = type_name, bagel = bagel,
+                         tables = table_name)
 
   # Multiply Weights by sample counts
-  used_samples <- which(bagel@variants$sample %in%
-                          colnames(counts_table))
-  if (length(used_samples) == 0) {
-    warning(strwrap(prefix = " ", initial = "", "No samples overlap with
-                      counts table, exposures will not be scaled by sample
-                      counts."))
-  } else {
-    sample_counts <- table(bagel@variants$sample[used_samples])
-    matched <- match(colnames(counts_table), names(sample_counts))
-    result@exposures <- sweep(result@exposures, 2, sample_counts[matched],
-                              FUN = "*")
-  }
+  sample_counts <- colSums(counts_table)
+  matched <- match(colnames(counts_table), names(sample_counts))
+  result@exposures <- sweep(result@exposures, 2, sample_counts[matched],
+                            FUN = "*")
   return(result)
 }
 
@@ -515,9 +505,9 @@ predict_decompTumor2Sig <- function(sample_mat, signature_mat) {
 .multi_modal_discovery <- function(bay, num_signatures, motif96_name,
                                   rflank_name, lflank_name, max.iter=125,
                                   seed=123) {
-  motif96 <- extract_count_table(bay, motif96_name)
-  rflank <- extract_count_table(bay, rflank_name)
-  lflank <- extract_count_table(bay, lflank_name)
+  motif96 <- .extract_count_table(bay, motif96_name)
+  rflank <- .extract_count_table(bay, rflank_name)
+  lflank <- .extract_count_table(bay, lflank_name)
   print(dim(motif96))
   print(dim(rflank))
   print(dim(lflank))
@@ -713,11 +703,11 @@ generate_result_grid <- function(bagel, table_name, discovery_type = "lda",
       cur_annot_samples <- unique(bagel@variants$sample)
     }
     #Used for reconstruction error
-    cur_counts <- extract_count_table(cur_bagel, table_name)
+    cur_counts <- .extract_count_table(cur_bagel, table_name)
 
     #Define new results
     for (cur_k in k_start:k_end) {
-      cur_result <- discover_signatures(input = cur_bagel, table_name =
+      cur_result <- discover_signatures(bagel = cur_bagel, table_name =
                                           table_name, num_signatures = cur_k,
                                         method = discovery_type, nstart =
                                           n_start, seed = seed, par_cores =
@@ -773,8 +763,9 @@ reconstruct_sample <- function(result, sample_number) {
 #' combines into a single result if combines_res = TRUE
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_annot.rds", package = "BAGEL"))
-#' auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda",
-#' "Tumor_Subtypes")
+#' auto_predict_grid(bagel = bay, table_name = "SBS96",
+#' signature_res = cosmic_v2_sigs, algorithm = "lda",
+#' sample_annotation = "Tumor_Subtypes")
 #' auto_predict_grid(bay, "SBS96", BAGEL::cosmic_v2_sigs, "lda")
 #' @export
 auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
@@ -802,9 +793,9 @@ auto_predict_grid <- function(bagel, table_name, signature_res, algorithm,
       if (verbose) {
         print(as.character(annot[i]))
       }
-      current_bagel <- BAGEL::subset_bagel_by_annotation(bagel, annot_col =
-                                                           sample_annotation,
-                                                         annot_name = annot[i])
+      current_bagel <- subset_bagel_by_annotation(bay = bagel, annot_col =
+                                                    sample_annotation,
+                                                  annot_names = annot[i])
       current_predicted <- auto_subset_sigs(bagel = current_bagel, table_name =
                                               table_name, signature_res =
                                               signature_res, min_exists =

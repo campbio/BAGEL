@@ -2,6 +2,8 @@
 #' @importFrom GenomicFeatures genes
 #' @importFrom S4Vectors queryHits decode subjectHits
 #' @importFrom GenomicRanges strand
+#' @importFrom TxDb.Hsapiens.UCSC.hg38.knownGene TxDb.Hsapiens.UCSC.hg38.knownGene
+#' @importFrom TxDb.Hsapiens.UCSC.hg19.knownGene TxDb.Hsapiens.UCSC.hg19.knownGene
 NULL
 
 #' Uses a genome object to find context and add it to the variant table
@@ -10,15 +12,16 @@ NULL
 #' @param flank_start Start of flank area to add, can be positive or negative
 #' @param flank_end End of flank area to add, can be positive or negative
 #' @param build_table Automatically build a table using the annotation and add
+#' @param overwrite Overwrite existing count table
 #' it to the bagel
 #' @examples
-#' bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
-#' package = "BAGEL"))
-#' add_flank_to_variants(bay, 1, 2)
-#' add_flank_to_variants(bay, -2, -1)
+#' #bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
+#' #package = "BAGEL"))
+#' #add_flank_to_variants(bay, 1, 2)
+#' #add_flank_to_variants(bay, -2, -1)
 #' @export
 add_flank_to_variants <- function(bay, flank_start, flank_end,
-                                  build_table = TRUE) {
+                                  build_table = TRUE, overwrite = FALSE) {
   stopifnot(sign(flank_start) == sign(flank_end), flank_start < flank_end)
 
   g <- bay@genome
@@ -69,7 +72,8 @@ add_flank_to_variants <- function(bay, flank_start, flank_end,
                                bay@count_tables,
                              sample_annotations = bay@sample_annotations)
     tab <- build_custom_table(dat_bagel, variant_annotation = output_column,
-                         name = output_column, return_instead = FALSE)
+                         name = output_column, return_instead = FALSE,
+                         overwrite = overwrite)
     eval.parent(substitute(bay@count_tables <- tab))
   }
 }
@@ -175,10 +179,10 @@ subset_variant_by_type <- function(tab, type) {
 annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (genome_build %in% c("19", "hg19")) {
     genes <- genes(
-      TxDb.Hsapiens.UCSC.hg19.knownGene::TxDb.Hsapiens.UCSC.hg19.knownGene)
+      TxDb.Hsapiens.UCSC.hg19.knownGene)
   } else if (genome_build %in% c("38", "hg38")) {
     genes <- genes(
-      TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene)
+      TxDb.Hsapiens.UCSC.hg38.knownGene)
   } else if (methods::isClass(genome_build, "TxDb")) {
     genes <- genome_build
   } else {
@@ -216,11 +220,11 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (build_table) {
     dat_bagel <- methods::new("bagel", variants = drop_na_variants(
       dat, "Transcript_Strand"), count_tables = bay@count_tables,
-      sample_annotations = bay@sample_annotations)
-    tab <- build_custom_table(dat_bagel, variant_annotation =
+      sample_annotations = bay@sample_annotations, genome = bay@genome)
+    tab <- build_custom_table(bay = dat_bagel, variant_annotation =
                                   "Transcript_Strand", name =
-                                  "Transcript_Strand", return_instead = FALSE)
-    eval.parent(substitute(bay@count_tables <- tab))
+                                  "Transcript_Strand", return_instead = TRUE)
+    eval.parent(substitute(bay@count_tables[["Transcript_Strand"]] <- tab))
   }
 }
 
@@ -260,6 +264,6 @@ annotate_replication_strand <- function(bay, rep_range, build_table = TRUE) {
                                 "Replication_Strand", data_factor =
                                 factor(c("leading", "lagging")),
                               return_instead = FALSE)
-    eval.parent(substitute(bay@count_tables <- tab))
+    eval.parent(substitute(bay@count_tables[["Replication_Strand"]] <- tab))
   }
 }

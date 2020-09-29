@@ -28,5 +28,5 @@ Plotting Signature Motif counts/spectra
 }
 \examples{
 result <- readRDS(system.file("testdata", "res.rds", package = "BAGEL"))
-plot_sample_reconstruction_error(result, "SNV96", 1)
+plot_sample_reconstruction_error(result, "SBS96", 1)
 }

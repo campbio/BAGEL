@@ -8,9 +8,11 @@ plot_signatures(
   result,
   no_legend = FALSE,
   plotly = FALSE,
-  text_size = 17,
-  facet_size = 20,
-  x_labels = FALSE
+  color_variable = NULL,
+  color_mapping = NULL,
+  text_size = 10,
+  facet_size = 10,
+  show_x_labels = TRUE
 )
 }
 \arguments{
@@ -20,11 +22,17 @@ plot_signatures(
 
 \item{plotly}{add plotly layer for plot interaction}
 
+\item{color_variable}{Annotation column to use for coloring plotted motifs,
+provided by counts table from input result's bagel object}
+
+\item{color_mapping}{Mapping from color_variable to color names, provided by
+counts table from input result's bagel object}
+
 \item{text_size}{Size of axis text}
 
 \item{facet_size}{Size of facet text}
 
-\item{x_labels}{Toggle plotting of x-axis labels}
+\item{show_x_labels}{Toggle plotting of x-axis labels}
 }
 \value{
 Generates plot {no return}

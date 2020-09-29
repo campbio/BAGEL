@@ -4,10 +4,12 @@
 \alias{create_sbs96_table}
 \title{Uses a genome object to find context and generate standard SBS96 tables}
 \usage{
-create_sbs96_table(bay)
+create_sbs96_table(bay, overwrite = FALSE)
 }
 \arguments{
 \item{bay}{Input samples}
+
+\item{overwrite}{Overwrite existing count table}
 }
 \description{
 Uses a genome object to find context and generate standard SBS96 tables
