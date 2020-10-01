@@ -46,6 +46,7 @@ Imports:
 Suggests:
     testthat,
     BiocStyle,
+    BiocManager,
     knitr,
     rmarkdown,
     survival,

@@ -2,12 +2,12 @@
 title: "BAGEL Mutational Signature Analysis Toolkit"
 author:
 - name: Aaron Chevalier
-  affiliation: Boston University College of Engineering
+  affiliation: &id Boston University School of Medicine
 - name: Joshua Campbell
-  affiliiation: Fill this in
+  affiliation: *id
+  email: camp@bu.edu
 output:
-  pdf_document:
-    toc: true
+  BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{BAGEL Mutational Signature Analysis Toolkit}
   %\VignetteEngine{knitr::rmarkdown}
@@ -30,30 +30,42 @@ with advanced downstream analysis including UMAP.
 
 # Installation
 Currently BAGEL can be installed from Github; in the future it will be 
-available on Bioconductor. To install from Github directly please use the code 
-below:
+available on Bioconductor:
+
+```{r, eval= FALSE}
+if (!requireNamespace("BiocManager", quietly=TRUE)){
+    install.packages("BiocManager")}
+BiocManager::install("BAGEL")
+```
+
+The package can be loaded using the `library` command.
+
+```{r, eval = TRUE, message = FALSE}
+library(BAGEL)
+```
+
+To install the latest version from Github, use the following code:
 library(devtools)
 install_github("campbio/BAGEL")
 
 # Setting up a bagel object
-In order to discover or predict, we must first set up our BAGEL object by 1) 
-extracting variants, 2) selecting a genome 3) creating our BAGEL object 4) 
-building a counts table for our BAGEL (SBS, DBS, INS, DEL, etc.)
-
-# Reproducibility note
-
-Many functions in *BAGEL* make use of stochastic algorithms or procedures which 
-require the use of random number generator (RNG) for simulation or sampling. 
-To maintain reproducibility, all these functions use a **default seed of 1** to 
-make sure same results are generated each time one of these functions is 
-called. Explicitly setting the `seed` arguments is needed for greater control 
-and randomness. These functions include *discover_signatures*, 
-*predict_exposure*, and *create_umap*.
+In order to discover or predict mutational signatures, we must first set up
+our BAGEL object by 1) extracting variants from files or objects such as
+VCFs and MAFs, 2) selecting the appropriate reference genome 3) creating a BAGEL object, and 4) building a count tables for our varinats of interest.
 
 ## Extracting variants
-Variants can be extracted from VCFs and MAFs, and R objects such as data.frames 
-and VCF and MAF representation via VariantAnnotation and maftools. 
-```{r}
+Variants can be extracted from various formats using the following functions:
+
+* The ```extract_variants_from_vcf_file()``` function will extract variants from a [VCF](https://samtools.github.io/hts-specs/) file. The file will be imported using the readVcf function from the [VariantAnnotation](https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html) package and then the variant information will be extracted from this object.
+* The ```extract_variants_from_vcf()``` function
+* The ```extract_variants_from_maf_file()``` function will extract variants from a file in [Mutation Annotation Format (MAF)](https://docs.gdc.cancer.gov/Data/File_Formats/MAF_Format/) used by TCGA.
+* The ```extract_variants_from_maf()``` function will extract variants from a MAF object created by the [maftools package](https://www.bioconductor.org/packages/release/bioc/html/maftools.html). 
+* The ```extract_variants_from_matrix()``` function will get the information from a matrix or data.frame like object that has columns for the chromosome, start position, end position, reference allele, and mutation allele. 
+* The ```extract_variants()``` function will extract variants from a list of objects. These objects can be any combination of VCF files, VariantAnnotation objects, MAF files, MAF objects, and data.frame objects.
+
+Below are some examples of extracting variants from MAF and VCF files:
+
+```{r extract_variants, message = FALSE}
 # Extract variants from a MAF File
 lusc_maf <- system.file("testdata", "public_TCGA.LUSC.maf", package = "BAGEL") 
 lusc.variants <- extract_variants_from_maf_file(maf_file = lusc_maf)
@@ -66,64 +78,66 @@ luad.variants <- extract_variants_from_vcf_file(vcf_file = luad_vcf)
 # Extract variants from multiple files and/or objects
 melanoma_vcfs <- list.files(system.file("testdata", package = "BAGEL"), 
                            pattern = glob2rx("*SKCM*vcf"), full.names = TRUE)
-variants <- extract_variants(c(lusc_maf, luad_vcf, melanoma_vcfs), verbose = TRUE)
+variants <- extract_variants(c(lusc_maf, luad_vcf, melanoma_vcfs))
 ```
 
-## Choosing genome
-BAGEL uses BSgenome objects to access genomic information such as reference 
-bases for count tables. The BSgenome represents and stores full genome sequeces 
-for different organisms. To make selection easy we provide an accessor method 
-for human genome build versions 38, and 19 (hg38, hg19), but many other less 
-common builds and organisms are available via BSgenome as well.
-```{r}
-g = select_genome("hg38")
+## Choosing a genome
+BAGEL uses [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html) objects to access genome sequence information that flanks each mutation which is used bases for generating mutation count tables. BSgenome objects store full genome sequences for different organisms. A full list of supported organisms can be obtained by running ```available.genomes()```. Custom genomes can be forged as well (see [BSgenome](https://bioconductor.org/packages/release/bioc/html/BSgenome.html) documentation). BAGEL provides a utility function called ```select_genome()``` to allow users to quickly select human genome build versions "hg19" and "hg38" or mouse genome builds "mm9" and "mm10". The reference sequencing for these genomes are in UCSC format (e.g. chr1).
+
+```{r select_genome}
+g <- select_genome("hg38")
 ```
 
-## Create bagel object
-```{r}
-bagel = create_bagel(x = variants, genome = g)
+## Creating a bagel object
+The last preprocessing step is to create a BAGEL object with the variants and the genome. This function will perform checks to ensure that the chromosome names and reference alleles in the input variant object match those in supplied BSgenome object. These checks can be turned off by setting ```check_ref_chromosomes = FALSE``` and ```check_ref_bases = FALSE```, respectively.
+
+```{r create_bagel}
+bagel <- create_bagel(x = variants, genome = g)
 ```
 
-# Create mutation count tables
+# Creating mutation count tables
 Motifs are the building blocks of mutational signatures. Motifs themselves are 
 a mutation combined with other genomic information. For instance, **SBS96** 
 motifs are constructed from an SBS mutation and one upsteam and one downstream 
 base sandwiched together. We build tables by counting these motifs for each 
 sample. 
-```{r}
+```{r build_tables}
 build_standard_table(bagel, "SBS96")
 ```
 
 # Discover Signatures/Exposures
 Discovery and prediction result are loaded into a self-contained result object 
 that includes signatures and sample exposures.
-```{r}
-result = discover_signatures(bagel = bagel, table_name = "SBS96", 
-                              num_signatures = 4, method = "lda", nstart = 10, 
+```{r discover_sigs}
+result <- discover_signatures(bagel = bagel, table_name = "SBS96", 
+                              num_signatures = 3, method = "lda", nstart = 10, 
                              seed = 1)
 ```
 
 # Plotting
 ## Signatures
-```{r}
-##Plot results
+```{r, plot_sigs}
 plot_signatures(result)
+```
 
-# We can name signatures based on prior knowledge
-name_signatures(result, c("unknown", "smoking", "apobec", "uv"))
+Signatures can be named based on prior knowledge and displayed in the plots:
+
+```{r, name_sigs}
+name_signatures(result, c("Smoking", "APOBEC", "UV"))
+plot_signatures(result)
 ```
 
 ## Exposures
-```{r}
+```{r exposures}
 plot_exposures(result, proportional = TRUE)
 plot_exposures(result, proportional = FALSE)
 plot_sample_counts(bagel, "SBS96", get_sample_names(bagel)[1])
 ```
 
 ## Comparison to external signatures (e.g. COSMIC)
+Compare to COSMIC signatures by leaving the second result as default
 
-```{r}
-##Compare to COSMIC signatures by leaving the second result as default
+```{r compare}
 compare_cosmic_v2(result, threshold = 0.78)
 ```
 
@@ -179,11 +193,17 @@ plot_exposures_by_annotation(res, annotation = "Tumor_Subtypes",
                              by_group = FALSE)
 ```
 
-# Other functions
-```{r}
-#Display what samples were added
-get_sample_names(bagel)
-```
+
+# Note on reproducibility
+
+Many functions in *BAGEL* make use of stochastic algorithms or procedures which 
+require the use of random number generator (RNG) for simulation or sampling. 
+To maintain reproducibility, all these functions use a **default seed of 1** to 
+make sure same results are generated each time one of these functions is 
+called. Explicitly setting the `seed` arguments is needed for greater control 
+and randomness. These functions include *discover_signatures*, 
+*predict_exposure*, and *create_umap*.
+
 
 # Session Information
 ```{r}
