@@ -14,6 +14,9 @@ object}
 
 \item{build_table}{Automatically build a table from this annotation}
 }
+\value{
+None
+}
 \description{
 Add transcript strand annotation to SBS variants (defined in genes only)
 }

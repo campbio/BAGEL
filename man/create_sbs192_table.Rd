@@ -5,10 +5,13 @@
 \title{Uses a genome object to find context and generate standard SBS192 table
 using transcript strand}
 \usage{
-create_sbs192_table(bay, strand_type, overwrite = FALSE)
+create_sbs192_table(bay, g, strand_type, overwrite = FALSE)
 }
 \arguments{
 \item{bay}{Input samples}
+
+\item{g}{A \linkS4class{BSgenome} object indicating which genome
+reference the variants and their coordinates were derived from.}
 
 \item{strand_type}{Transcript_Strand or Replication_Strand}
 

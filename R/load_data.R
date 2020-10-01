@@ -421,7 +421,7 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
   }
 
   # Automatically try to fix some types of errors in VCF files
-  if (class(vcf) == "try-error" && fix_vcf_errors) {
+  if (is(vcf, "try-error") && fix_vcf_errors) {
     alt_input <- utils::read.table(vcf_file, stringsAsFactors = FALSE,
                             check.names = FALSE, comment.char = "", skip = 7,
                             header = TRUE)
@@ -465,7 +465,7 @@ extract_variants_from_vcf_file <- function(vcf_file, id = NULL, rename = NULL,
     #           " is malformed but could be recovered, review optional.",
     #           " \nAdditional information: \n", vcf[1],
     #           sep = ""))
-  } else if (class(vcf) == "try-error") {
+  } else if (is(vcf, "try-error")) {
     stop("VCF File: ", vcf_file,
                   " is malformed and automatic error fixing is disabled.",
                   " \nAdditional information: \n", vcf[1])
@@ -702,7 +702,7 @@ create_bagel <- function(x, genome,
   }
 
   # Create and return a BAGEL object
-  bagel <- new("bagel", variants = dt, genome = genome)
+  bagel <- new("bagel", variants = dt)
   return(bagel)
 }
 
@@ -731,7 +731,7 @@ create_bagel <- function(x, genome,
     inter <- intersect(chr_u, genome_u)
     if (length(inter) == 0) {
       # Error 1: No matching of genome and variants
-      if (class(g_error) == "try-error" & class(v_error) == "try-error") {
+      if (is(g_error, "try-error") & is(v_error, "try-error")) {
         stop("The style of the genome references in the 'variant' and ",
              "'genome' objects did not match each other or any style ",
              "from the 'GenomeInfoDb' package. Please ensure that the entries ",
@@ -739,7 +739,7 @@ create_bagel <- function(x, genome,
              "entries in 'seqnames(genome)'. First five chromosomes:\n",
              "variant: ", paste(head(chr_u, 5), collapse = ", "), "\n",
              "genome: ", paste(head(genome_u, 5), collapse = ", "))
-      } else if (class(g_error) == "try-error") {
+      } else if (is(g_error, "try-error")) {
         stop("The style of the genome references in the 'variant' and ",
              "'genome' objects did not match each other. The style for the ",
              "variant table was determined to be ", variant_style, " by the ",
@@ -750,7 +750,7 @@ create_bagel <- function(x, genome,
              "entries in 'seqnames(genome)'. First five chromosomes:\n",
              "variant: ", paste(head(chr_u, 5), collapse = ", "), "\n",
              "genome: ", paste(head(genome_u, 5), collapse = ", "))
-      } else if (class(v_error) == "try-error") {
+      } else if (is(v_error, "try-error")) {
         stop("The style of the genome references in the 'variant' and ",
              "'genome' objects did not match each other. The style for the ",
              "genome object was determined to be ", genome_style, " by the ",
@@ -766,7 +766,7 @@ create_bagel <- function(x, genome,
         new_chr <- chr
         map_error <- try(GenomeInfoDb::seqlevelsStyle(new_chr) <-
                            genome_style, silent = TRUE)
-        if (class(map_error) == "try-error") {
+        if (is(map_error, "try-error")) {
           stop("The style of the genome references in the 'variant' and ",
                "'genome' objects did not match each other. The style for the ",
                "genome object was determined to be ", genome_style, " and the ",

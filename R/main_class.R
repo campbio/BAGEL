@@ -49,14 +49,11 @@ setClass("count_table", slots = c(name = "character",
 #' and tables
 #'
 #' @slot variants \code{data.table} of variants
-#' @slot genome \code{BSgenome} object containing the reference genome of the
-#' variants
 #' @slot count_tables Summary table with per-sample unnormalized motif counts
 #' @slot sample_annotations Sample-level annotations (e.g. age, sex, primary)
 #' @export
 #' @import data.table BSgenome
 setClass("bagel", slots = c(variants = "data.table",
-                                 genome = "BSgenome",
                                  count_tables = "list",
                                  sample_annotations = "data.table"),
          prototype = list(variants = data.table::data.table(),

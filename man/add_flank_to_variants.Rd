@@ -6,6 +6,7 @@
 \usage{
 add_flank_to_variants(
   bay,
+  g,
   flank_start,
   flank_end,
   build_table = TRUE,
@@ -15,14 +16,20 @@ add_flank_to_variants(
 \arguments{
 \item{bay}{Input samples}
 
+\item{g}{A \linkS4class{BSgenome} object indicating which genome
+reference the variants and their coordinates were derived from.}
+
 \item{flank_start}{Start of flank area to add, can be positive or negative}
 
 \item{flank_end}{End of flank area to add, can be positive or negative}
 
 \item{build_table}{Automatically build a table using the annotation and add}
 
-\item{overwrite}{Overwrite existing count table
-it to the bagel}
+\item{overwrite}{Overwrite existing count table}
+}
+\value{
+None
+it to the bagel
 }
 \description{
 Uses a genome object to find context and add it to the variant table

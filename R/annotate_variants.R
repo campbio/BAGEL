@@ -9,10 +9,13 @@ NULL
 #' Uses a genome object to find context and add it to the variant table
 #'
 #' @param bay Input samples
+#' @param g A \linkS4class{BSgenome} object indicating which genome
+#' reference the variants and their coordinates were derived from.
 #' @param flank_start Start of flank area to add, can be positive or negative
 #' @param flank_end End of flank area to add, can be positive or negative
 #' @param build_table Automatically build a table using the annotation and add
 #' @param overwrite Overwrite existing count table
+#' @return None
 #' it to the bagel
 #' @examples
 #' #bay <- readRDS(system.file("testdata", "bagel_sbs96_tiny.rds",
@@ -20,11 +23,9 @@ NULL
 #' #add_flank_to_variants(bay, 1, 2)
 #' #add_flank_to_variants(bay, -2, -1)
 #' @export
-add_flank_to_variants <- function(bay, flank_start, flank_end,
+add_flank_to_variants <- function(bay, g, flank_start, flank_end,
                                   build_table = TRUE, overwrite = FALSE) {
   stopifnot(sign(flank_start) == sign(flank_end), flank_start < flank_end)
-
-  g <- bay@genome
 
   direction <- ifelse(sign(flank_start) == 1, "r", "l")
 
@@ -102,6 +103,7 @@ annotate_variant_length <- function(bay) {
 #'
 #' @param bay Input samples
 #' @param column_name Name of column to drop
+#' @param None
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' drop_annotation(bay, "Variant_Type")
@@ -172,6 +174,7 @@ subset_variant_by_type <- function(tab, type) {
 #' @param genome_build Which genome build to use: hg19, hg38, or a custom TxDb
 #' object
 #' @param build_table Automatically build a table from this annotation
+#' @return None
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_transcript_strand(bay, 19)
@@ -220,7 +223,7 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
   if (build_table) {
     dat_bagel <- methods::new("bagel", variants = drop_na_variants(
       dat, "Transcript_Strand"), count_tables = bay@count_tables,
-      sample_annotations = bay@sample_annotations, genome = bay@genome)
+      sample_annotations = bay@sample_annotations)
     tab <- build_custom_table(bay = dat_bagel, variant_annotation =
                                   "Transcript_Strand", name =
                                   "Transcript_Strand", return_instead = TRUE)
@@ -233,6 +236,7 @@ annotate_transcript_strand <- function(bay, genome_build, build_table = TRUE) {
 #' @param bay Input bagel
 #' @param rep_range A GRanges object with replication timing as metadata
 #' @param build_table Automatically build a table from this annotation
+#' @return None
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_replication_strand(bay, BAGEL::rep_range)

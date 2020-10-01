@@ -14,9 +14,6 @@ and tables
 \describe{
 \item{\code{variants}}{\code{data.table} of variants}
 
-\item{\code{genome}}{\code{BSgenome} object containing the reference genome of the
-variants}
-
 \item{\code{count_tables}}{Summary table with per-sample unnormalized motif counts}
 
 \item{\code{sample_annotations}}{Sample-level annotations (e.g. age, sex, primary)}
