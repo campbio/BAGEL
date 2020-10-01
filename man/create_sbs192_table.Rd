@@ -17,6 +17,10 @@ reference the variants and their coordinates were derived from.}
 
 \item{overwrite}{Overwrite existing count table}
 }
+\value{
+Returns the created SBS192 count table object built using either
+transcript strand or replication strand
+}
 \description{
 Uses a genome object to find context and generate standard SBS192 table
 using transcript strand

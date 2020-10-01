@@ -11,6 +11,9 @@ drop_annotation(bay, column_name)
 
 \item{column_name}{Name of column to drop}
 }
+\value{
+None
+}
 \description{
 Drops a column from the variant table that the user no longer needs
 }

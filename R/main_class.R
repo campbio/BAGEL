@@ -230,6 +230,9 @@ get_variants <- function(bay) {
 #' @param bay Input bagel
 #' @param table_name Name of table used for subsetting
 #' @param num_counts Minimum sum count value to drop samples
+#' @return Returns a new bagel object with sample annotations, count tables,
+#' and variants subsetted to only contains samples with the specified minimum
+#' number of counts (column sums) in the specified table
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
 #' subset_bagel_by_counts(bay, "SBS96", 20)
@@ -257,6 +260,9 @@ subset_bagel_by_counts <- function(bay, table_name, num_counts) {
 #' @param bay Input bagel
 #' @param annot_col Annotation class to use for subsetting
 #' @param annot_names Annotational value to subset to
+#' @return Returns a new bagel object with sample annotations, count tables,
+#' and variants subsetted to only contains samples of the specified annotation
+#' type
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel_sbs96.rds", package = "BAGEL"))
 #' sample_annotations <- read.table(system.file("testdata",

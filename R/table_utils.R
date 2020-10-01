@@ -153,6 +153,9 @@ subset_count_tables <- function(bay, samples) {
 #' @param return_instead Instead of adding to bagel object, return the created
 #' table
 #' @param overwrite Overwrite existing count table
+#' @return If return_instead = TRUE then the created table object is returned,
+#' otherwise the table object is automatically added to the bagel's
+#' count_tables list and nothing is returned
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_transcript_strand(bay, "19", build_table = FALSE)

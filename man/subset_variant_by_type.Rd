@@ -11,6 +11,10 @@ subset_variant_by_type(tab, type)
 
 \item{type}{Variant type to return e.g. "SBS", "INS", "DEL", "DBS"}
 }
+\value{
+Returns the input variant table subsetted to only contain variants
+of the specified variant type
+}
 \description{
 Subsets a variant table based on Variant Type
 }

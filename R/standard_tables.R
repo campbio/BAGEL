@@ -4,6 +4,7 @@
 #' @param g A \linkS4class{BSgenome} object indicating which genome
 #' reference the variants and their coordinates were derived from.
 #' @param overwrite Overwrite existing count table
+#' @return Returns the created SBS96 count table object
 create_sbs96_table <- function(bay, g, overwrite = FALSE) {
   dat <- subset_variant_by_type(bay@variants, type = "SBS")
   ref <- as.character(dat$ref)
@@ -100,6 +101,8 @@ create_sbs96_table <- function(bay, g, overwrite = FALSE) {
 #' reference the variants and their coordinates were derived from.
 #' @param strand_type Transcript_Strand or Replication_Strand
 #' @param overwrite Overwrite existing count table
+#' @return Returns the created SBS192 count table object built using either
+#' transcript strand or replication strand
 create_sbs192_table <- function(bay, g, strand_type, overwrite = FALSE) {
   if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
     stop("Please select either Transcript_Strand or Replication_Strand")
@@ -206,6 +209,7 @@ create_sbs192_table <- function(bay, g, strand_type, overwrite = FALSE) {
 #'
 #' @param bay Input bagel
 #' @param overwrite Overwrite existing count table
+#' @return Returns the created DBS table object
 create_dbs_table <- function(bay, overwrite = overwrite) {
   dbs <- subset_variant_by_type(bay@variants, "DBS")
 
@@ -292,6 +296,7 @@ create_dbs_table <- function(bay, overwrite = overwrite) {
 #' Reverse complement of a string using biostrings
 #'
 #' @param dna Input DNA string
+#' @return Returns the reverse compliment of the input DNA string
 #' @examples
 #' rc("ATGC")
 #' @export

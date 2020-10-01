@@ -49,6 +49,11 @@ table}
 
 \item{overwrite}{Overwrite existing count table}
 }
+\value{
+If return_instead = TRUE then the created table object is returned,
+otherwise the table object is automatically added to the bagel's
+count_tables list and nothing is returned
+}
 \description{
 Builds a custom table from specified user variants
 }

@@ -79,9 +79,11 @@ add_flank_to_variants <- function(bay, g, flank_start, flank_end,
   }
 }
 
-#' Adds an annotation to the variant table with length of each variant
+#' Adds an annotation to the input bagel's variant table with length of each
+#' variant
 #'
 #' @param bay Input samples
+#' @return None
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_variant_length(bay)
@@ -103,7 +105,7 @@ annotate_variant_length <- function(bay) {
 #'
 #' @param bay Input samples
 #' @param column_name Name of column to drop
-#' @param None
+#' @return None
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' drop_annotation(bay, "Variant_Type")
@@ -119,6 +121,8 @@ drop_annotation <- function(bay, column_name) {
 #' Generates a variant type table
 #'
 #' @param tab Input variant table
+#' @return Returns the inputted variant table with variant type ("SBS", "DBS",
+#' "INS", "DEL") added as an appended "Variant_Type" column
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' BAGEL:::add_variant_type(bay@variants)
@@ -139,6 +143,7 @@ add_variant_type <- function(tab) {
 #' Annotate variants with variant type ("SBS", "INS", "DEl", "DBS")
 #'
 #' @param bay Input bagel
+#' @return None
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_variant_type(bay)
@@ -152,6 +157,8 @@ annotate_variant_type <- function(bay) {
 #'
 #' @param tab Input variant table
 #' @param type Variant type to return e.g. "SBS", "INS", "DEL", "DBS"
+#' @return Returns the input variant table subsetted to only contain variants
+#' of the specified variant type
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_variant_type(bay)

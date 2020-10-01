@@ -14,6 +14,9 @@ reference the variants and their coordinates were derived from.}
 
 \item{overwrite}{Overwrite existing count table}
 }
+\value{
+Returns the created SBS96 count table object
+}
 \description{
 Uses a genome object to find context and generate standard SBS96 tables
 }

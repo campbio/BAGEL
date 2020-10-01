@@ -8,7 +8,7 @@ addons:
      packages:
        - libgsl0-dev # for topicmodels
        - libxml2-dev # for XML, a dependency of quanteda
-warnings_are_errors: true
+warnings_are_errors: false
 bioc_required: true
 r_build_args: "--no-build-vignettes"
 r_check_args: "--no-vignettes --no-build-vignettes --as-cran"

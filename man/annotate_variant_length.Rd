@@ -2,15 +2,20 @@
 % Please edit documentation in R/annotate_variants.R
 \name{annotate_variant_length}
 \alias{annotate_variant_length}
-\title{Adds an annotation to the variant table with length of each variant}
+\title{Adds an annotation to the input bagel's variant table with length of each
+variant}
 \usage{
 annotate_variant_length(bay)
 }
 \arguments{
 \item{bay}{Input samples}
 }
+\value{
+None
+}
 \description{
-Adds an annotation to the variant table with length of each variant
+Adds an annotation to the input bagel's variant table with length of each
+variant
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))

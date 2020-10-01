@@ -9,6 +9,9 @@ annotate_variant_type(bay)
 \arguments{
 \item{bay}{Input bagel}
 }
+\value{
+None
+}
 \description{
 Annotate variants with variant type ("SBS", "INS", "DEl", "DBS")
 }

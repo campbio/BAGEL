@@ -548,7 +548,8 @@ create_umap <- function(result, annotation, n_neighbors = 30, min_dist = 0.75,
 #' @param legend_size Set legend size
 #' @param text_box Place a box around cluster labels for improved readability
 #' @param plotly Create plotly version of plot
-#' @return UMAP data.frame
+#' @return Returns a ggplot2 plot of the created umap, if plotly = TRUE the
+#' ggplotly object is returned
 #' @examples
 #' result <- readRDS(system.file("testdata", "res_annot.rds",
 #' package = "BAGEL"))
@@ -604,6 +605,7 @@ plot_umap <- function(result, point_size = 0.7, no_legend = FALSE,
 #' Plot a UMAP data.frame
 #'
 #' @param result Result object containing UMAP data.frame
+#' @return Returns ggplot2 plot of the created umap
 #' @examples
 #' result <- readRDS(system.file("testdata", "res_annot.rds",
 #' package = "BAGEL"))
