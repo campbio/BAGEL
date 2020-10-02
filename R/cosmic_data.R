@@ -25,7 +25,7 @@
 #'
 #' @docType data
 #'
-#' @usage data(cosmic_v3_snv_sigs_exome)
+#' @usage data(cosmic_v3_sbs_sigs_exome)
 #'
 #' @format An object of class \code{"Result"}; see [BAGEL::predict_exposure()].
 #'
@@ -36,7 +36,7 @@
 #' ([Nature](https://doi.org/10.1038/s41586-020-1943-3))
 #'
 #' @source COSMIC v3, <https://cancer.sanger.ac.uk/cosmic/signatures>
-"cosmic_v3_snv_sigs_exome"
+"cosmic_v3_sbs_sigs_exome"
 
 #' COSMIC v3 SBS96 Genome Signatures Result Object
 #'
@@ -45,7 +45,7 @@
 #'
 #' @docType data
 #'
-#' @usage data(cosmic_v3_snv_sigs)
+#' @usage data(cosmic_v3_sbs_sigs)
 #'
 #' @format An object of class \code{"Result"}; see [BAGEL::predict_exposure()].
 #'
@@ -56,7 +56,7 @@
 #' ([Nature](https://doi.org/10.1038/s41586-020-1943-3))
 #'
 #' @source COSMIC v3, <https://cancer.sanger.ac.uk/cosmic/signatures>
-"cosmic_v3_snv_sigs"
+"cosmic_v3_sbs_sigs"
 
 #' COSMIC v3 DBS Genome Signatures Result Object
 #'

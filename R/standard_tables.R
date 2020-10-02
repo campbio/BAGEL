@@ -1,10 +1,12 @@
 #' Uses a genome object to find context and generate standard SBS96 tables
 #'
 #' @param bay Input samples
+#' @param g A \linkS4class{BSgenome} object indicating which genome
+#' reference the variants and their coordinates were derived from.
 #' @param overwrite Overwrite existing count table
-create_sbs96_table <- function(bay, overwrite = FALSE) {
+#' @return Returns the created SBS96 count table object
+create_sbs96_table <- function(bay, g, overwrite = FALSE) {
   dat <- subset_variant_by_type(bay@variants, type = "SBS")
-  g <- bay@genome
   ref <- as.character(dat$ref)
   alt <- as.character(dat$alt)
   mut_type <- paste(ref, ">", alt, sep = "")
@@ -95,13 +97,16 @@ create_sbs96_table <- function(bay, overwrite = FALSE) {
 #' using transcript strand
 #'
 #' @param bay Input samples
+#' @param g A \linkS4class{BSgenome} object indicating which genome
+#' reference the variants and their coordinates were derived from.
 #' @param strand_type Transcript_Strand or Replication_Strand
 #' @param overwrite Overwrite existing count table
-create_sbs192_table <- function(bay, strand_type, overwrite = FALSE) {
+#' @return Returns the created SBS192 count table object built using either
+#' transcript strand or replication strand
+create_sbs192_table <- function(bay, g, strand_type, overwrite = FALSE) {
   if (!strand_type %in% c("Transcript_Strand", "Replication_Strand")) {
     stop("Please select either Transcript_Strand or Replication_Strand")
   }
-  g <- bay@genome
   dat <- bay@variants
   dat <- subset_variant_by_type(dat, "SBS")
   dat <- drop_na_variants(dat, strand_type)
@@ -204,6 +209,7 @@ create_sbs192_table <- function(bay, strand_type, overwrite = FALSE) {
 #'
 #' @param bay Input bagel
 #' @param overwrite Overwrite existing count table
+#' @return Returns the created DBS table object
 create_dbs_table <- function(bay, overwrite = overwrite) {
   dbs <- subset_variant_by_type(bay@variants, "DBS")
 
@@ -290,14 +296,15 @@ create_dbs_table <- function(bay, overwrite = overwrite) {
 #' Reverse complement of a string using biostrings
 #'
 #' @param dna Input DNA string
+#' @return Returns the reverse compliment of the input DNA string
 #' @examples
 #' rc("ATGC")
 #' @export
 rc <- function(dna) {
-  if (class(dna) == "character" && length(dna) == 1) {
+  if (is(dna, "character") && length(dna) == 1) {
     rev_com <- as.character(Biostrings::reverseComplement(
       Biostrings::DNAString(dna)))
-  } else if (class(dna) == "character" && length(dna) > 1) {
+  } else if (is(dna, "character") && length(dna) > 1) {
     rev_com <- sapply(dna, rc)
     names(rev_com) <- NULL
   } else {
@@ -309,41 +316,46 @@ rc <- function(dna) {
 #' Builds a standard table from user variants
 #'
 #' @param bay Input samples
+#' @param g A \linkS4class{BSgenome} object indicating which genome
+#' reference the variants and their coordinates were derived from.
 #' @param table_name Name of standard table to build SBS96, SBS192, DBS, or
 #' Indel
 #' @param strand_type Only for SBS192 Transcript_Strand or Replication_Strand
 #' @param overwrite Overwrite existing count table
+#' @return None
 #' @examples
+#' g <- select_genome("19")
+#'
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SBS96", overwrite = TRUE)
+#' build_standard_table(bay, g, "SBS96", overwrite = TRUE)
 #'
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_transcript_strand(bay, "19")
-#' build_standard_table(bay, "SBS192", "Transcript_Strand")
+#' build_standard_table(bay, g, "SBS192", "Transcript_Strand")
 #'
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 #' annotate_replication_strand(bay, BAGEL::rep_range)
-#' build_standard_table(bay, "SBS192", "Replication_Strand")
+#' build_standard_table(bay, g, "SBS192", "Replication_Strand")
 #'
 #' bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 #' package = "BAGEL"))
-#' build_standard_table(bay, table_name = "DBS")
+#' build_standard_table(bay, g, "DBS")
 #'
 #' bay <- readRDS(system.file("testdata", "indel_bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, table_name = "INDEL")
+#' build_standard_table(bay, g, table_name = "INDEL")
 #' @export
-build_standard_table <- function(bay, table_name, strand_type = NA,
+build_standard_table <- function(bay, g, table_name, strand_type = NA,
                                  overwrite = FALSE) {
   if (table_name %in% c("SNV96", "SNV", "96", "SBS", "SBS96")) {
     .table_exists_warning(bay, "SBS96", overwrite)
     tab_list <- list()
-    tab <- create_sbs96_table(bay, overwrite)
+    tab <- create_sbs96_table(bay, g, overwrite)
     tab_list[[tab@name]] <- tab
     tab_list <- c(bay@count_tables, tab_list)
   } else if (table_name %in% c("SBS192", "192")) {
     .table_exists_warning(bay, "SBS192", overwrite)
     tab_list <- list()
-    tab <- create_sbs192_table(bay, strand_type, overwrite)
+    tab <- create_sbs192_table(bay, g, strand_type, overwrite)
     tab_list[[tab@name]] <- tab
     tab_list <- c(bay@count_tables, tab_list)
   } else if (table_name %in% c("DBS", "doublet")) {
@@ -355,7 +367,7 @@ build_standard_table <- function(bay, table_name, strand_type = NA,
   } else if (table_name %in% c("INDEL", "IND", "indel", "Indel")) {
     .table_exists_warning(bay, "INDEL", overwrite)
     tab_list <- list()
-    tab <- create_indel_table(bay, overwrite)
+    tab <- create_indel_table(bay, g, overwrite)
     tab_list[[tab@name]] <- tab
     tab_list <- c(bay@count_tables, tab_list)
   } else {
@@ -376,9 +388,8 @@ build_standard_table <- function(bay, table_name, strand_type = NA,
   }
 }
 
-create_indel_table <- function(bay, overwrite = FALSE) {
+create_indel_table <- function(bay, g, overwrite = FALSE) {
   var <- bay@variants
-  g <- bay@genome
   all_ins <- as.data.frame(subset_variant_by_type(var, "INS"))
   all_del <- as.data.frame(subset_variant_by_type(var, "DEL"))
   samples <- unique(c(as.character(all_ins$sample),

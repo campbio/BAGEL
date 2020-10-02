@@ -13,6 +13,9 @@ annotate_replication_strand(bay, rep_range, build_table = TRUE)
 
 \item{build_table}{Automatically build a table from this annotation}
 }
+\value{
+None
+}
 \description{
 Add replication strand annotation to SBS variants based on bedgraph file
 }

@@ -13,6 +13,11 @@ subset_bagel_by_counts(bay, table_name, num_counts)
 
 \item{num_counts}{Minimum sum count value to drop samples}
 }
+\value{
+Returns a new bagel object with sample annotations, count tables,
+and variants subsetted to only contains samples with the specified minimum
+number of counts (column sums) in the specified table
+}
 \description{
 Creates a new bagel subsetted to only samples with enough variants
 }

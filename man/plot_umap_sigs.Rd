@@ -9,6 +9,9 @@ plot_umap_sigs(result)
 \arguments{
 \item{result}{Result object containing UMAP data.frame}
 }
+\value{
+Returns ggplot2 plot of the created umap
+}
 \description{
 Plot a UMAP data.frame
 }

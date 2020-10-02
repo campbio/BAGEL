@@ -34,7 +34,8 @@ for split or small clusters)}
 \item{plotly}{Create plotly version of plot}
 }
 \value{
-UMAP data.frame
+Returns a ggplot2 plot of the created umap, if plotly = TRUE the
+ggplotly object is returned
 }
 \description{
 Plot a UMAP data.frame

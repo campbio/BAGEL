@@ -4,10 +4,13 @@
 \alias{build_standard_table}
 \title{Builds a standard table from user variants}
 \usage{
-build_standard_table(bay, table_name, strand_type = NA, overwrite = FALSE)
+build_standard_table(bay, g, table_name, strand_type = NA, overwrite = FALSE)
 }
 \arguments{
 \item{bay}{Input samples}
+
+\item{g}{A \linkS4class{BSgenome} object indicating which genome
+reference the variants and their coordinates were derived from.}
 
 \item{table_name}{Name of standard table to build SBS96, SBS192, DBS, or
 Indel}
@@ -16,25 +19,30 @@ Indel}
 
 \item{overwrite}{Overwrite existing count table}
 }
+\value{
+None
+}
 \description{
 Builds a standard table from user variants
 }
 \examples{
+g <- select_genome("19")
+
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-build_standard_table(bay, "SBS96", overwrite = TRUE)
+build_standard_table(bay, g, "SBS96", overwrite = TRUE)
 
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 annotate_transcript_strand(bay, "19")
-build_standard_table(bay, "SBS192", "Transcript_Strand")
+build_standard_table(bay, g, "SBS192", "Transcript_Strand")
 
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
 annotate_replication_strand(bay, BAGEL::rep_range)
-build_standard_table(bay, "SBS192", "Replication_Strand")
+build_standard_table(bay, g, "SBS192", "Replication_Strand")
 
 bay <- readRDS(system.file("testdata", "dbs_bagel.rds",
 package = "BAGEL"))
-build_standard_table(bay, table_name = "DBS")
+build_standard_table(bay, g, "DBS")
 
 bay <- readRDS(system.file("testdata", "indel_bagel.rds", package = "BAGEL"))
-build_standard_table(bay, table_name = "INDEL")
+build_standard_table(bay, g, table_name = "INDEL")
 }

@@ -11,6 +11,9 @@ create_dbs_table(bay, overwrite = overwrite)
 
 \item{overwrite}{Overwrite existing count table}
 }
+\value{
+Returns the created DBS table object
+}
 \description{
 Creates and adds a table for standard doublet base subsitution (DBS)
 }

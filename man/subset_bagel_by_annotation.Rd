@@ -13,6 +13,11 @@ subset_bagel_by_annotation(bay, annot_col, annot_names)
 
 \item{annot_names}{Annotational value to subset to}
 }
+\value{
+Returns a new bagel object with sample annotations, count tables,
+and variants subsetted to only contains samples of the specified annotation
+type
+}
 \description{
 Creates a new bagel subsetted to only one value of a sample annotation
 }

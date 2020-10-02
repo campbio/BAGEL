@@ -6,6 +6,7 @@
 \usage{
 predict_exposure(
   bagel,
+  g,
   table_name,
   signature_res,
   algorithm,
@@ -16,6 +17,9 @@ predict_exposure(
 }
 \arguments{
 \item{bagel}{Input samples to predit signature weights}
+
+\item{g}{A \linkS4class{BSgenome} object indicating which genome
+reference the variants and their coordinates were derived from.}
 
 \item{table_name}{Name of table used for posterior prediction.
 Must match the table type used to generate the prediction signatures}
@@ -39,7 +43,8 @@ LDA prediction of samples based on existing signatures
 }
 \examples{
 bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-build_standard_table(bay, "SBS96", overwrite = TRUE)
+g <- select_genome("19")
+build_standard_table(bay, g, "SBS96", overwrite = TRUE)
 predict_exposure(bagel = bay, table_name = "SBS96",
 signature_res = BAGEL::cosmic_v2_sigs, algorithm = "lda")
 }

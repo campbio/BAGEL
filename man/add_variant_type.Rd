@@ -9,6 +9,10 @@ add_variant_type(tab)
 \arguments{
 \item{tab}{Input variant table}
 }
+\value{
+Returns the inputted variant table with variant type ("SBS", "DBS",
+"INS", "DEL") added as an appended "Variant_Type" column
+}
 \description{
 Generates a variant type table
 }

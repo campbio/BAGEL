@@ -42,25 +42,25 @@ Imports:
     ggplot2,
     stringr,
     TxDb.Hsapiens.UCSC.hg19.knownGene,
-    TxDb.Hsapiens.UCSC.hg38.knownGene
+    TxDb.Hsapiens.UCSC.hg38.knownGene,
+    BSgenome.Hsapiens.UCSC.hg19,
+    BSgenome.Hsapiens.UCSC.hg38,
+    BSgenome.Mmusculus.UCSC.mm9,
+    BSgenome.Mmusculus.UCSC.mm10,
+    deconstructSigs,
+    decompTumor2Sig,
+    topicmodels,
+    ggrepel,
+    withr,
+    plotly
 Suggests:
     testthat,
     BiocStyle,
     knitr,
     rmarkdown,
     survival,
-    BSgenome.Hsapiens.UCSC.hg19,
-    BSgenome.Hsapiens.UCSC.hg38,
-    BSgenome.Mmusculus.UCSC.mm9,
-    BSgenome.Mmusculus.UCSC.mm10,
     XVector,
     qpdf,
-    deconstructSigs,
-    decompTumor2Sig,
-    topicmodels,
-    ggrepel,
-    withr,
-    plotly,
     covr
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr

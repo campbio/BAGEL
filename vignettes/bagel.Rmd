@@ -91,7 +91,7 @@ motifs are constructed from an SBS mutation and one upsteam and one downstream
 base sandwiched together. We build tables by counting these motifs for each 
 sample. 
 ```{r}
-build_standard_table(bagel, "SBS96")
+build_standard_table(bagel, g, "SBS96")
 ```
 
 # Discover Signatures/Exposures
@@ -133,12 +133,12 @@ compare_cosmic_v2(result, threshold = 0.78)
 cosmic_v2_subtype_map("lung")
 
 #Calculate posterior based on COSMIC signatures 4, 11, 12, 15
-cosmic_post = predict_exposure(bagel = bagel, "SBS96", signature_res = 
+cosmic_post = predict_exposure(bagel = bagel, g, "SBS96", signature_res = 
                                  cosmic_v2_sigs, signatures_to_use = 
                                  c(12, 4, 11, 15), algorithm = "lda")
 
 #Calculate posterior based on our novel signatures
-our_sigs_post = predict_exposure(bagel = bagel, "SBS96", signature_res = 
+our_sigs_post = predict_exposure(bagel = bagel, g, "SBS96", signature_res = 
                                    result, algorithm = "lda")
 
 #Plot results from posterior calculation

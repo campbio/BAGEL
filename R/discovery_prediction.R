@@ -13,12 +13,14 @@ NULL
 #' @return Returns a result object with results and input object (if bagel)
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SBS96", overwrite = TRUE)
+#' g <- select_genome("19")
+#' build_standard_table(bay, g, "SBS96", overwrite = TRUE)
 #' discover_signatures(bagel = bay, table_name = "SBS96",
 #' num_signatures = 3, method = "nmf", seed = 12345, nstart = 1)
 #' @export
-discover_signatures <- function(bagel, table_name = NULL, num_signatures, method="lda",
-                            seed = 1, nstart = 1, par_cores = FALSE) {
+discover_signatures <- function(bagel, table_name = NULL, num_signatures,
+                                method="lda", seed = 1, nstart = 1,
+                                par_cores = FALSE) {
   #if (!methods::is(input, "bagel")) {
 #    if (!methods::is(input, "matrix")) {
 #      stop("Input to discover_signatures must be a bagel object or a matrix")
@@ -323,6 +325,8 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' LDA prediction of samples based on existing signatures
 #'
 #' @param bagel Input samples to predit signature weights
+#' @param g A \linkS4class{BSgenome} object indicating which genome
+#' reference the variants and their coordinates were derived from.
 #' @param table_name Name of table used for posterior prediction.
 #' Must match the table type used to generate the prediction signatures
 #' @param signature_res Signatures to use for prediction
@@ -334,11 +338,12 @@ cosmic_v2_subtype_map <- function(tumor_type) {
 #' @return Results a result object containing signatures and sample weights
 #' @examples
 #' bay <- readRDS(system.file("testdata", "bagel.rds", package = "BAGEL"))
-#' build_standard_table(bay, "SBS96", overwrite = TRUE)
+#' g <- select_genome("19")
+#' build_standard_table(bay, g, "SBS96", overwrite = TRUE)
 #' predict_exposure(bagel = bay, table_name = "SBS96",
 #' signature_res = BAGEL::cosmic_v2_sigs, algorithm = "lda")
 #' @export
-predict_exposure <- function(bagel, table_name, signature_res, algorithm,
+predict_exposure <- function(bagel, g, table_name, signature_res, algorithm,
                              signatures_to_use = seq_len(ncol(
                                signature_res@signatures)), seed = 1,
                              verbose = FALSE) {
@@ -375,7 +380,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                       pos = "start",
                                       ref = "ref",
                                       alt = "alt",
-                                      bsg = bagel@genome),
+                                      bsg = g),
            sigs.input <- withr::with_seed(seed,
              deconstructSigs::mut.to.sigs.input(mut.ref = bagel@variants,
                                              sample.id = "sample",
@@ -383,7 +388,7 @@ predict_exposure <- function(bagel, table_name, signature_res, algorithm,
                                              pos = "start",
                                              ref = "ref",
                                              alt = "alt",
-                                             bsg = bagel@genome)))
+                                             bsg = g)))
     sig_all <- t(signature)
     middle <- unlist(lapply(strsplit(colnames(sig_all), "_"), "[", 1))
     context <- lapply(strsplit(colnames(sig_all), "_"), "[", 2)
@@ -521,7 +526,7 @@ whichSignatures <- function(tumor_ref = NA,
                            signature_cutoff = 0.06,
                            contexts_needed = FALSE,
                            tri_counts_method = "default") {
-  if (class(tumor_ref) == 'matrix') {
+  if (is(tumor_ref, 'matrix')) {
     stop(paste("Input tumor.ref needs to be a data frame or location of input text file", sep = ""))
   }
 

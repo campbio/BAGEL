@@ -9,6 +9,9 @@ rc(dna)
 \arguments{
 \item{dna}{Input DNA string}
 }
+\value{
+Returns the reverse compliment of the input DNA string
+}
 \description{
 Reverse complement of a string using biostrings
 }
